@@ -58,14 +58,29 @@ pub struct Record {
 }
 
 #[repr(u8)]
-#[derive(Eq, PartialEq, Debug, Clone, Ord, PartialOrd, Copy, ReadWriteState, ReadRPC, WriteRPC)]
+#[derive(
+    Eq,
+    PartialEq,
+    Debug,
+    Clone,
+    Ord,
+    PartialOrd,
+    Copy,
+    CreateTypeSpec,
+    ReadWriteState,
+    ReadRPC,
+    WriteRPC,
+)]
 pub enum RecordClass {
     /// Wallet
-    Wallet = 0x00,
+    #[discriminant(0)]
+    Wallet {},
     /// Website
-    Website = 0x01,
+    #[discriminant(1)]
+    Website {},
     /// Twitter
-    Twitter = 0x02,
+    #[discriminant(2)]
+    Twitter {},
 }
 
 impl PartisiaNameSystemContractState {
@@ -420,9 +435,9 @@ impl PartisiaNameSystemContractState {
     /// Get fully qualified name for token and record class
     fn fully_qualified_name(token_id: String, class: RecordClass) -> String {
         let class_name = match class {
-            RecordClass::Wallet => "wallet",
-            RecordClass::Website => "website",
-            RecordClass::Twitter => "twitter",
+            RecordClass::Wallet {} => "wallet",
+            RecordClass::Website {} => "website",
+            RecordClass::Twitter {} => "twitter",
         };
 
         format!("{}.{}", class_name, token_id)
