@@ -1,4 +1,4 @@
-use mpc721_base::msg::{
+use partisia_name_system::msg::{
     ApproveForAllMsg, ApproveMsg, BurnMsg, CheckOwnerMsg, MintMsg, MultiMintMsg, RevokeForAllMsg,
     RevokeMsg, SetBaseUriMsg, TransferFromMsg, TransferMsg, UpdateMinterMsg,
 };
@@ -39,7 +39,7 @@ fn proper_transfer_action_call() {
 
     let msg = TransferMsg {
         to: mock_address(1u8),
-        token_id: 1,
+        token_id: "name.meta".to_string(),
     };
     let mut event_group = EventGroup::builder();
     let mut test_event_group = EventGroup::builder();
@@ -48,7 +48,7 @@ fn proper_transfer_action_call() {
     test_event_group
         .call(dest.clone(), Shortname::from_u32(TRANSFER))
         .argument(mock_address(1u8))
-        .argument(1u128)
+        .argument("name.meta".to_string())
         .done();
 
     assert_eq!(event_group.build(), test_event_group.build());
@@ -61,7 +61,7 @@ fn proper_transfer_from_action_call() {
     let msg = TransferFromMsg {
         from: mock_address(1u8),
         to: mock_address(2u8),
-        token_id: 1,
+        token_id: "name.meta".to_string(),
     };
 
     let mut event_group = EventGroup::builder();
@@ -72,7 +72,7 @@ fn proper_transfer_from_action_call() {
         .call(dest.clone(), Shortname::from_u32(TRANSFER_FROM))
         .argument(mock_address(1u8))
         .argument(mock_address(2u8))
-        .argument(1u128)
+        .argument("name.meta".to_string())
         .done();
 
     assert_eq!(event_group.build(), test_event_group.build());
@@ -84,7 +84,7 @@ fn proper_approve_action_call() {
 
     let msg = ApproveMsg {
         spender: mock_address(1u8),
-        token_id: 1,
+        token_id: "name.meta".to_string(),
     };
 
     let mut event_group = EventGroup::builder();
@@ -94,7 +94,7 @@ fn proper_approve_action_call() {
     test_event_group
         .call(dest.clone(), Shortname::from_u32(APPROVE))
         .argument(mock_address(1u8))
-        .argument(1u128)
+        .argument("name.meta".to_string())
         .done();
 
     assert_eq!(event_group.build(), test_event_group.build());
@@ -125,9 +125,9 @@ fn proper_mint_action_call() {
     let dest = mock_address(30u8);
 
     let msg = MintMsg {
-        token_id: 1,
+        token_id: "name.meta".to_string(),
         to: mock_address(1u8),
-        token_uri: Some("uri".to_string()),
+        parent: "".to_string(),
     };
 
     let mut event_group = EventGroup::builder();
@@ -136,9 +136,9 @@ fn proper_mint_action_call() {
     let mut test_event_group = EventGroup::builder();
     test_event_group
         .call(dest.clone(), Shortname::from_u32(MINT))
-        .argument(1u128)
+        .argument("name.meta".to_string())
         .argument(mock_address(1u8))
-        .argument(Some("uri".to_string()))
+        .argument("".to_string())
         .done();
 
     assert_eq!(event_group.build(), test_event_group.build());
@@ -150,7 +150,7 @@ fn proper_ownership_check_call() {
 
     let msg = CheckOwnerMsg {
         owner: mock_address(1u8),
-        token_id: 1u128,
+        token_id: "name.meta".to_string(),
     };
 
     let mut event_group = EventGroup::builder();
@@ -160,7 +160,7 @@ fn proper_ownership_check_call() {
     test_event_group
         .call(dest.clone(), Shortname::from_u32(CHECKOWNER))
         .argument(mock_address(1u8))
-        .argument(1u128)
+        .argument("name.meta".to_string())
         .done();
 
     assert_eq!(event_group.build(), test_event_group.build());
@@ -192,7 +192,7 @@ fn proper_revoke_action_call() {
 
     let msg = RevokeMsg {
         spender: mock_address(1u8),
-        token_id: 1,
+        token_id: "name.meta".to_string(),
     };
 
     let mut event_group = EventGroup::builder();
@@ -202,7 +202,7 @@ fn proper_revoke_action_call() {
     test_event_group
         .call(dest.clone(), Shortname::from_u32(REVOKE))
         .argument(mock_address(1u8))
-        .argument(1u128)
+        .argument("name.meta".to_string())
         .done();
 
     assert_eq!(event_group.build(), test_event_group.build());
@@ -232,7 +232,7 @@ fn proper_revoke_for_all_action_call() {
 fn proper_burn_action_call() {
     let dest = mock_address(30u8);
 
-    let msg = BurnMsg { token_id: 1 };
+    let msg = BurnMsg { token_id: "name.meta".to_string() };
 
     let mut event_group = EventGroup::builder();
     msg.as_interaction(&mut event_group, &dest);
@@ -240,7 +240,7 @@ fn proper_burn_action_call() {
     let mut test_event_group = EventGroup::builder();
     test_event_group
         .call(dest.clone(), Shortname::from_u32(BURN))
-        .argument(1u128)
+        .argument("name.meta".to_string())
         .done();
 
     assert_eq!(event_group.build(), test_event_group.build());
@@ -270,29 +270,29 @@ fn proper_multi_mint_action_call() {
 
     let mints = vec![
         MintMsg {
-            token_id: 1,
+            token_id: "name.meta".to_string(),
             to: mock_address(4),
-            token_uri: Some(String::from("Token1")),
+            parent: "".to_string(),
         },
         MintMsg {
-            token_id: 2,
+            token_id: "name2.meta".to_string(),
             to: mock_address(4),
-            token_uri: Some(String::from("Token2")),
+            parent: "".to_string(),
         },
         MintMsg {
-            token_id: 3,
+            token_id: "name3.meta".to_string(),
             to: mock_address(5),
-            token_uri: Some(String::from("Token3")),
+            parent: "".to_string(),
         },
         MintMsg {
-            token_id: 4,
+            token_id: "name4.meta".to_string(),
             to: mock_address(5),
-            token_uri: Some(String::from("Token4")),
+            parent: "".to_string(),
         },
         MintMsg {
-            token_id: 5,
+            token_id: "name5.meta".to_string(),
             to: mock_address(6),
-            token_uri: Some(String::from("Token5")),
+            parent: "".to_string(),
         },
     ];
     let msg = MultiMintMsg {
