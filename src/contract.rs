@@ -93,7 +93,7 @@ pub fn mint(
     state: ContractState,
     token_id: String,
     to: Address,
-    parent: String,
+    parent: Option<String>,
 ) -> (ContractState, Vec<EventGroup>) {
     let mut state = state;
     let events = execute_mint(

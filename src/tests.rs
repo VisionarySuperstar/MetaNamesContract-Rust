@@ -127,7 +127,7 @@ fn proper_mint_action_call() {
     let msg = MintMsg {
         token_id: "name.meta".to_string(),
         to: mock_address(1u8),
-        parent: "".to_string(),
+        parent: Some("".to_string()),
     };
 
     let mut event_group = EventGroup::builder();
@@ -138,7 +138,7 @@ fn proper_mint_action_call() {
         .call(dest.clone(), Shortname::from_u32(MINT))
         .argument("name.meta".to_string())
         .argument(mock_address(1u8))
-        .argument("".to_string())
+        .argument(Some("".to_string()))
         .done();
 
     assert_eq!(event_group.build(), test_event_group.build());
@@ -272,27 +272,27 @@ fn proper_multi_mint_action_call() {
         MintMsg {
             token_id: "name.meta".to_string(),
             to: mock_address(4),
-            parent: "".to_string(),
+            parent: Some("".to_string()),
         },
         MintMsg {
             token_id: "name2.meta".to_string(),
             to: mock_address(4),
-            parent: "".to_string(),
+            parent: Some("".to_string()),
         },
         MintMsg {
             token_id: "name3.meta".to_string(),
             to: mock_address(5),
-            parent: "".to_string(),
+            parent: Some("".to_string()),
         },
         MintMsg {
             token_id: "name4.meta".to_string(),
             to: mock_address(5),
-            parent: "".to_string(),
+            parent: Some("".to_string()),
         },
         MintMsg {
             token_id: "name5.meta".to_string(),
             to: mock_address(6),
-            parent: "".to_string(),
+            parent: Some("".to_string()),
         },
     ];
     let msg = MultiMintMsg {
