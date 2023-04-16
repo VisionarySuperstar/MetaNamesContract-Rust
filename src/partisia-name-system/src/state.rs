@@ -21,9 +21,12 @@ pub struct PartisiaNameSystemContractState {
     pub base_uri: Option<String>,
     /// minter address
     pub minter: Address,
+    /// domains are token id
+    /// Token id is currently a string (the domain name)
+    pub tokens: BTreeMap<String, Domain>,
     /// record info by token id
     /// Token id is currently a string (the domain name)
-    pub tokens: BTreeMap<String, Record>,
+    pub records: BTreeMap<String, Record>,
     /// token approvals
     pub operator_approvals: BTreeMap<Address, BTreeMap<Address, bool>>,
 }
@@ -31,26 +34,34 @@ pub struct PartisiaNameSystemContractState {
 /// ## Description
 /// This structure describes minted PNS information
 #[derive(ReadWriteRPC, ReadWriteState, CreateTypeSpec, Clone, PartialEq, Eq, Debug)]
-pub struct Record {
+pub struct Domain {
     /// token owner
     pub owner: Address,
     /// Parent
     pub parent: String,
+    /// token approvals
+    pub approvals: Vec<Address>,
+}
+
+/// ## Description
+/// This structure describes minted PNS information
+#[derive(ReadWriteRPC, ReadWriteState, CreateTypeSpec, Clone, PartialEq, Eq, Debug)]
+pub struct Record {
+    /// Related domain
+    pub domain: String,
     /// Class type
     pub class: RecordClass,
     /// Data
     pub data: String,
-    /// token approvals
-    pub approvals: Vec<Address>,
 }
 
 #[repr(u8)]
 #[derive(Eq, PartialEq, Debug, Clone, Ord, PartialOrd, Copy, ReadWriteState, ReadRPC, WriteRPC)]
 pub enum RecordClass {
+    /// Wallet
+    Wallet = 0x00,
     /// Website
-    Website = 0x00,
-    /// Email
-    Email = 0x01,
+    Website = 0x01,
     /// Twitter
     Twitter = 0x02,
 }
@@ -80,19 +91,43 @@ impl PartisiaNameSystemContractState {
         &mut self,
         token_id: String,
         to: &Address,
-        data: String,
-        class: RecordClass,
         parent: String,
     ) {
-        let token = Record {
+        let token = Domain {
             owner: *to,
             parent: parent,
-            class: class,
-            data: data,
             approvals: vec![],
         };
 
         self.tokens.insert(token_id, token);
+    }
+
+    /// ## Description
+    /// Mints record for token
+    /// ## Params
+    /// * **actor** is an object of type [`Address`]
+    ///
+    /// * **token_id** is a field of type [`String`]
+    ///
+    /// * **data** is an object of type [`String`]
+    ///
+    /// * **class** is an object of type [`RecordClass`]
+    ///
+    /// * **parent** is an object of type [`String`]
+    pub fn mint_record(
+        &mut self,
+        token_id: String,
+        data: String,
+        class: RecordClass,
+    ) {
+        let record = Record {
+            domain: token_id.to_string(),
+            class: class,
+            data: data,
+        };
+        let qualified_name = Self::fully_qualified_name(token_id.to_string(), class);
+
+        self.records.insert(qualified_name, record);
     }
 
     /// ## Description
@@ -107,7 +142,7 @@ impl PartisiaNameSystemContractState {
         let token = self.tokens.get(&token_id).unwrap();
         // TODO: Investigate transfer with parent
         assert!(
-            Self::allowed_parent(token.parent),
+            Self::allowed_parent(token.parent.to_string()),
             "{}",
             ContractError::ParentError
         );
@@ -118,10 +153,32 @@ impl PartisiaNameSystemContractState {
             ContractError::Unauthorized
         );
 
+        // TODO: Remove all records related to this mint
         self.tokens.entry(token_id).and_modify(|t| {
             t.owner = *to;
-            t.data = "".to_string();
             t.approvals = vec![];
+        });
+    }
+
+    /// ## Description
+    /// Update data of a record
+    /// ## Params
+    /// * **actor** is an object of type [`Address`]
+    ///
+    /// * **token_id** is an object of type [`String`]
+    ///
+    /// * **data** is an object of type [`String`]
+    pub fn update_data(&mut self, actor: &Address, token_id: String, class: RecordClass, data: String) {
+        let qualified_name = Self::fully_qualified_name(token_id, class);
+        let token = self.records.get(&qualified_name).unwrap();
+        assert!(
+            Self::is_owner(&self, &actor),
+            "{}",
+            ContractError::Unauthorized
+        );
+
+        self.records.entry(qualified_name).and_modify(|t| {
+            t.data = data;
         });
     }
 
@@ -144,7 +201,7 @@ impl PartisiaNameSystemContractState {
     ) {
         let token = self.tokens.get(&token_id).unwrap().to_owned();
         assert!(
-            Self::allowed_parent(token.parent),
+            Self::allowed_parent(token.parent.to_string()),
             "{}",
             ContractError::ParentError
         );
@@ -242,11 +299,44 @@ impl PartisiaNameSystemContractState {
     }
 
     /// ## Description
+    /// Checks that address is owner or not of token
+    /// ## Params
+    /// * **token_id** is an object of type [`String`]
+    ///
+    /// * **address** is an object of type [`Address`]
+    pub fn is_token_owner(&self, token_id: String, address: &Address) -> bool {
+        if let Some(token) = self.tokens.get(&token_id) {
+            token.owner.eq(address)
+        } else {
+            false
+        }
+    }
+
+    /// ## Description
     /// Returns token info by token id
     /// ## Params
     /// * **token_id** is an object of type [`String`]
-    pub fn token_info(&self, token_id: String) -> Option<&Record> {
+    pub fn token_info(&self, token_id: String) -> Option<&Domain> {
         self.tokens.get(&token_id)
+    }
+
+    /// ## Description
+    /// Returns records of token by token id
+    /// ## Params
+    /// * **token_id** is an object of type [`String`]
+    pub fn records(&self, actor: &Address, token_id: String) -> Vec<&Record> {
+        let token = self.tokens.get(&token_id).unwrap();
+        assert!(
+            Self::allowed_to_transfer(actor, token, &self.operator_approvals),
+            "{}",
+            ContractError::Unauthorized
+        );
+
+        self.records
+            .values()
+            .into_iter()
+            .filter(|r| r.domain == token_id)
+            .collect()
     }
 
     /// ## Description
@@ -271,7 +361,7 @@ impl PartisiaNameSystemContractState {
 
     fn allowed_to_transfer(
         account: &Address,
-        token: &Record,
+        token: &Domain,
         operator_approvals: &BTreeMap<Address, BTreeMap<Address, bool>>,
     ) -> bool {
         if token.owner == *account {
@@ -293,7 +383,7 @@ impl PartisiaNameSystemContractState {
 
     fn allowed_to_approve(
         account: &Address,
-        token: &Record,
+        token: &Domain,
         operator_approvals: &BTreeMap<Address, BTreeMap<Address, bool>>,
     ) -> bool {
         if token.owner == *account {
@@ -309,15 +399,25 @@ impl PartisiaNameSystemContractState {
         false
     }
 
+    // TODO: Improve parent management
     fn allowed_parent(parent: String) -> bool {
-        if parent == "meta".to_string() {
-            return true;
-        }
-
         if parent.is_empty() {
             return true;
         }
 
         false
     }
+
+    /// ## Description
+    /// Get fully qualified name for token and record class
+    fn fully_qualified_name(token_id: String, class: RecordClass) -> String {
+        let class_name = match class {
+            RecordClass::Wallet => "wallet",
+            RecordClass::Website => "website",
+            RecordClass::Twitter => "twitter",
+        };
+
+        format!("{}.{}", class_name, token_id)
+    }
+
 }

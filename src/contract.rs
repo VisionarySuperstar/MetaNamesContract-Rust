@@ -34,7 +34,7 @@ pub fn transfer(
     ctx: ContractContext,
     state: ContractState,
     to: Address,
-    token_id: u128,
+    token_id: String,
 ) -> (ContractState, Vec<EventGroup>) {
     let mut state = state;
     let events = execute_transfer(&ctx, &mut state.pns, &TransferMsg { to, token_id });
@@ -48,7 +48,7 @@ pub fn transfer_from(
     state: ContractState,
     from: Address,
     to: Address,
-    token_id: u128,
+    token_id: String,
 ) -> (ContractState, Vec<EventGroup>) {
     let mut state = state;
     let events = execute_transfer_from(
@@ -65,7 +65,7 @@ pub fn approve(
     ctx: ContractContext,
     state: ContractState,
     spender: Address,
-    token_id: u128,
+    token_id: String,
 ) -> (ContractState, Vec<EventGroup>) {
     let mut state = state;
     let events = execute_approve(&ctx, &mut state.pns, &ApproveMsg { spender, token_id });
@@ -89,9 +89,9 @@ pub fn set_base_uri(
 pub fn mint(
     ctx: ContractContext,
     state: ContractState,
-    token_id: u128,
+    token_id: String,
     to: Address,
-    token_uri: Option<String>,
+    parent: String,
 ) -> (ContractState, Vec<EventGroup>) {
     let mut state = state;
     let events = execute_mint(
@@ -100,7 +100,7 @@ pub fn mint(
         &MintMsg {
             token_id,
             to,
-            token_uri,
+            parent,
         },
     );
 
@@ -124,7 +124,7 @@ pub fn revoke(
     ctx: ContractContext,
     state: ContractState,
     spender: Address,
-    token_id: u128,
+    token_id: String,
 ) -> (ContractState, Vec<EventGroup>) {
     let mut state = state;
     let events = execute_revoke(&ctx, &mut state.pns, &RevokeMsg { spender, token_id });
@@ -148,7 +148,7 @@ pub fn revoke_for_all(
 pub fn burn(
     ctx: ContractContext,
     state: ContractState,
-    token_id: u128,
+    token_id: String,
 ) -> (ContractState, Vec<EventGroup>) {
     let mut state = state;
     let events = execute_burn(&ctx, &mut state.pns, &BurnMsg { token_id });
@@ -161,7 +161,7 @@ pub fn check_ownership(
     ctx: ContractContext,
     state: ContractState,
     owner: Address,
-    token_id: u128,
+    token_id: String,
 ) -> (ContractState, Vec<EventGroup>) {
     let mut state = state;
     let events =

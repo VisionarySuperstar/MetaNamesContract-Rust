@@ -5,7 +5,8 @@ use pbc_contract_common::{context::ContractContext, events::EventGroup};
 use crate::{
     msg::{
         ApproveForAllMsg, ApproveMsg, BurnMsg, CheckOwnerMsg, InitMsg, MintMsg, MultiMintMsg,
-        RevokeForAllMsg, RevokeMsg, SetBaseUriMsg, TransferFromMsg, TransferMsg, UpdateMinterMsg,
+        RecordMintMsg, RevokeForAllMsg, RevokeMsg, SetBaseUriMsg, TransferFromMsg, TransferMsg,
+        UpdateMinterMsg,
     },
     state::PartisiaNameSystemContractState,
     ContractError,
@@ -29,8 +30,8 @@ pub fn execute_init(
         symbol: msg.symbol.clone(),
         base_uri: msg.base_uri.clone(),
         minter: msg.minter,
-        supply: 0,
         tokens: BTreeMap::new(),
+        records: BTreeMap::new(),
         operator_approvals: BTreeMap::new(),
     };
 
@@ -83,13 +84,49 @@ pub fn execute_mint(
         ContractError::Unauthorized
     );
 
-    assert!(!state.is_minted(msg.token_id), "{}", ContractError::Minted);
+    assert!(
+        !state.is_minted(msg.token_id.to_string()),
+        "{}",
+        ContractError::Minted
+    );
 
-    state.mint(msg.token_id, &msg.to, &msg.token_uri);
-    state.increase_supply();
+    state.mint(msg.token_id.to_string(), &msg.to, msg.parent.to_string());
 
     vec![]
 }
+
+/// ## Description
+/// Mint a new record for a token. Can only be executed from owner account.
+/// Returns [`(PartisiaNameSystemContractState, Vec<EventGroup>)`] if operation was successful,
+/// otherwise panics with error message defined in [`ContractError`]
+/// ## Params
+/// * **ctx** is an object of type [`ContractContext`]
+///
+/// * **state** is an object of type [`PartisiaNameSystemContractState`]
+///
+/// * **msg** is an object of type [`MintMsg`]
+pub fn execute_record_mint(
+    ctx: &ContractContext,
+    state: &mut PartisiaNameSystemContractState,
+    msg: &RecordMintMsg,
+) -> Vec<EventGroup> {
+    assert!(
+        state.minter == ctx.sender,
+        "{}",
+        ContractError::Unauthorized
+    );
+
+    assert!(
+        !state.is_minted(msg.token_id.to_string()),
+        "{}",
+        ContractError::Minted
+    );
+
+    state.mint_record(msg.token_id.to_string(), msg.data.to_string(), msg.class);
+
+    vec![]
+}
+
 /// ## Description
 /// Updates the minter address checking that the sender is the contract owner address
 /// ## Params
@@ -129,9 +166,13 @@ pub fn execute_transfer(
     state: &mut PartisiaNameSystemContractState,
     msg: &TransferMsg,
 ) -> Vec<EventGroup> {
-    assert!(state.is_minted(msg.token_id), "{}", ContractError::NotFound);
+    assert!(
+        state.is_minted(msg.token_id.to_string()),
+        "{}",
+        ContractError::NotFound
+    );
 
-    state.transfer(&ctx.sender, &msg.to, msg.token_id);
+    state.transfer(&ctx.sender, &msg.to, msg.token_id.to_string());
     vec![]
 }
 
@@ -150,9 +191,13 @@ pub fn execute_transfer_from(
     state: &mut PartisiaNameSystemContractState,
     msg: &TransferFromMsg,
 ) -> Vec<EventGroup> {
-    assert!(state.is_minted(msg.token_id), "{}", ContractError::NotFound);
+    assert!(
+        state.is_minted(msg.token_id.to_string()),
+        "{}",
+        ContractError::NotFound
+    );
 
-    state.transfer(&msg.from, &msg.to, msg.token_id);
+    state.transfer(&msg.from, &msg.to, msg.token_id.to_string());
     vec![]
 }
 
@@ -171,9 +216,13 @@ pub fn execute_approve(
     state: &mut PartisiaNameSystemContractState,
     msg: &ApproveMsg,
 ) -> Vec<EventGroup> {
-    assert!(state.is_minted(msg.token_id), "{}", ContractError::NotFound);
+    assert!(
+        state.is_minted(msg.token_id.to_string()),
+        "{}",
+        ContractError::NotFound
+    );
 
-    state.update_approvals(&ctx.sender, &msg.spender, msg.token_id, true);
+    state.update_approvals(&ctx.sender, &msg.spender, msg.token_id.to_string(), true);
     vec![]
 }
 
@@ -211,9 +260,13 @@ pub fn execute_revoke(
     state: &mut PartisiaNameSystemContractState,
     msg: &RevokeMsg,
 ) -> Vec<EventGroup> {
-    assert!(state.is_minted(msg.token_id), "{}", ContractError::NotFound);
+    assert!(
+        state.is_minted(msg.token_id.to_string()),
+        "{}",
+        ContractError::NotFound
+    );
 
-    state.update_approvals(&ctx.sender, &msg.spender, msg.token_id, false);
+    state.update_approvals(&ctx.sender, &msg.spender, msg.token_id.to_string(), false);
     vec![]
 }
 
@@ -251,10 +304,13 @@ pub fn execute_burn(
     state: &mut PartisiaNameSystemContractState,
     msg: &BurnMsg,
 ) -> Vec<EventGroup> {
-    assert!(state.is_minted(msg.token_id), "{}", ContractError::NotFound);
+    assert!(
+        state.is_minted(msg.token_id.to_string()),
+        "{}",
+        ContractError::NotFound
+    );
 
-    state.remove_token(&ctx.sender, msg.token_id);
-    state.decrease_supply();
+    state.remove_token(&ctx.sender, msg.token_id.to_string());
 
     vec![]
 }
@@ -274,7 +330,7 @@ pub fn execute_ownership_check(
     state: &mut PartisiaNameSystemContractState,
     msg: &CheckOwnerMsg,
 ) -> Vec<EventGroup> {
-    let token_info = state.token_info(msg.token_id);
+    let token_info = state.token_info(msg.token_id.to_string());
     match token_info {
         Some(token_info) => assert!(
             token_info.owner == msg.owner,
@@ -307,3 +363,8 @@ pub fn execute_multi_mint(
 
     vec![]
 }
+
+// TODO: Add actions
+// - Mint record
+// - Update record
+// - Delete record
