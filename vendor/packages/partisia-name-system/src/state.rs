@@ -77,7 +77,7 @@ pub enum RecordClass {
     Wallet {},
     /// Website
     #[discriminant(1)]
-    Website {},
+    Uri {},
     /// Twitter
     #[discriminant(2)]
     Twitter {},
@@ -436,7 +436,7 @@ impl PartisiaNameSystemContractState {
     fn fully_qualified_name(token_id: String, class: RecordClass) -> String {
         let class_name = match class {
             RecordClass::Wallet {} => "wallet",
-            RecordClass::Website {} => "website",
+            RecordClass::Uri {} => "uri",
             RecordClass::Twitter {} => "twitter",
         };
 
