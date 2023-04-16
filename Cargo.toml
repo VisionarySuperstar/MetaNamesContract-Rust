@@ -20,7 +20,7 @@ create_type_spec_derive = { git = "https://git@gitlab.com/partisiablockchain/lan
 pbc_contract_codegen = { git = "https://git@gitlab.com/partisiablockchain/language/contract-sdk.git", tag = "13.1.0" }
 
 mpc721-base = { path = "./vendor/packages/mpc721-base" }
-partisia-name-system = { path = "./src/partisia-name-system" }
+partisia-name-system = { path = "./vendor/packages/partisia-name-system" }
 contract-version-base = { path = "./vendor/packages/contract-version-base" }
 
 serde_json = "1.0"
