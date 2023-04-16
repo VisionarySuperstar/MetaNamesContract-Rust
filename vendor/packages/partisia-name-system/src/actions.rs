@@ -118,7 +118,7 @@ pub fn execute_record_mint(
     );
 
     assert!(
-        !state.is_minted(msg.token_id.to_string()),
+        state.is_minted(msg.token_id.to_string()),
         "{}",
         ContractError::Minted
     );
@@ -383,7 +383,7 @@ pub fn execute_record_update(
 ) -> Vec<EventGroup> {
     let token_id = msg.token_id.to_string();
     assert!(
-        !state.is_minted(token_id.to_string()),
+        state.is_minted(token_id.to_string()),
         "{}",
         ContractError::Minted
     );
@@ -416,7 +416,7 @@ pub fn execute_record_delete(
 ) -> Vec<EventGroup> {
     let token_id = msg.token_id.to_string();
     assert!(
-        !state.is_minted(token_id.to_string()),
+        state.is_minted(token_id.to_string()),
         "{}",
         ContractError::Minted
     );
