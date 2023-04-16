@@ -3,7 +3,8 @@ use pbc_contract_common::{
     context::ContractContext,
     events::EventGroupBuilder,
 };
-use pbc_traits::ReadWriteRPC;
+use pbc_traits::ReadRPC;
+use pbc_traits::WriteRPC;
 
 // Contract Deployer address
 pub const CONTRACT_DEPLOYER: Address = Address {
@@ -35,7 +36,7 @@ pub fn add_contract_deploy_event_with_msg<T>(
     init_msg: &T,
 ) -> Address
 where
-    T: ReadWriteRPC,
+    T: ReadRPC + WriteRPC,
 {
     let mut raw_init_msg: Vec<u8> = vec![];
     init_msg.rpc_write_to(&mut raw_init_msg).unwrap();
