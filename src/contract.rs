@@ -6,13 +6,16 @@ use pbc_contract_common::{address::Address, context::ContractContext, events::Ev
 use partisia_name_system::{
     actions::{
         execute_approve, execute_approve_for_all, execute_burn, execute_init, execute_mint,
-        execute_multi_mint, execute_ownership_check, execute_revoke, execute_revoke_for_all,
-        execute_set_base_uri, execute_transfer, execute_transfer_from, execute_update_minter,
+        execute_multi_mint, execute_ownership_check, execute_record_delete, execute_record_mint,
+        execute_record_update, execute_revoke, execute_revoke_for_all, execute_set_base_uri,
+        execute_transfer, execute_transfer_from, execute_update_minter,
     },
     msg::{
         ApproveForAllMsg, ApproveMsg, BurnMsg, CheckOwnerMsg, InitMsg, MintMsg, MultiMintMsg,
-        RevokeForAllMsg, RevokeMsg, SetBaseUriMsg, TransferFromMsg, TransferMsg, UpdateMinterMsg,
+        RecordDeleteMsg, RecordMintMsg, RecordUpdateMsg, RevokeForAllMsg, RevokeMsg, SetBaseUriMsg,
+        TransferFromMsg, TransferMsg, UpdateMinterMsg,
     },
+    state::RecordClass,
 };
 
 const CONTRACT_NAME: &str = env!("CARGO_PKG_NAME");
@@ -164,8 +167,7 @@ pub fn check_ownership(
     token_id: String,
 ) -> (ContractState, Vec<EventGroup>) {
     let mut state = state;
-    let events =
-        execute_ownership_check(&ctx, &mut state.pns, &CheckOwnerMsg { owner, token_id });
+    let events = execute_ownership_check(&ctx, &mut state.pns, &CheckOwnerMsg { owner, token_id });
     (state, events)
 }
 #[action(shortname = 0x19)]
@@ -188,4 +190,61 @@ pub fn multi_mint(
 
     execute_multi_mint(&ctx, &mut state.pns, &MultiMintMsg { mints });
     (state, vec![])
+}
+
+#[action(shortname = 0x21)]
+pub fn mint_record(
+    ctx: ContractContext,
+    state: ContractState,
+    token_id: String,
+    class: RecordClass,
+    data: String,
+) -> (ContractState, Vec<EventGroup>) {
+    let mut state = state;
+    let events = execute_record_mint(
+        &ctx,
+        &mut state.pns,
+        &RecordMintMsg {
+            token_id,
+            class,
+            data,
+        },
+    );
+
+    (state, events)
+}
+
+#[action(shortname = 0x22)]
+pub fn update_record(
+    ctx: ContractContext,
+    state: ContractState,
+    token_id: String,
+    class: RecordClass,
+    data: String,
+) -> (ContractState, Vec<EventGroup>) {
+    let mut state = state;
+    let events = execute_record_update(
+        &ctx,
+        &mut state.pns,
+        &RecordUpdateMsg {
+            token_id,
+            class,
+            data,
+        },
+    );
+
+    (state, events)
+}
+
+#[action(shortname = 0x23)]
+pub fn delete_record(
+    ctx: ContractContext,
+    state: ContractState,
+    token_id: String,
+    class: RecordClass,
+) -> (ContractState, Vec<EventGroup>) {
+    let mut state = state;
+    let events = execute_record_delete(&ctx, &mut state.pns, &RecordDeleteMsg { token_id, class });
+
+    (state, events)
 }
