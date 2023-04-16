@@ -15,7 +15,6 @@ use partisia_name_system::{
         RecordDeleteMsg, RecordMintMsg, RecordUpdateMsg, RevokeForAllMsg, RevokeMsg, SetBaseUriMsg,
         TransferFromMsg, TransferMsg, UpdateMinterMsg,
     },
-    state::RecordClass,
 };
 
 const CONTRACT_NAME: &str = env!("CARGO_PKG_NAME");
@@ -197,7 +196,7 @@ pub fn mint_record(
     ctx: ContractContext,
     state: ContractState,
     token_id: String,
-    class: RecordClass,
+    class: u8,
     data: String,
 ) -> (ContractState, Vec<EventGroup>) {
     let mut state = state;
@@ -219,7 +218,7 @@ pub fn update_record(
     ctx: ContractContext,
     state: ContractState,
     token_id: String,
-    class: RecordClass,
+    class: u8,
     data: String,
 ) -> (ContractState, Vec<EventGroup>) {
     let mut state = state;
@@ -241,7 +240,7 @@ pub fn delete_record(
     ctx: ContractContext,
     state: ContractState,
     token_id: String,
-    class: RecordClass,
+    class: u8,
 ) -> (ContractState, Vec<EventGroup>) {
     let mut state = state;
     let events = execute_record_delete(&ctx, &mut state.pns, &RecordDeleteMsg { token_id, class });
