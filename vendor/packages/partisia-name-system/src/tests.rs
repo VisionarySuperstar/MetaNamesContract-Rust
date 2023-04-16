@@ -2,7 +2,7 @@ use std::collections::BTreeMap;
 
 use pbc_contract_common::{
     address::{Address, AddressType},
-    context::ContractContext,
+    context::ContraMETAontext,
 };
 
 use crate::{
@@ -15,7 +15,7 @@ use crate::{
         ApproveForAllMsg, ApproveMsg, BurnMsg, CheckOwnerMsg, InitMsg, MintMsg, MultiMintMsg,
         RevokeForAllMsg, RevokeMsg, SetBaseUriMsg, TransferFromMsg, TransferMsg, UpdateMinterMsg,
     },
-    state::{PartisiaNameSystemContractState, Record},
+    state::{PartisiaNameSystemContractState, Domain},
 };
 
 fn mock_address(le: u8) -> Address {
@@ -28,8 +28,8 @@ fn mock_address(le: u8) -> Address {
     }
 }
 
-fn mock_contract_context(sender: u8) -> ContractContext {
-    ContractContext {
+fn mock_contract_context(sender: u8) -> ContraMETAontext {
+    ContraMETAontext {
         contract_address: mock_address(1u8),
         sender: mock_address(sender),
         block_time: 100,
@@ -49,8 +49,8 @@ fn mock_contract_context(sender: u8) -> ContractContext {
 fn proper_execute_init() {
     let msg = InitMsg {
         owner: None,
-        name: "Cool Token".to_string(),
-        symbol: "CTC".to_string(),
+        name: "Meta Names".to_string(),
+        symbol: "META".to_string(),
         base_uri: Some("ipfs://some.some".to_string()),
         minter: mock_address(1),
     };
@@ -61,12 +61,13 @@ fn proper_execute_init() {
         state,
         PartisiaNameSystemContractState {
             owner: None,
-            name: "Cool Token".to_string(),
-            symbol: "CTC".to_string(),
+            name: "Meta Names".to_string(),
+            symbol: "META".to_string(),
             base_uri: Some("ipfs://some.some".to_string()),
             minter: mock_address(1),
             supply: 0,
             tokens: BTreeMap::new(),
+            Domains: BTreeMap::new(),
             operator_approvals: BTreeMap::new(),
         }
     );
@@ -78,8 +79,8 @@ fn proper_set_base_uri() {
 
     let msg = InitMsg {
         owner: Some(mock_address(owner)),
-        name: "Cool Token".to_string(),
-        symbol: "CTC".to_string(),
+        name: "Meta Names".to_string(),
+        symbol: "META".to_string(),
         base_uri: Some("ipfs://some.some".to_string()),
         minter: mock_address(1),
     };
@@ -101,8 +102,8 @@ fn owner_is_not_set_on_set_base_uri() {
 
     let msg = InitMsg {
         owner: None,
-        name: "Cool Token".to_string(),
-        symbol: "CTC".to_string(),
+        name: "Meta Names".to_string(),
+        symbol: "META".to_string(),
         base_uri: Some("ipfs://some.some".to_string()),
         minter: mock_address(1),
     };
@@ -124,8 +125,8 @@ fn sender_is_not_owner_on_set_base_uri() {
 
     let msg = InitMsg {
         owner: Some(mock_address(owner)),
-        name: "Cool Token".to_string(),
-        symbol: "CTC".to_string(),
+        name: "Meta Names".to_string(),
+        symbol: "META".to_string(),
         base_uri: Some("ipfs://some.some".to_string()),
         minter: mock_address(1),
     };
@@ -146,8 +147,8 @@ fn proper_mint() {
 
     let msg = InitMsg {
         owner: None,
-        name: "Cool Token".to_string(),
-        symbol: "CTC".to_string(),
+        name: "Meta Names".to_string(),
+        symbol: "META".to_string(),
         base_uri: Some("ipfs://some.some".to_string()),
         minter: mock_address(minter),
     };
@@ -157,7 +158,7 @@ fn proper_mint() {
     let mint_msg = MintMsg {
         token_id: 1,
         to: mock_address(alice),
-        token_uri: None,
+        parent: None,
     };
 
     let _ = execute_mint(&mock_contract_context(minter), &mut state, &mint_msg);
@@ -166,10 +167,10 @@ fn proper_mint() {
     let token = state.token_info(1).unwrap();
     assert_eq!(
         *token,
-        Record {
+        Domain {
             owner: mock_address(alice),
             approvals: vec![],
-            token_uri: None,
+            parent: None,
         }
     );
 }
@@ -180,8 +181,8 @@ fn proper_ownership_check() {
 
     let msg = InitMsg {
         owner: None,
-        name: "Cool Token".to_string(),
-        symbol: "CTC".to_string(),
+        name: "Meta Names".to_string(),
+        symbol: "META".to_string(),
         base_uri: Some("ipfs://some.some".to_string()),
         minter: mock_address(1),
     };
@@ -190,7 +191,7 @@ fn proper_ownership_check() {
     let mint_msg = MintMsg {
         token_id: 1,
         to: mock_address(alice),
-        token_uri: None,
+        parent: None,
     };
 
     let _ = execute_mint(&mock_contract_context(minter), &mut state, &mint_msg);
@@ -209,8 +210,8 @@ fn proper_ownership_check_fail() {
     let bob = 11u8;
     let msg = InitMsg {
         owner: None,
-        name: "Cool Token".to_string(),
-        symbol: "CTC".to_string(),
+        name: "Meta Names".to_string(),
+        symbol: "META".to_string(),
         base_uri: Some("ipfs://some.some".to_string()),
         minter: mock_address(1),
     };
@@ -219,7 +220,7 @@ fn proper_ownership_check_fail() {
     let mint_msg = MintMsg {
         token_id: 1,
         to: mock_address(alice),
-        token_uri: None,
+        parent: None,
     };
 
     let _ = execute_mint(&mock_contract_context(minter), &mut state, &mint_msg);
@@ -239,8 +240,8 @@ fn proper_ownership_check_fail_not_found() {
     let bob = 11u8;
     let msg = InitMsg {
         owner: None,
-        name: "Cool Token".to_string(),
-        symbol: "CTC".to_string(),
+        name: "Meta Names".to_string(),
+        symbol: "META".to_string(),
         base_uri: Some("ipfs://some.some".to_string()),
         minter: mock_address(1),
     };
@@ -249,7 +250,7 @@ fn proper_ownership_check_fail_not_found() {
     let mint_msg = MintMsg {
         token_id: 1,
         to: mock_address(alice),
-        token_uri: None,
+        parent: None,
     };
 
     let _ = execute_mint(&mock_contract_context(minter), &mut state, &mint_msg);
@@ -269,8 +270,8 @@ fn sender_is_not_minter_on_mint() {
 
     let msg = InitMsg {
         owner: None,
-        name: "Cool Token".to_string(),
-        symbol: "CTC".to_string(),
+        name: "Meta Names".to_string(),
+        symbol: "META".to_string(),
         base_uri: Some("ipfs://some.some".to_string()),
         minter: mock_address(minter),
     };
@@ -280,7 +281,7 @@ fn sender_is_not_minter_on_mint() {
     let mint_msg = MintMsg {
         token_id: 1,
         to: mock_address(alice),
-        token_uri: None,
+        parent: None,
     };
 
     let _ = execute_mint(&mock_contract_context(alice), &mut state, &mint_msg);
@@ -294,8 +295,8 @@ fn token_already_minted_on_mint() {
 
     let msg = InitMsg {
         owner: None,
-        name: "Cool Token".to_string(),
-        symbol: "CTC".to_string(),
+        name: "Meta Names".to_string(),
+        symbol: "META".to_string(),
         base_uri: Some("ipfs://some.some".to_string()),
         minter: mock_address(minter),
     };
@@ -305,7 +306,7 @@ fn token_already_minted_on_mint() {
     let mint_msg = MintMsg {
         token_id: 1,
         to: mock_address(alice),
-        token_uri: None,
+        parent: None,
     };
 
     let _ = execute_mint(&mock_contract_context(minter), &mut state, &mint_msg);
@@ -313,7 +314,7 @@ fn token_already_minted_on_mint() {
     let mint_msg = MintMsg {
         token_id: 1,
         to: mock_address(alice),
-        token_uri: None,
+        parent: None,
     };
 
     let _ = execute_mint(&mock_contract_context(minter), &mut state, &mint_msg);
@@ -327,8 +328,8 @@ fn proper_approve_for_all() {
 
     let msg = InitMsg {
         owner: Some(mock_address(owner)),
-        name: "Cool Token".to_string(),
-        symbol: "CTC".to_string(),
+        name: "Meta Names".to_string(),
+        symbol: "META".to_string(),
         base_uri: Some("ipfs://some.some".to_string()),
         minter: mock_address(1),
     };
@@ -375,8 +376,8 @@ fn proper_revoke_for_all() {
 
     let msg = InitMsg {
         owner: Some(mock_address(owner)),
-        name: "Cool Token".to_string(),
-        symbol: "CTC".to_string(),
+        name: "Meta Names".to_string(),
+        symbol: "META".to_string(),
         base_uri: Some("ipfs://some.some".to_string()),
         minter: mock_address(1),
     };
@@ -420,8 +421,8 @@ fn revoke_not_existing_operator() {
 
     let msg = InitMsg {
         owner: Some(mock_address(owner)),
-        name: "Cool Token".to_string(),
-        symbol: "CTC".to_string(),
+        name: "Meta Names".to_string(),
+        symbol: "META".to_string(),
         base_uri: Some("ipfs://some.some".to_string()),
         minter: mock_address(1),
     };
@@ -442,8 +443,8 @@ fn proper_token_owner_approve() {
 
     let msg = InitMsg {
         owner: None,
-        name: "Cool Token".to_string(),
-        symbol: "CTC".to_string(),
+        name: "Meta Names".to_string(),
+        symbol: "META".to_string(),
         base_uri: Some("ipfs://some.some".to_string()),
         minter: mock_address(minter),
     };
@@ -453,7 +454,7 @@ fn proper_token_owner_approve() {
     let mint_msg = MintMsg {
         token_id: 1,
         to: mock_address(alice),
-        token_uri: None,
+        parent: None,
     };
 
     let _ = execute_mint(&mock_contract_context(minter), &mut state, &mint_msg);
@@ -466,10 +467,10 @@ fn proper_token_owner_approve() {
     let _ = execute_approve(&mock_contract_context(alice), &mut state, &approve_msg);
     assert_eq!(
         *state.token_info(1).unwrap(),
-        Record {
+        Domain {
             owner: mock_address(alice),
             approvals: vec![mock_address(bob)],
-            token_uri: None,
+            parent: None,
         }
     );
 }
@@ -483,8 +484,8 @@ fn proper_token_operator_approve() {
 
     let msg = InitMsg {
         owner: None,
-        name: "Cool Token".to_string(),
-        symbol: "CTC".to_string(),
+        name: "Meta Names".to_string(),
+        symbol: "META".to_string(),
         base_uri: Some("ipfs://some.some".to_string()),
         minter: mock_address(minter),
     };
@@ -494,7 +495,7 @@ fn proper_token_operator_approve() {
     let mint_msg = MintMsg {
         token_id: 1,
         to: mock_address(alice),
-        token_uri: None,
+        parent: None,
     };
 
     let _ = execute_mint(&mock_contract_context(minter), &mut state, &mint_msg);
@@ -512,10 +513,10 @@ fn proper_token_operator_approve() {
     let _ = execute_approve(&mock_contract_context(bob), &mut state, &approve_msg);
     assert_eq!(
         *state.token_info(1).unwrap(),
-        Record {
+        Domain {
             owner: mock_address(alice),
             approvals: vec![mock_address(jack)],
-            token_uri: None,
+            parent: None,
         }
     );
 }
@@ -530,8 +531,8 @@ fn approve_not_minted_token() {
 
     let msg = InitMsg {
         owner: None,
-        name: "Cool Token".to_string(),
-        symbol: "CTC".to_string(),
+        name: "Meta Names".to_string(),
+        symbol: "META".to_string(),
         base_uri: Some("ipfs://some.some".to_string()),
         minter: mock_address(minter),
     };
@@ -555,8 +556,8 @@ fn not_owner_or_operator_approve() {
 
     let msg = InitMsg {
         owner: None,
-        name: "Cool Token".to_string(),
-        symbol: "CTC".to_string(),
+        name: "Meta Names".to_string(),
+        symbol: "META".to_string(),
         base_uri: Some("ipfs://some.some".to_string()),
         minter: mock_address(minter),
     };
@@ -566,7 +567,7 @@ fn not_owner_or_operator_approve() {
     let mint_msg = MintMsg {
         token_id: 1,
         to: mock_address(alice),
-        token_uri: None,
+        parent: None,
     };
 
     let _ = execute_mint(&mock_contract_context(minter), &mut state, &mint_msg);
@@ -587,8 +588,8 @@ fn proper_revoke() {
 
     let msg = InitMsg {
         owner: None,
-        name: "Cool Token".to_string(),
-        symbol: "CTC".to_string(),
+        name: "Meta Names".to_string(),
+        symbol: "META".to_string(),
         base_uri: Some("ipfs://some.some".to_string()),
         minter: mock_address(minter),
     };
@@ -598,7 +599,7 @@ fn proper_revoke() {
     let mint_msg = MintMsg {
         token_id: 1,
         to: mock_address(alice),
-        token_uri: None,
+        parent: None,
     };
 
     let _ = execute_mint(&mock_contract_context(minter), &mut state, &mint_msg);
@@ -618,10 +619,10 @@ fn proper_revoke() {
     let _ = execute_revoke(&mock_contract_context(alice), &mut state, &revoke_msg);
     assert_eq!(
         *state.token_info(1).unwrap(),
-        Record {
+        Domain {
             owner: mock_address(alice),
             approvals: vec![],
-            token_uri: None,
+            parent: None,
         }
     );
 }
@@ -635,8 +636,8 @@ fn revoke_not_minted_token() {
 
     let msg = InitMsg {
         owner: None,
-        name: "Cool Token".to_string(),
-        symbol: "CTC".to_string(),
+        name: "Meta Names".to_string(),
+        symbol: "META".to_string(),
         base_uri: Some("ipfs://some.some".to_string()),
         minter: mock_address(minter),
     };
@@ -659,8 +660,8 @@ fn proper_owner_transfer() {
 
     let msg = InitMsg {
         owner: None,
-        name: "Cool Token".to_string(),
-        symbol: "CTC".to_string(),
+        name: "Meta Names".to_string(),
+        symbol: "META".to_string(),
         base_uri: Some("ipfs://some.some".to_string()),
         minter: mock_address(minter),
     };
@@ -670,7 +671,7 @@ fn proper_owner_transfer() {
     let mint_msg = MintMsg {
         token_id: 1,
         to: mock_address(alice),
-        token_uri: None,
+        parent: None,
     };
 
     let _ = execute_mint(&mock_contract_context(minter), &mut state, &mint_msg);
@@ -683,10 +684,10 @@ fn proper_owner_transfer() {
     let _ = execute_transfer(&mock_contract_context(alice), &mut state, &transfer_msg);
     assert_eq!(
         *state.token_info(1).unwrap(),
-        Record {
+        Domain {
             owner: mock_address(bob),
             approvals: vec![],
-            token_uri: None,
+            parent: None,
         }
     );
 }
@@ -699,8 +700,8 @@ fn proper_approved_transfer() {
 
     let msg = InitMsg {
         owner: None,
-        name: "Cool Token".to_string(),
-        symbol: "CTC".to_string(),
+        name: "Meta Names".to_string(),
+        symbol: "META".to_string(),
         base_uri: Some("ipfs://some.some".to_string()),
         minter: mock_address(minter),
     };
@@ -710,7 +711,7 @@ fn proper_approved_transfer() {
     let mint_msg = MintMsg {
         token_id: 1,
         to: mock_address(alice),
-        token_uri: None,
+        parent: None,
     };
 
     let _ = execute_mint(&mock_contract_context(minter), &mut state, &mint_msg);
@@ -730,10 +731,10 @@ fn proper_approved_transfer() {
     let _ = execute_transfer(&mock_contract_context(bob), &mut state, &transfer_msg);
     assert_eq!(
         *state.token_info(1).unwrap(),
-        Record {
+        Domain {
             owner: mock_address(bob),
             approvals: vec![],
-            token_uri: None,
+            parent: None,
         }
     );
 }
@@ -746,8 +747,8 @@ fn proper_operator_transfer() {
 
     let msg = InitMsg {
         owner: None,
-        name: "Cool Token".to_string(),
-        symbol: "CTC".to_string(),
+        name: "Meta Names".to_string(),
+        symbol: "META".to_string(),
         base_uri: Some("ipfs://some.some".to_string()),
         minter: mock_address(minter),
     };
@@ -757,7 +758,7 @@ fn proper_operator_transfer() {
     let mint_msg = MintMsg {
         token_id: 1,
         to: mock_address(alice),
-        token_uri: None,
+        parent: None,
     };
 
     let _ = execute_mint(&mock_contract_context(minter), &mut state, &mint_msg);
@@ -775,10 +776,10 @@ fn proper_operator_transfer() {
     let _ = execute_transfer(&mock_contract_context(bob), &mut state, &transfer_msg);
     assert_eq!(
         *state.token_info(1).unwrap(),
-        Record {
+        Domain {
             owner: mock_address(bob),
             approvals: vec![],
-            token_uri: None,
+            parent: None,
         }
     );
 }
@@ -792,8 +793,8 @@ fn transfer_not_minted_token() {
 
     let msg = InitMsg {
         owner: None,
-        name: "Cool Token".to_string(),
-        symbol: "CTC".to_string(),
+        name: "Meta Names".to_string(),
+        symbol: "META".to_string(),
         base_uri: Some("ipfs://some.some".to_string()),
         minter: mock_address(minter),
     };
@@ -818,8 +819,8 @@ fn transfer_not_owner_or_approved_token() {
 
     let msg = InitMsg {
         owner: None,
-        name: "Cool Token".to_string(),
-        symbol: "CTC".to_string(),
+        name: "Meta Names".to_string(),
+        symbol: "META".to_string(),
         base_uri: Some("ipfs://some.some".to_string()),
         minter: mock_address(minter),
     };
@@ -829,7 +830,7 @@ fn transfer_not_owner_or_approved_token() {
     let mint_msg = MintMsg {
         token_id: 1,
         to: mock_address(alice),
-        token_uri: None,
+        parent: None,
     };
 
     let _ = execute_mint(&mock_contract_context(minter), &mut state, &mint_msg);
@@ -850,8 +851,8 @@ fn proper_transfer_from() {
 
     let msg = InitMsg {
         owner: None,
-        name: "Cool Token".to_string(),
-        symbol: "CTC".to_string(),
+        name: "Meta Names".to_string(),
+        symbol: "META".to_string(),
         base_uri: Some("ipfs://some.some".to_string()),
         minter: mock_address(minter),
     };
@@ -861,7 +862,7 @@ fn proper_transfer_from() {
     let mint_msg = MintMsg {
         token_id: 1,
         to: mock_address(alice),
-        token_uri: None,
+        parent: None,
     };
 
     let _ = execute_mint(&mock_contract_context(minter), &mut state, &mint_msg);
@@ -875,10 +876,10 @@ fn proper_transfer_from() {
     let _ = execute_transfer_from(&mock_contract_context(alice), &mut state, &transfer_msg);
     assert_eq!(
         *state.token_info(1).unwrap(),
-        Record {
+        Domain {
             owner: mock_address(bob),
             approvals: vec![],
-            token_uri: None,
+            parent: None,
         }
     );
 }
@@ -892,8 +893,8 @@ fn transfer_from_not_minted_token() {
 
     let msg = InitMsg {
         owner: None,
-        name: "Cool Token".to_string(),
-        symbol: "CTC".to_string(),
+        name: "Meta Names".to_string(),
+        symbol: "META".to_string(),
         base_uri: Some("ipfs://some.some".to_string()),
         minter: mock_address(minter),
     };
@@ -916,8 +917,8 @@ fn proper_burn() {
 
     let msg = InitMsg {
         owner: None,
-        name: "Cool Token".to_string(),
-        symbol: "CTC".to_string(),
+        name: "Meta Names".to_string(),
+        symbol: "META".to_string(),
         base_uri: Some("ipfs://some.some".to_string()),
         minter: mock_address(minter),
     };
@@ -927,7 +928,7 @@ fn proper_burn() {
     let mint_msg = MintMsg {
         token_id: 1,
         to: mock_address(alice),
-        token_uri: None,
+        parent: None,
     };
 
     let _ = execute_mint(&mock_contract_context(minter), &mut state, &mint_msg);
@@ -947,8 +948,8 @@ fn burn_not_minted_token() {
 
     let msg = InitMsg {
         owner: None,
-        name: "Cool Token".to_string(),
-        symbol: "CTC".to_string(),
+        name: "Meta Names".to_string(),
+        symbol: "META".to_string(),
         base_uri: Some("ipfs://some.some".to_string()),
         minter: mock_address(minter),
     };
@@ -962,8 +963,8 @@ fn burn_not_minted_token() {
 fn test_multi_mint() {
     let msg = InitMsg {
         owner: None,
-        name: "Cool Token".to_string(),
-        symbol: "CTC".to_string(),
+        name: "Meta Names".to_string(),
+        symbol: "META".to_string(),
         base_uri: Some("ipfs://some.some".to_string()),
         minter: mock_address(1),
     };
@@ -971,67 +972,68 @@ fn test_multi_mint() {
     let (state, events) = execute_init(&mock_contract_context(2), &msg);
     let mut test_state = PartisiaNameSystemContractState {
         owner: None,
-        name: "Cool Token".to_string(),
-        symbol: "CTC".to_string(),
+        name: "Meta Names".to_string(),
+        symbol: "META".to_string(),
         base_uri: Some("ipfs://some.some".to_string()),
         minter: mock_address(1),
         supply: 0,
         tokens: BTreeMap::new(),
+        records: BTreeMap::new(),
         operator_approvals: BTreeMap::new(),
     };
     test_state.tokens.insert(
         1,
-        Record {
+        Domain {
             /// token owner
             owner: mock_address(4),
             /// token approvals
             approvals: vec![],
             /// optional token uri
-            token_uri: Some(String::from("Token1")),
+            parent: Some(String::from("Token1")),
         },
     );
     test_state.tokens.insert(
         2,
-        Record {
+        Domain {
             /// token owner
             owner: mock_address(4),
             /// token approvals
             approvals: vec![],
             /// optional token uri
-            token_uri: Some(String::from("Token2")),
+            parent: Some(String::from("Token2")),
         },
     );
     test_state.tokens.insert(
         3,
-        Record {
+        Domain {
             /// token owner
             owner: mock_address(5),
             /// token approvals
             approvals: vec![],
             /// optional token uri
-            token_uri: Some(String::from("Token3")),
+            parent: Some(String::from("Token3")),
         },
     );
     test_state.tokens.insert(
         4,
-        Record {
+        Domain {
             /// token owner
             owner: mock_address(5),
             /// token approvals
             approvals: vec![],
             /// optional token uri
-            token_uri: Some(String::from("Token4")),
+            parent: Some(String::from("Token4")),
         },
     );
     test_state.tokens.insert(
         5,
-        Record {
+        Domain {
             /// token owner
             owner: mock_address(6),
             /// token approvals
             approvals: vec![],
             /// optional token uri
-            token_uri: Some(String::from("Token5")),
+            parent: Some(String::from("Token5")),
         },
     );
     test_state.supply = 5;
@@ -1040,27 +1042,27 @@ fn test_multi_mint() {
         MintMsg {
             token_id: 1,
             to: mock_address(4),
-            token_uri: Some(String::from("Token1")),
+            parent: Some(String::from("Token1")),
         },
         MintMsg {
             token_id: 2,
             to: mock_address(4),
-            token_uri: Some(String::from("Token2")),
+            parent: Some(String::from("Token2")),
         },
         MintMsg {
             token_id: 3,
             to: mock_address(5),
-            token_uri: Some(String::from("Token3")),
+            parent: Some(String::from("Token3")),
         },
         MintMsg {
             token_id: 4,
             to: mock_address(5),
-            token_uri: Some(String::from("Token4")),
+            parent: Some(String::from("Token4")),
         },
         MintMsg {
             token_id: 5,
             to: mock_address(6),
-            token_uri: Some(String::from("Token5")),
+            parent: Some(String::from("Token5")),
         },
     ];
     execute_multi_mint(
@@ -1079,8 +1081,8 @@ fn can_update_minter() {
 
     let msg = InitMsg {
         owner: Some(mock_address(alice)),
-        name: "Cool Token".to_string(),
-        symbol: "CTC".to_string(),
+        name: "Meta Names".to_string(),
+        symbol: "META".to_string(),
         base_uri: Some("ipfs://some.some".to_string()),
         minter: mock_address(minter),
     };
@@ -1105,8 +1107,8 @@ fn update_minter_fails_not_owner() {
 
     let msg = InitMsg {
         owner: Some(mock_address(alice)),
-        name: "Cool Token".to_string(),
-        symbol: "CTC".to_string(),
+        name: "Meta Names".to_string(),
+        symbol: "META".to_string(),
         base_uri: Some("ipfs://some.some".to_string()),
         minter: mock_address(minter),
     };
@@ -1130,8 +1132,8 @@ fn update_minter_fails_no_owner() {
 
     let msg = InitMsg {
         owner: None,
-        name: "Cool Token".to_string(),
-        symbol: "CTC".to_string(),
+        name: "Meta Names".to_string(),
+        symbol: "META".to_string(),
         base_uri: Some("ipfs://some.some".to_string()),
         minter: mock_address(minter),
     };
