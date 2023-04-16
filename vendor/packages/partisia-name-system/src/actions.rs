@@ -120,7 +120,7 @@ pub fn execute_record_mint(
     assert!(
         state.is_minted(msg.token_id.to_string()),
         "{}",
-        ContractError::Minted
+        ContractError::NotFound
     );
 
     state.mint_record(msg.token_id.to_string(), msg.data.to_string(), msg.class);
