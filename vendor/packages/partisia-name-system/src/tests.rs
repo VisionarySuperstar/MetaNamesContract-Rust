@@ -2,7 +2,7 @@ use std::collections::BTreeMap;
 
 use pbc_contract_common::{
     address::{Address, AddressType},
-    context::ContraMETAontext,
+    context::ContractContext,
 };
 
 use crate::{
@@ -28,8 +28,8 @@ fn mock_address(le: u8) -> Address {
     }
 }
 
-fn mock_contract_context(sender: u8) -> ContraMETAontext {
-    ContraMETAontext {
+fn mock_contract_context(sender: u8) -> ContractContext {
+    ContractContext {
         contract_address: mock_address(1u8),
         sender: mock_address(sender),
         block_time: 100,
@@ -156,7 +156,7 @@ fn proper_mint() {
     let (mut state, events) = execute_init(&mock_contract_context(2), &msg);
 
     let mint_msg = MintMsg {
-        token_id: 1,
+        token_id: "name.meta".to_string(),
         to: mock_address(alice),
         parent: None,
     };
@@ -164,7 +164,7 @@ fn proper_mint() {
     let _ = execute_mint(&mock_contract_context(minter), &mut state, &mint_msg);
     assert_eq!(state.supply, 1);
 
-    let token = state.token_info(1).unwrap();
+    let token = state.token_info("name.meta".to_string()).unwrap();
     assert_eq!(
         *token,
         Domain {
@@ -189,7 +189,7 @@ fn proper_ownership_check() {
 
     let (mut state, events) = execute_init(&mock_contract_context(2), &msg);
     let mint_msg = MintMsg {
-        token_id: 1,
+        token_id: "name.meta".to_string(),
         to: mock_address(alice),
         parent: None,
     };
@@ -198,7 +198,7 @@ fn proper_ownership_check() {
     assert_eq!(state.supply, 1);
     let ownership_msg: CheckOwnerMsg = CheckOwnerMsg {
         owner: mock_address(alice),
-        token_id: 1,
+        token_id: "name.meta".to_string(),
     };
     let _ = execute_ownership_check(&mock_contract_context(2), &mut state, &ownership_msg);
 }
@@ -218,7 +218,7 @@ fn proper_ownership_check_fail() {
 
     let (mut state, events) = execute_init(&mock_contract_context(2), &msg);
     let mint_msg = MintMsg {
-        token_id: 1,
+        token_id: "name.meta".to_string(),
         to: mock_address(alice),
         parent: None,
     };
@@ -228,7 +228,7 @@ fn proper_ownership_check_fail() {
 
     let ownership_msg: CheckOwnerMsg = CheckOwnerMsg {
         owner: mock_address(bob),
-        token_id: 1,
+        token_id: "name.meta".to_string(),
     };
     let _ = execute_ownership_check(&mock_contract_context(2), &mut state, &ownership_msg);
 }
@@ -248,7 +248,7 @@ fn proper_ownership_check_fail_not_found() {
 
     let (mut state, events) = execute_init(&mock_contract_context(2), &msg);
     let mint_msg = MintMsg {
-        token_id: 1,
+        token_id: "name.meta".to_string(),
         to: mock_address(alice),
         parent: None,
     };
@@ -258,7 +258,7 @@ fn proper_ownership_check_fail_not_found() {
 
     let ownership_msg: CheckOwnerMsg = CheckOwnerMsg {
         owner: mock_address(bob),
-        token_id: 3,
+        token_id: "name3.meta".to_string(),
     };
     let _ = execute_ownership_check(&mock_contract_context(2), &mut state, &ownership_msg);
 }
@@ -279,7 +279,7 @@ fn sender_is_not_minter_on_mint() {
     let (mut state, events) = execute_init(&mock_contract_context(2), &msg);
 
     let mint_msg = MintMsg {
-        token_id: 1,
+        token_id: "name.meta".to_string(),
         to: mock_address(alice),
         parent: None,
     };
@@ -304,7 +304,7 @@ fn token_already_minted_on_mint() {
     let (mut state, events) = execute_init(&mock_contract_context(2), &msg);
 
     let mint_msg = MintMsg {
-        token_id: 1,
+        token_id: "name.meta".to_string(),
         to: mock_address(alice),
         parent: None,
     };
@@ -312,7 +312,7 @@ fn token_already_minted_on_mint() {
     let _ = execute_mint(&mock_contract_context(minter), &mut state, &mint_msg);
 
     let mint_msg = MintMsg {
-        token_id: 1,
+        token_id: "name.meta".to_string(),
         to: mock_address(alice),
         parent: None,
     };
@@ -452,7 +452,7 @@ fn proper_token_owner_approve() {
     let (mut state, events) = execute_init(&mock_contract_context(2), &msg);
 
     let mint_msg = MintMsg {
-        token_id: 1,
+        token_id: "name.meta".to_string(),
         to: mock_address(alice),
         parent: None,
     };
@@ -461,12 +461,12 @@ fn proper_token_owner_approve() {
 
     let approve_msg = ApproveMsg {
         spender: mock_address(bob),
-        token_id: 1,
+        token_id: "name.meta".to_string(),
     };
 
     let _ = execute_approve(&mock_contract_context(alice), &mut state, &approve_msg);
     assert_eq!(
-        *state.token_info(1).unwrap(),
+        *state.token_info("name.meta".to_string()).unwrap(),
         Domain {
             owner: mock_address(alice),
             approvals: vec![mock_address(bob)],
@@ -493,7 +493,7 @@ fn proper_token_operator_approve() {
     let (mut state, events) = execute_init(&mock_contract_context(2), &msg);
 
     let mint_msg = MintMsg {
-        token_id: 1,
+        token_id: "name.meta".to_string(),
         to: mock_address(alice),
         parent: None,
     };
@@ -507,12 +507,12 @@ fn proper_token_operator_approve() {
 
     let approve_msg = ApproveMsg {
         spender: mock_address(jack),
-        token_id: 1,
+        token_id: "name.meta".to_string(),
     };
 
     let _ = execute_approve(&mock_contract_context(bob), &mut state, &approve_msg);
     assert_eq!(
-        *state.token_info(1).unwrap(),
+        *state.token_info("name.meta".to_string()).unwrap(),
         Domain {
             owner: mock_address(alice),
             approvals: vec![mock_address(jack)],
@@ -541,7 +541,7 @@ fn approve_not_minted_token() {
 
     let approve_msg = ApproveMsg {
         spender: mock_address(jack),
-        token_id: 1,
+        token_id: "name.meta".to_string(),
     };
 
     let _ = execute_approve(&mock_contract_context(bob), &mut state, &approve_msg);
@@ -565,7 +565,7 @@ fn not_owner_or_operator_approve() {
     let (mut state, events) = execute_init(&mock_contract_context(2), &msg);
 
     let mint_msg = MintMsg {
-        token_id: 1,
+        token_id: "name.meta".to_string(),
         to: mock_address(alice),
         parent: None,
     };
@@ -574,7 +574,7 @@ fn not_owner_or_operator_approve() {
 
     let approve_msg = ApproveMsg {
         spender: mock_address(bob),
-        token_id: 1,
+        token_id: "name.meta".to_string(),
     };
 
     let _ = execute_approve(&mock_contract_context(bob), &mut state, &approve_msg);
@@ -597,7 +597,7 @@ fn proper_revoke() {
     let (mut state, events) = execute_init(&mock_contract_context(2), &msg);
 
     let mint_msg = MintMsg {
-        token_id: 1,
+        token_id: "name.meta".to_string(),
         to: mock_address(alice),
         parent: None,
     };
@@ -606,19 +606,19 @@ fn proper_revoke() {
 
     let approve_msg = ApproveMsg {
         spender: mock_address(bob),
-        token_id: 1,
+        token_id: "name.meta".to_string(),
     };
 
     let _ = execute_approve(&mock_contract_context(alice), &mut state, &approve_msg);
 
     let revoke_msg = RevokeMsg {
         spender: mock_address(bob),
-        token_id: 1,
+        token_id: "name.meta".to_string(),
     };
 
     let _ = execute_revoke(&mock_contract_context(alice), &mut state, &revoke_msg);
     assert_eq!(
-        *state.token_info(1).unwrap(),
+        *state.token_info("name.meta".to_string()).unwrap(),
         Domain {
             owner: mock_address(alice),
             approvals: vec![],
@@ -646,7 +646,7 @@ fn revoke_not_minted_token() {
 
     let revoke_msg = RevokeMsg {
         spender: mock_address(bob),
-        token_id: 1,
+        token_id: "name.meta".to_string(),
     };
 
     let _ = execute_revoke(&mock_contract_context(alice), &mut state, &revoke_msg);
@@ -669,7 +669,7 @@ fn proper_owner_transfer() {
     let (mut state, events) = execute_init(&mock_contract_context(2), &msg);
 
     let mint_msg = MintMsg {
-        token_id: 1,
+        token_id: "name.meta".to_string(),
         to: mock_address(alice),
         parent: None,
     };
@@ -678,12 +678,12 @@ fn proper_owner_transfer() {
 
     let transfer_msg = TransferMsg {
         to: mock_address(bob),
-        token_id: 1,
+        token_id: "name.meta".to_string(),
     };
 
     let _ = execute_transfer(&mock_contract_context(alice), &mut state, &transfer_msg);
     assert_eq!(
-        *state.token_info(1).unwrap(),
+        *state.token_info("name.meta".to_string()).unwrap(),
         Domain {
             owner: mock_address(bob),
             approvals: vec![],
@@ -709,7 +709,7 @@ fn proper_approved_transfer() {
     let (mut state, events) = execute_init(&mock_contract_context(2), &msg);
 
     let mint_msg = MintMsg {
-        token_id: 1,
+        token_id: "name.meta".to_string(),
         to: mock_address(alice),
         parent: None,
     };
@@ -718,19 +718,19 @@ fn proper_approved_transfer() {
 
     let approve_msg = ApproveMsg {
         spender: mock_address(bob),
-        token_id: 1,
+        token_id: "name.meta".to_string(),
     };
 
     let _ = execute_approve(&mock_contract_context(alice), &mut state, &approve_msg);
 
     let transfer_msg = TransferMsg {
         to: mock_address(bob),
-        token_id: 1,
+        token_id: "name.meta".to_string(),
     };
 
     let _ = execute_transfer(&mock_contract_context(bob), &mut state, &transfer_msg);
     assert_eq!(
-        *state.token_info(1).unwrap(),
+        *state.token_info("name.meta".to_string()).unwrap(),
         Domain {
             owner: mock_address(bob),
             approvals: vec![],
@@ -756,7 +756,7 @@ fn proper_operator_transfer() {
     let (mut state, events) = execute_init(&mock_contract_context(2), &msg);
 
     let mint_msg = MintMsg {
-        token_id: 1,
+        token_id: "name.meta".to_string(),
         to: mock_address(alice),
         parent: None,
     };
@@ -770,12 +770,12 @@ fn proper_operator_transfer() {
 
     let transfer_msg = TransferMsg {
         to: mock_address(bob),
-        token_id: 1,
+        token_id: "name.meta".to_string(),
     };
 
     let _ = execute_transfer(&mock_contract_context(bob), &mut state, &transfer_msg);
     assert_eq!(
-        *state.token_info(1).unwrap(),
+        *state.token_info("name.meta".to_string()).unwrap(),
         Domain {
             owner: mock_address(bob),
             approvals: vec![],
@@ -803,7 +803,7 @@ fn transfer_not_minted_token() {
 
     let transfer_msg = TransferMsg {
         to: mock_address(bob),
-        token_id: 1,
+        token_id: "name.meta".to_string(),
     };
 
     let _ = execute_transfer(&mock_contract_context(bob), &mut state, &transfer_msg);
@@ -828,7 +828,7 @@ fn transfer_not_owner_or_approved_token() {
     let (mut state, events) = execute_init(&mock_contract_context(2), &msg);
 
     let mint_msg = MintMsg {
-        token_id: 1,
+        token_id: "name.meta".to_string(),
         to: mock_address(alice),
         parent: None,
     };
@@ -837,7 +837,7 @@ fn transfer_not_owner_or_approved_token() {
 
     let transfer_msg = TransferMsg {
         to: mock_address(jack),
-        token_id: 1,
+        token_id: "name.meta".to_string(),
     };
 
     let _ = execute_transfer(&mock_contract_context(jack), &mut state, &transfer_msg);
@@ -860,7 +860,7 @@ fn proper_transfer_from() {
     let (mut state, events) = execute_init(&mock_contract_context(2), &msg);
 
     let mint_msg = MintMsg {
-        token_id: 1,
+        token_id: "name.meta".to_string(),
         to: mock_address(alice),
         parent: None,
     };
@@ -870,12 +870,12 @@ fn proper_transfer_from() {
     let transfer_msg = TransferFromMsg {
         from: mock_address(alice),
         to: mock_address(bob),
-        token_id: 1,
+        token_id: "name.meta".to_string(),
     };
 
     let _ = execute_transfer_from(&mock_contract_context(alice), &mut state, &transfer_msg);
     assert_eq!(
-        *state.token_info(1).unwrap(),
+        *state.token_info("name.meta".to_string()).unwrap(),
         Domain {
             owner: mock_address(bob),
             approvals: vec![],
@@ -904,7 +904,7 @@ fn transfer_from_not_minted_token() {
     let transfer_msg = TransferFromMsg {
         from: mock_address(alice),
         to: mock_address(bob),
-        token_id: 1,
+        token_id: "name.meta".to_string(),
     };
 
     let _ = execute_transfer_from(&mock_contract_context(alice), &mut state, &transfer_msg);
@@ -926,18 +926,18 @@ fn proper_burn() {
     let (mut state, events) = execute_init(&mock_contract_context(2), &msg);
 
     let mint_msg = MintMsg {
-        token_id: 1,
+        token_id: "name.meta".to_string(),
         to: mock_address(alice),
         parent: None,
     };
 
     let _ = execute_mint(&mock_contract_context(minter), &mut state, &mint_msg);
 
-    let burn_msg = BurnMsg { token_id: 1 };
+    let burn_msg = BurnMsg { token_id: "name.meta".to_string() };
 
     let _ = execute_burn(&mock_contract_context(alice), &mut state, &burn_msg);
     assert_eq!(state.supply, 0);
-    assert_eq!(state.is_minted(1), false);
+    assert_eq!(state.is_minted("name.meta".to_string()), false);
 }
 
 #[test]
@@ -956,7 +956,7 @@ fn burn_not_minted_token() {
 
     let (mut state, events) = execute_init(&mock_contract_context(2), &msg);
 
-    let burn_msg = BurnMsg { token_id: 1 };
+    let burn_msg = BurnMsg { token_id: "name.meta".to_string() };
     let _ = execute_burn(&mock_contract_context(alice), &mut state, &burn_msg);
 }
 #[test]
@@ -982,87 +982,87 @@ fn test_multi_mint() {
         operator_approvals: BTreeMap::new(),
     };
     test_state.tokens.insert(
-        1,
+        "name.meta".to_string(),
         Domain {
             /// token owner
             owner: mock_address(4),
             /// token approvals
             approvals: vec![],
             /// optional token uri
-            parent: Some(String::from("Token1")),
+            parent: Some(String::from("name.meta")),
         },
     );
     test_state.tokens.insert(
-        2,
+        "name2.meta".to_string(),
         Domain {
             /// token owner
             owner: mock_address(4),
             /// token approvals
             approvals: vec![],
             /// optional token uri
-            parent: Some(String::from("Token2")),
+            parent: Some(String::from("name2.meta")),
         },
     );
     test_state.tokens.insert(
-        3,
+        "name3.meta".to_string(),
         Domain {
             /// token owner
             owner: mock_address(5),
             /// token approvals
             approvals: vec![],
             /// optional token uri
-            parent: Some(String::from("Token3")),
+            parent: Some(String::from("name3.meta")),
         },
     );
     test_state.tokens.insert(
-        4,
+        "name4.meta".to_string(),
         Domain {
             /// token owner
             owner: mock_address(5),
             /// token approvals
             approvals: vec![],
             /// optional token uri
-            parent: Some(String::from("Token4")),
+            parent: Some(String::from("name4.meta")),
         },
     );
     test_state.tokens.insert(
-        5,
+        "name5.meta".to_string(),
         Domain {
             /// token owner
             owner: mock_address(6),
             /// token approvals
             approvals: vec![],
             /// optional token uri
-            parent: Some(String::from("Token5")),
+            parent: Some(String::from("name5.meta")),
         },
     );
     test_state.supply = 5;
     let mut state = state;
     let mint = vec![
         MintMsg {
-            token_id: 1,
+            token_id: "name.meta".to_string(),
             to: mock_address(4),
-            parent: Some(String::from("Token1")),
+            parent: Some(String::from("name.meta")),
         },
         MintMsg {
-            token_id: 2,
+            token_id: "name2.meta".to_string(),
             to: mock_address(4),
-            parent: Some(String::from("Token2")),
+            parent: Some(String::from("name2.meta")),
         },
         MintMsg {
-            token_id: 3,
+            token_id: "name3.meta".to_string(),
             to: mock_address(5),
-            parent: Some(String::from("Token3")),
+            parent: Some(String::from("name3.meta")),
         },
         MintMsg {
-            token_id: 4,
+            token_id: "name4.meta".to_string(),
             to: mock_address(5),
-            parent: Some(String::from("Token4")),
+            parent: Some(String::from("name4.meta")),
         },
         MintMsg {
-            token_id: 5,
+            token_id: "name5.meta".to_string(),
             to: mock_address(6),
-            parent: Some(String::from("Token5")),
+            parent: Some(String::from("name5.meta")),
         },
     ];
     execute_multi_mint(

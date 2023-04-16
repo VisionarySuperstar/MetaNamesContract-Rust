@@ -91,7 +91,7 @@ pub fn execute_mint(
         ContractError::Minted
     );
 
-    state.mint(msg.token_id.to_string(), &msg.to, msg.parent.to_string());
+    state.mint(msg.token_id.to_string(), &msg.to, &msg.parent);
 
     vec![]
 }
@@ -312,6 +312,7 @@ pub fn execute_burn(
     );
 
     state.remove_token(&ctx.sender, msg.token_id.to_string());
+    state.supply -= 1;
 
     vec![]
 }

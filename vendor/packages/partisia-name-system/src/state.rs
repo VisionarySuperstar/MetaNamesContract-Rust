@@ -40,7 +40,7 @@ pub struct Domain {
     /// token owner
     pub owner: Address,
     /// Parent
-    pub parent: String,
+    pub parent: Option<String>,
     /// token approvals
     pub approvals: Vec<Address>,
 }
@@ -78,10 +78,10 @@ impl PartisiaNameSystemContractState {
     /// * **class** is an object of type [`u8`]
     ///
     /// * **parent** is an object of type [`String`]
-    pub fn mint(&mut self, token_id: String, to: &Address, parent: String) {
+    pub fn mint(&mut self, token_id: String, to: &Address, parent: &Option<String>) {
         let token = Domain {
             owner: *to,
-            parent: parent,
+            parent: parent.clone(),
             approvals: vec![],
         };
 
@@ -99,8 +99,6 @@ impl PartisiaNameSystemContractState {
     /// * **data** is an object of type [`String`]
     ///
     /// * **class** is an object of type [`u8`]
-    ///
-    /// * **parent** is an object of type [`String`]
     pub fn mint_record(&mut self, token_id: String, data: String, class: u8) {
         let record = Record {
             domain: token_id.to_string(),
@@ -123,11 +121,13 @@ impl PartisiaNameSystemContractState {
     pub fn transfer(&mut self, from: &Address, to: &Address, token_id: String) {
         let token = self.tokens.get(&token_id).unwrap();
         // TODO: Investigate transfer with parent
-        assert!(
-            Self::allowed_parent(token.parent.to_string()),
-            "{}",
-            ContractError::ParentError
-        );
+        if let Some(parent) = &token.parent {
+            assert!(
+                Self::allowed_parent(parent.clone()),
+                "{}",
+                ContractError::ParentError
+            );
+        }
 
         assert!(
             Self::allowed_to_transfer(from, token, &self.operator_approvals),
@@ -200,11 +200,13 @@ impl PartisiaNameSystemContractState {
         approved: bool,
     ) {
         let token = self.tokens.get(&token_id).unwrap().to_owned();
-        assert!(
-            Self::allowed_parent(token.parent.to_string()),
-            "{}",
-            ContractError::ParentError
-        );
+        if let Some(parent) = &token.parent {
+            assert!(
+                Self::allowed_parent(parent.clone()),
+                "{}",
+                ContractError::ParentError
+            );
+        }
 
         assert!(
             Self::allowed_to_approve(from, &token, &self.operator_approvals),

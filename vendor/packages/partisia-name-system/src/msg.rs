@@ -75,7 +75,7 @@ pub struct MintMsg {
     /// receiver address
     pub to: Address,
     /// parent
-    pub parent: String,
+    pub parent: Option<String>,
 }
 
 /// ## Description
