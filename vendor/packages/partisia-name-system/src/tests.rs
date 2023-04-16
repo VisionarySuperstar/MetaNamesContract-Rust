@@ -67,7 +67,7 @@ fn proper_execute_init() {
             minter: mock_address(1),
             supply: 0,
             tokens: BTreeMap::new(),
-            Domains: BTreeMap::new(),
+            records: BTreeMap::new(),
             operator_approvals: BTreeMap::new(),
         }
     );
