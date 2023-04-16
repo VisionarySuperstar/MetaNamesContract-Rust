@@ -2,7 +2,7 @@ use std::collections::BTreeMap;
 
 use create_type_spec_derive::CreateTypeSpec;
 use pbc_contract_common::address::Address;
-use read_write_rpc_derive::ReadWriteRPC;
+use read_write_rpc_derive::{ReadRPC, ReadWriteRPC, WriteRPC};
 use read_write_state_derive::ReadWriteState;
 
 use crate::ContractError;
@@ -21,24 +21,38 @@ pub struct PartisiaNameSystemContractState {
     pub base_uri: Option<String>,
     /// minter address
     pub minter: Address,
-    /// current supply
-    pub supply: u128,
-    /// token info by token id
-    pub tokens: BTreeMap<u128, TokenInfo>,
+    /// record info by token id
+    /// Token id is currently a string (the domain name)
+    pub tokens: BTreeMap<String, Record>,
     /// token approvals
     pub operator_approvals: BTreeMap<Address, BTreeMap<Address, bool>>,
 }
 
 /// ## Description
-/// This structure describes minted mpc721 token information
+/// This structure describes minted PNS information
 #[derive(ReadWriteRPC, ReadWriteState, CreateTypeSpec, Clone, PartialEq, Eq, Debug)]
-pub struct TokenInfo {
+pub struct Record {
     /// token owner
     pub owner: Address,
+    /// Parent
+    pub parent: String,
+    /// Class type
+    pub class: RecordClass,
+    /// Data
+    pub data: String,
     /// token approvals
     pub approvals: Vec<Address>,
-    /// optional token uri
-    pub token_uri: Option<String>,
+}
+
+#[repr(u8)]
+#[derive(Eq, PartialEq, Debug, Clone, Ord, PartialOrd, Copy, ReadWriteState, ReadRPC, WriteRPC)]
+pub enum RecordClass {
+    /// Website
+    Website = 0x00,
+    /// Email
+    Email = 0x01,
+    /// Twitter
+    Twitter = 0x02,
 }
 
 impl PartisiaNameSystemContractState {
@@ -53,31 +67,32 @@ impl PartisiaNameSystemContractState {
     /// ## Description
     /// Mints new token id to specified address
     /// ## Params
-    /// * **token_id** is a field of type [`u128`]
+    /// * **token_id** is a field of type [`String`]
     ///
     /// * **to** is an object of type [`Address`]
     ///
-    /// * **token_uri** is an object of type [`Option<String>`]
-    pub fn mint(&mut self, token_id: u128, to: &Address, token_uri: &Option<String>) {
-        let token = TokenInfo {
+    /// * **data** is an object of type [`String`]
+    ///
+    /// * **class** is an object of type [`RecordClass`]
+    ///
+    /// * **parent** is an object of type [`String`]
+    pub fn mint(
+        &mut self,
+        token_id: String,
+        to: &Address,
+        data: String,
+        class: RecordClass,
+        parent: String,
+    ) {
+        let token = Record {
             owner: *to,
+            parent: parent,
+            class: class,
+            data: data,
             approvals: vec![],
-            token_uri: token_uri.clone(),
         };
 
         self.tokens.insert(token_id, token);
-    }
-
-    /// ## Description
-    /// Increases total supply
-    pub fn increase_supply(&mut self) {
-        self.supply = self.supply.checked_add(1).unwrap()
-    }
-
-    /// ## Description
-    /// Decreases total supply
-    pub fn decrease_supply(&mut self) {
-        self.supply = self.supply.checked_sub(1).unwrap()
     }
 
     /// ## Description
@@ -87,9 +102,16 @@ impl PartisiaNameSystemContractState {
     ///
     /// * **to** is an object of type [`Address`]
     ///
-    /// * **token_id** is an object of type [`u128`]
-    pub fn transfer(&mut self, from: &Address, to: &Address, token_id: u128) {
+    /// * **token_id** is an object of type [`String`]
+    pub fn transfer(&mut self, from: &Address, to: &Address, token_id: String) {
         let token = self.tokens.get(&token_id).unwrap();
+        // TODO: Investigate transfer with parent
+        assert!(
+            Self::allowed_parent(token.parent),
+            "{}",
+            ContractError::ParentError
+        );
+
         assert!(
             Self::allowed_to_transfer(from, token, &self.operator_approvals),
             "{}",
@@ -98,6 +120,7 @@ impl PartisiaNameSystemContractState {
 
         self.tokens.entry(token_id).and_modify(|t| {
             t.owner = *to;
+            t.data = "".to_string();
             t.approvals = vec![];
         });
     }
@@ -109,17 +132,23 @@ impl PartisiaNameSystemContractState {
     ///
     /// * **spender** is an object of type [`Address`]
     ///
-    /// * **token_id** is an object of type [`u128`]
+    /// * **token_id** is an object of type [`String`]
     ///
     /// * **approved** is an object of type [`bool`]
     pub fn update_approvals(
         &mut self,
         from: &Address,
         spender: &Address,
-        token_id: u128,
+        token_id: String,
         approved: bool,
     ) {
         let token = self.tokens.get(&token_id).unwrap().to_owned();
+        assert!(
+            Self::allowed_parent(token.parent),
+            "{}",
+            ContractError::ParentError
+        );
+
         assert!(
             Self::allowed_to_approve(from, &token, &self.operator_approvals),
             "{}",
@@ -180,8 +209,8 @@ impl PartisiaNameSystemContractState {
     /// ## Params
     /// * **owner** is an object of type [`Address`]
     ///
-    /// * **token_id** is an object of type [`u128`]
-    pub fn remove_token(&mut self, owner: &Address, token_id: u128) {
+    /// * **token_id** is an object of type [`String`]
+    pub fn remove_token(&mut self, owner: &Address, token_id: String) {
         let token = self.tokens.get(&token_id).unwrap();
         assert!(
             Self::allowed_to_transfer(owner, token, &self.operator_approvals),
@@ -195,8 +224,8 @@ impl PartisiaNameSystemContractState {
     /// ## Description
     /// Says is token id minted or not
     /// ## Params
-    /// * **token_id** is an object of type [`u128`]
-    pub fn is_minted(&self, token_id: u128) -> bool {
+    /// * **token_id** is an object of type [`String`]
+    pub fn is_minted(&self, token_id: String) -> bool {
         self.tokens.contains_key(&token_id)
     }
 
@@ -215,8 +244,8 @@ impl PartisiaNameSystemContractState {
     /// ## Description
     /// Returns token info by token id
     /// ## Params
-    /// * **token_id** is an object of type [`u128`]
-    pub fn token_info(&self, token_id: u128) -> Option<&TokenInfo> {
+    /// * **token_id** is an object of type [`String`]
+    pub fn token_info(&self, token_id: String) -> Option<&Record> {
         self.tokens.get(&token_id)
     }
 
@@ -235,14 +264,14 @@ impl PartisiaNameSystemContractState {
     /// ## Description
     /// Returns owner of specified token id
     /// ## Params
-    /// * **token_id** is an object of type [`u128`]
-    pub fn owner_of(&self, token_id: u128) -> Address {
+    /// * **token_id** is an object of type [`String`]
+    pub fn owner_of(&self, token_id: String) -> Address {
         self.tokens.get(&token_id).unwrap().owner
     }
 
     fn allowed_to_transfer(
         account: &Address,
-        token: &TokenInfo,
+        token: &Record,
         operator_approvals: &BTreeMap<Address, BTreeMap<Address, bool>>,
     ) -> bool {
         if token.owner == *account {
@@ -264,7 +293,7 @@ impl PartisiaNameSystemContractState {
 
     fn allowed_to_approve(
         account: &Address,
-        token: &TokenInfo,
+        token: &Record,
         operator_approvals: &BTreeMap<Address, BTreeMap<Address, bool>>,
     ) -> bool {
         if token.owner == *account {
@@ -275,6 +304,18 @@ impl PartisiaNameSystemContractState {
             if let Some(approved) = owner_approvals.get(account) {
                 return *approved;
             }
+        }
+
+        false
+    }
+
+    fn allowed_parent(parent: String) -> bool {
+        if parent == "meta".to_string() {
+            return true;
+        }
+
+        if parent.is_empty() {
+            return true;
         }
 
         false

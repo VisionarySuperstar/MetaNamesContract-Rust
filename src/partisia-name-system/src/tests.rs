@@ -15,7 +15,7 @@ use crate::{
         ApproveForAllMsg, ApproveMsg, BurnMsg, CheckOwnerMsg, InitMsg, MintMsg, MultiMintMsg,
         RevokeForAllMsg, RevokeMsg, SetBaseUriMsg, TransferFromMsg, TransferMsg, UpdateMinterMsg,
     },
-    state::{PartisiaNameSystemContractState, TokenInfo},
+    state::{PartisiaNameSystemContractState, Record},
 };
 
 fn mock_address(le: u8) -> Address {
@@ -166,7 +166,7 @@ fn proper_mint() {
     let token = state.token_info(1).unwrap();
     assert_eq!(
         *token,
-        TokenInfo {
+        Record {
             owner: mock_address(alice),
             approvals: vec![],
             token_uri: None,
@@ -466,7 +466,7 @@ fn proper_token_owner_approve() {
     let _ = execute_approve(&mock_contract_context(alice), &mut state, &approve_msg);
     assert_eq!(
         *state.token_info(1).unwrap(),
-        TokenInfo {
+        Record {
             owner: mock_address(alice),
             approvals: vec![mock_address(bob)],
             token_uri: None,
@@ -512,7 +512,7 @@ fn proper_token_operator_approve() {
     let _ = execute_approve(&mock_contract_context(bob), &mut state, &approve_msg);
     assert_eq!(
         *state.token_info(1).unwrap(),
-        TokenInfo {
+        Record {
             owner: mock_address(alice),
             approvals: vec![mock_address(jack)],
             token_uri: None,
@@ -618,7 +618,7 @@ fn proper_revoke() {
     let _ = execute_revoke(&mock_contract_context(alice), &mut state, &revoke_msg);
     assert_eq!(
         *state.token_info(1).unwrap(),
-        TokenInfo {
+        Record {
             owner: mock_address(alice),
             approvals: vec![],
             token_uri: None,
@@ -683,7 +683,7 @@ fn proper_owner_transfer() {
     let _ = execute_transfer(&mock_contract_context(alice), &mut state, &transfer_msg);
     assert_eq!(
         *state.token_info(1).unwrap(),
-        TokenInfo {
+        Record {
             owner: mock_address(bob),
             approvals: vec![],
             token_uri: None,
@@ -730,7 +730,7 @@ fn proper_approved_transfer() {
     let _ = execute_transfer(&mock_contract_context(bob), &mut state, &transfer_msg);
     assert_eq!(
         *state.token_info(1).unwrap(),
-        TokenInfo {
+        Record {
             owner: mock_address(bob),
             approvals: vec![],
             token_uri: None,
@@ -775,7 +775,7 @@ fn proper_operator_transfer() {
     let _ = execute_transfer(&mock_contract_context(bob), &mut state, &transfer_msg);
     assert_eq!(
         *state.token_info(1).unwrap(),
-        TokenInfo {
+        Record {
             owner: mock_address(bob),
             approvals: vec![],
             token_uri: None,
@@ -875,7 +875,7 @@ fn proper_transfer_from() {
     let _ = execute_transfer_from(&mock_contract_context(alice), &mut state, &transfer_msg);
     assert_eq!(
         *state.token_info(1).unwrap(),
-        TokenInfo {
+        Record {
             owner: mock_address(bob),
             approvals: vec![],
             token_uri: None,
@@ -981,7 +981,7 @@ fn test_multi_mint() {
     };
     test_state.tokens.insert(
         1,
-        TokenInfo {
+        Record {
             /// token owner
             owner: mock_address(4),
             /// token approvals
@@ -992,7 +992,7 @@ fn test_multi_mint() {
     );
     test_state.tokens.insert(
         2,
-        TokenInfo {
+        Record {
             /// token owner
             owner: mock_address(4),
             /// token approvals
@@ -1003,7 +1003,7 @@ fn test_multi_mint() {
     );
     test_state.tokens.insert(
         3,
-        TokenInfo {
+        Record {
             /// token owner
             owner: mock_address(5),
             /// token approvals
@@ -1014,7 +1014,7 @@ fn test_multi_mint() {
     );
     test_state.tokens.insert(
         4,
-        TokenInfo {
+        Record {
             /// token owner
             owner: mock_address(5),
             /// token approvals
@@ -1025,7 +1025,7 @@ fn test_multi_mint() {
     );
     test_state.tokens.insert(
         5,
-        TokenInfo {
+        Record {
             /// token owner
             owner: mock_address(6),
             /// token approvals

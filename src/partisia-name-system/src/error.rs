@@ -7,6 +7,9 @@ pub enum ContractError {
     #[error("Unauthorized")]
     Unauthorized,
 
+    #[error("Cannot transfer record belonging to this parent")]
+    ParentError,
+
     #[error("Token with specified id is already minted")]
     Minted,
 
