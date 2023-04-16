@@ -5,8 +5,8 @@ use pbc_contract_common::{context::ContractContext, events::EventGroup};
 use crate::{
     msg::{
         ApproveForAllMsg, ApproveMsg, BurnMsg, CheckOwnerMsg, InitMsg, MintMsg, MultiMintMsg,
-        RecordMintMsg, RevokeForAllMsg, RevokeMsg, SetBaseUriMsg, TransferFromMsg, TransferMsg,
-        UpdateMinterMsg,
+        RecordDeleteMsg, RecordMintMsg, RecordUpdateMsg, RevokeForAllMsg, RevokeMsg, SetBaseUriMsg,
+        TransferFromMsg, TransferMsg, UpdateMinterMsg,
     },
     state::PartisiaNameSystemContractState,
     ContractError,
@@ -364,7 +364,68 @@ pub fn execute_multi_mint(
     vec![]
 }
 
-// TODO: Add actions
-// - Mint record
-// - Update record
-// - Delete record
+/// ## Description
+/// Update record related to token
+/// Returns [` Vec<EventGroup>)`] if operation was successful,
+/// otherwise panics with error message defined in [`ContractError`]
+/// ## Params
+/// * **ctx** is an object of type [`ContractContext`]
+///
+/// * **state** is an object of type [`PartisiaNameSystemContractState`]
+///
+/// * **msg** is an object of type [`RecordUpdateMsg`]
+pub fn execute_record_update(
+    ctx: &ContractContext,
+    state: &mut PartisiaNameSystemContractState,
+    msg: &RecordUpdateMsg,
+) -> Vec<EventGroup> {
+    let token_id = msg.token_id.to_string();
+    assert!(
+        !state.is_minted(token_id.to_string()),
+        "{}",
+        ContractError::Minted
+    );
+
+    assert!(
+        state.is_token_owner(token_id.to_string(), &ctx.sender),
+        "{}",
+        ContractError::Unauthorized
+    );
+
+    state.update_record_data(token_id.to_string(), msg.class, msg.data.to_string());
+
+    vec![]
+}
+
+/// ## Description
+/// Delete the record related to token
+/// Returns [` Vec<EventGroup>)`] if operation was successful,
+/// otherwise panics with error message defined in [`ContractError`]
+/// ## Params
+/// * **ctx** is an object of type [`ContractContext`]
+///
+/// * **state** is an object of type [`PartisiaNameSystemContractState`]
+///
+/// * **msg** is an object of type [`RecordDeleteMsg`]
+pub fn execute_record_delete(
+    ctx: &ContractContext,
+    state: &mut PartisiaNameSystemContractState,
+    msg: &RecordDeleteMsg,
+) -> Vec<EventGroup> {
+    let token_id = msg.token_id.to_string();
+    assert!(
+        !state.is_minted(token_id.to_string()),
+        "{}",
+        ContractError::Minted
+    );
+
+    assert!(
+        !state.is_token_owner(token_id.to_string(), &ctx.sender),
+        "{}",
+        ContractError::Unauthorized
+    );
+
+    state.delete_record(token_id.to_string(), msg.class);
+
+    vec![]
+}

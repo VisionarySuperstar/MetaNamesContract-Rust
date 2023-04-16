@@ -81,19 +81,6 @@ pub struct MintMsg {
 }
 
 /// ## Description
-/// This structure describes fields for PNS record mint msg
-#[derive(ReadWriteRPC, CreateTypeSpec, IntoShortnameRPCEvent, Clone, PartialEq, Eq, Debug)]
-#[rpc_msg(action = 0x09)]
-pub struct RecordMintMsg {
-    /// Related domain
-    pub token_id: String,
-    /// Class type
-    pub class: RecordClass,
-    /// Data
-    pub data: String,
-}
-
-/// ## Description
 /// This structure describes fields for PNS approve for all msg
 #[derive(ReadWriteRPC, CreateTypeSpec, IntoShortnameRPCEvent, Clone, PartialEq, Eq, Debug)]
 #[rpc_msg(action = 0x11)]
@@ -149,6 +136,7 @@ pub struct UpdateMinterMsg {
     /// operator address to approve
     pub new_minter: Address,
 }
+
 /// ## Description
 /// This structure describes fields for the Multi Mint Msg
 #[derive(ReadWriteRPC, CreateTypeSpec, IntoShortnameRPCEvent, Clone, PartialEq, Eq, Debug)]
@@ -156,4 +144,41 @@ pub struct UpdateMinterMsg {
 pub struct MultiMintMsg {
     /// array of MintMsgs to mint multiple nfts
     pub mints: Vec<MintMsg>,
+}
+
+/// ## Description
+/// This structure describes fields for PNS Record Mint Msg
+#[derive(ReadWriteRPC, CreateTypeSpec, IntoShortnameRPCEvent, Clone, PartialEq, Eq, Debug)]
+#[rpc_msg(action = 0x21)]
+pub struct RecordMintMsg {
+    /// Related domain
+    pub token_id: String,
+    /// Class type
+    pub class: RecordClass,
+    /// Data
+    pub data: String,
+}
+
+/// ## Description
+/// This structure describes fields for the record update msg
+#[derive(ReadWriteRPC, CreateTypeSpec, IntoShortnameRPCEvent, Clone, PartialEq, Eq, Debug)]
+#[rpc_msg(action = 0x22)]
+pub struct RecordUpdateMsg {
+    /// Related domain
+    pub token_id: String,
+    /// Class type
+    pub class: RecordClass,
+    /// Data
+    pub data: String,
+}
+
+/// ## Description
+/// This structure describes fields for the Record Delete Msg
+#[derive(ReadWriteRPC, CreateTypeSpec, IntoShortnameRPCEvent, Clone, PartialEq, Eq, Debug)]
+#[rpc_msg(action = 0x23)]
+pub struct RecordDeleteMsg {
+    /// Related domain
+    pub token_id: String,
+    /// Class type
+    pub class: RecordClass,
 }

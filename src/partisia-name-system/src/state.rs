@@ -87,12 +87,7 @@ impl PartisiaNameSystemContractState {
     /// * **class** is an object of type [`RecordClass`]
     ///
     /// * **parent** is an object of type [`String`]
-    pub fn mint(
-        &mut self,
-        token_id: String,
-        to: &Address,
-        parent: String,
-    ) {
+    pub fn mint(&mut self, token_id: String, to: &Address, parent: String) {
         let token = Domain {
             owner: *to,
             parent: parent,
@@ -114,12 +109,7 @@ impl PartisiaNameSystemContractState {
     /// * **class** is an object of type [`RecordClass`]
     ///
     /// * **parent** is an object of type [`String`]
-    pub fn mint_record(
-        &mut self,
-        token_id: String,
-        data: String,
-        class: RecordClass,
-    ) {
+    pub fn mint_record(&mut self, token_id: String, data: String, class: RecordClass) {
         let record = Record {
             domain: token_id.to_string(),
             class: class,
@@ -163,23 +153,37 @@ impl PartisiaNameSystemContractState {
     /// ## Description
     /// Update data of a record
     /// ## Params
-    /// * **actor** is an object of type [`Address`]
-    ///
     /// * **token_id** is an object of type [`String`]
     ///
     /// * **data** is an object of type [`String`]
-    pub fn update_data(&mut self, actor: &Address, token_id: String, class: RecordClass, data: String) {
-        let qualified_name = Self::fully_qualified_name(token_id, class);
-        let token = self.records.get(&qualified_name).unwrap();
+    pub fn update_record_data(&mut self, token_id: String, class: RecordClass, data: String) {
         assert!(
-            Self::is_owner(&self, &actor),
+            !self.is_minted(token_id.to_string()),
             "{}",
-            ContractError::Unauthorized
+            ContractError::Minted
         );
 
+        let qualified_name = Self::fully_qualified_name(token_id, class);
         self.records.entry(qualified_name).and_modify(|t| {
             t.data = data;
         });
+    }
+
+    /// ## Description
+    /// Remove a record
+    /// ## Params
+    /// * **token_id** is an object of type [`String`]
+    ///
+    /// * **data** is an object of type [`String`]
+    pub fn delete_record(&mut self, token_id: String, class: RecordClass) {
+        assert!(
+            !self.is_minted(token_id.to_string()),
+            "{}",
+            ContractError::Minted
+        );
+
+        let qualified_name = Self::fully_qualified_name(token_id, class);
+        self.records.remove_entry(&qualified_name);
     }
 
     /// ## Description
@@ -419,5 +423,4 @@ impl PartisiaNameSystemContractState {
 
         format!("{}.{}", class_name, token_id)
     }
-
 }
