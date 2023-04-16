@@ -3,7 +3,8 @@ use pbc_contract_common::{
     context::ContractContext,
     events::EventGroupBuilder,
 };
-use pbc_traits::ReadWriteRPC;
+use pbc_traits::WriteRPC;
+use pbc_traits::ReadRPC;
 
 use crate::contract_deployer::init_msg_signature;
 
@@ -42,7 +43,7 @@ pub fn add_zk_contract_deploy_event_with_msg<T>(
     mpc_token_stake: Option<u64>,
 ) -> Address
 where
-    T: ReadWriteRPC,
+    T: ReadRPC + WriteRPC,
 {
     let mut raw_init_msg: Vec<u8> = vec![];
     init_msg.rpc_write_to(&mut raw_init_msg).unwrap();

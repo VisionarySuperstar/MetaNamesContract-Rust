@@ -3,7 +3,8 @@ use pbc_contract_common::{
     context::CallbackContext,
     events::EventGroupBuilder,
 };
-use pbc_traits::ReadWriteRPC;
+use pbc_traits::WriteRPC;
+use pbc_traits::ReadRPC;
 
 /// ## Description
 /// This trait describes methods that must be implemented
@@ -32,7 +33,7 @@ pub trait IntoShortnameRPCEventWithCost {
 #[inline]
 pub fn build_msg_callback<T>(builder: &mut EventGroupBuilder, callback_byte: u32, msg: &T)
 where
-    T: ReadWriteRPC + Clone,
+    T: ReadRPC + WriteRPC + Clone,
 {
     builder
         .with_callback(ShortnameCallback::from_u32(callback_byte))
@@ -57,7 +58,7 @@ pub fn build_msg_callback_with_cost<T>(
     msg: &T,
     cost: u64,
 ) where
-    T: ReadWriteRPC + Clone,
+    T: ReadRPC + WriteRPC + Clone,
 {
     builder
         .with_callback(ShortnameCallback::from_u32(callback_byte))
