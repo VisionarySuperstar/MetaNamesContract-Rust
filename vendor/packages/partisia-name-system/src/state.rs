@@ -21,6 +21,8 @@ pub struct PartisiaNameSystemContractState {
     pub base_uri: Option<String>,
     /// minter address
     pub minter: Address,
+    /// Token supply
+    pub supply: u128,
     /// domains are token id
     /// Token id is currently a string (the domain name)
     pub tokens: BTreeMap<String, Domain>,
@@ -95,6 +97,7 @@ impl PartisiaNameSystemContractState {
         };
 
         self.tokens.insert(token_id, token);
+        self.supply += 1;
     }
 
     /// ## Description
@@ -184,6 +187,7 @@ impl PartisiaNameSystemContractState {
 
         let qualified_name = Self::fully_qualified_name(token_id, class);
         self.records.remove_entry(&qualified_name);
+        self.supply += 1;
     }
 
     /// ## Description

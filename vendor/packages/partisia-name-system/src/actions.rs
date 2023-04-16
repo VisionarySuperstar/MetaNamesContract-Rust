@@ -30,6 +30,7 @@ pub fn execute_init(
         symbol: msg.symbol.clone(),
         base_uri: msg.base_uri.clone(),
         minter: msg.minter,
+        supply: 0,
         tokens: BTreeMap::new(),
         records: BTreeMap::new(),
         operator_approvals: BTreeMap::new(),
