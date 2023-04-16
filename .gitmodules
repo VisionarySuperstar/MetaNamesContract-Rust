@@ -1,0 +1,3 @@
+[submodule "core-contracts"]
+	path = core-contracts
+	url = https://github.com/partisiablockchainapplications/CoreContracts.git
