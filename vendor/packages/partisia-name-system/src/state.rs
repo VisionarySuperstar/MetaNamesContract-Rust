@@ -175,8 +175,11 @@ impl PartisiaNameSystemContractState {
         );
 
         let qualified_name = Self::fully_qualified_name(token_id, class);
-        self.records.remove_entry(&qualified_name);
-        self.supply += 1;
+        if self.records.contains_key(&qualified_name) {
+            self.records.remove_entry(&qualified_name);
+        } else {
+            panic!("{}", ContractError::NotFound);
+        }
     }
 
     /// ## Description
