@@ -5,8 +5,6 @@ use read_write_rpc_derive::ReadWriteRPC;
 use rpc_msg_derive::IntoShortnameRPCEvent;
 use utils::events::IntoShortnameRPCEvent;
 
-use crate::state::RecordClass;
-
 /// ## Description
 /// This structure describes fields for PNS initialize msg
 #[derive(ReadWriteRPC, CreateTypeSpec, Clone, PartialEq, Eq, Debug)]
@@ -154,7 +152,7 @@ pub struct RecordMintMsg {
     /// Related domain
     pub token_id: String,
     /// Class type
-    pub class: RecordClass,
+    pub class: u8,
     /// Data
     pub data: String,
 }
@@ -167,7 +165,7 @@ pub struct RecordUpdateMsg {
     /// Related domain
     pub token_id: String,
     /// Class type
-    pub class: RecordClass,
+    pub class: u8,
     /// Data
     pub data: String,
 }
@@ -180,5 +178,5 @@ pub struct RecordDeleteMsg {
     /// Related domain
     pub token_id: String,
     /// Class type
-    pub class: RecordClass,
+    pub class: u8,
 }
