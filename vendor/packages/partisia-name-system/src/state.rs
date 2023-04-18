@@ -175,9 +175,9 @@ impl PartisiaNameSystemContractState {
     /// * **data** is an object of type [`String`]
     pub fn update_record_data(&mut self, token_id: String, class: RecordClass, data: String) {
         assert!(
-            !self.is_minted(token_id.to_string()),
+            self.is_minted(token_id.to_string()),
             "{}",
-            ContractError::Minted
+            ContractError::NotMinted
         );
 
         let qualified_name = Self::fully_qualified_name(token_id, class);
@@ -194,9 +194,9 @@ impl PartisiaNameSystemContractState {
     /// * **class** is an object of type [`RecordClass`]
     pub fn delete_record(&mut self, token_id: String, class: RecordClass) {
         assert!(
-            !self.is_minted(token_id.to_string()),
+            self.is_minted(token_id.to_string()),
             "{}",
-            ContractError::Minted
+            ContractError::NotMinted
         );
 
         let qualified_name = Self::fully_qualified_name(token_id, class);

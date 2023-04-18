@@ -385,7 +385,7 @@ pub fn execute_record_update(
     assert!(
         state.is_minted(token_id.to_string()),
         "{}",
-        ContractError::Minted
+        ContractError::NotMinted
     );
 
     assert!(
@@ -418,7 +418,7 @@ pub fn execute_record_delete(
     assert!(
         state.is_minted(token_id.to_string()),
         "{}",
-        ContractError::Minted
+        ContractError::NotMinted
     );
 
     assert!(
