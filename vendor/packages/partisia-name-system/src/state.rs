@@ -2,7 +2,7 @@ use std::collections::BTreeMap;
 
 use create_type_spec_derive::CreateTypeSpec;
 use pbc_contract_common::address::Address;
-use read_write_rpc_derive::{ReadWriteRPC};
+use read_write_rpc_derive::ReadWriteRPC;
 use read_write_state_derive::ReadWriteState;
 
 use crate::ContractError;
@@ -52,9 +52,34 @@ pub struct Record {
     /// Related domain
     pub domain: String,
     /// Class type
-    pub class: u8,
+    pub class: RecordClass,
     /// Data
     pub data: String,
+}
+
+#[repr(u8)]
+#[derive(
+    Eq,
+    PartialEq,
+    Debug,
+    Clone,
+    Ord,
+    PartialOrd,
+    Copy,
+    CreateTypeSpec,
+    ReadWriteState,
+    ReadWriteRPC,
+)]
+pub enum RecordClass {
+    /// Wallet
+    #[discriminant(0)]
+    Wallet {},
+    /// Website
+    #[discriminant(1)]
+    Uri {},
+    /// Twitter
+    #[discriminant(2)]
+    Twitter {},
 }
 
 impl PartisiaNameSystemContractState {
@@ -74,8 +99,6 @@ impl PartisiaNameSystemContractState {
     /// * **to** is an object of type [`Address`]
     ///
     /// * **data** is an object of type [`String`]
-    ///
-    /// * **class** is an object of type [`u8`]
     ///
     /// * **parent** is an object of type [`String`]
     pub fn mint(&mut self, token_id: String, to: &Address, parent: &Option<String>) {
@@ -98,8 +121,8 @@ impl PartisiaNameSystemContractState {
     ///
     /// * **data** is an object of type [`String`]
     ///
-    /// * **class** is an object of type [`u8`]
-    pub fn mint_record(&mut self, token_id: String, data: String, class: u8) {
+    /// * **class** is an object of type [`RecordClass`]
+    pub fn mint_record(&mut self, token_id: String, data: String, class: RecordClass) {
         let record = Record {
             domain: token_id.to_string(),
             class: class,
@@ -147,8 +170,10 @@ impl PartisiaNameSystemContractState {
     /// ## Params
     /// * **token_id** is an object of type [`String`]
     ///
+    /// * **class** is an object of type [`RecordClass`]
+    ///
     /// * **data** is an object of type [`String`]
-    pub fn update_record_data(&mut self, token_id: String, class: u8, data: String) {
+    pub fn update_record_data(&mut self, token_id: String, class: RecordClass, data: String) {
         assert!(
             !self.is_minted(token_id.to_string()),
             "{}",
@@ -166,8 +191,8 @@ impl PartisiaNameSystemContractState {
     /// ## Params
     /// * **token_id** is an object of type [`String`]
     ///
-    /// * **data** is an object of type [`String`]
-    pub fn delete_record(&mut self, token_id: String, class: u8) {
+    /// * **class** is an object of type [`RecordClass`]
+    pub fn delete_record(&mut self, token_id: String, class: RecordClass) {
         assert!(
             !self.is_minted(token_id.to_string()),
             "{}",
@@ -412,12 +437,11 @@ impl PartisiaNameSystemContractState {
 
     /// ## Description
     /// Get fully qualified name for token and record class
-    fn fully_qualified_name(token_id: String, class: u8) -> String {
+    fn fully_qualified_name(token_id: String, class: RecordClass) -> String {
         let class_name = match class {
-            0x0 => "wallet",
-            0x1 => "uri",
-            0x2 => "twitter",
-            _ => panic!("Unknown class"),
+            RecordClass::Wallet {} => "wallet",
+            RecordClass::Uri {} => "uri",
+            RecordClass::Twitter {} => "twitter",
         };
 
         format!("{}.{}", class_name, token_id)
