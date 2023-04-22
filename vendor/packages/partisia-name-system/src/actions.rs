@@ -123,6 +123,12 @@ pub fn execute_record_mint(
         ContractError::NotFound
     );
 
+    assert!(
+        !state.is_record_minted(msg.token_id.to_string(), msg.class),
+        "{}",
+        ContractError::RecordMinted
+    );
+
     state.mint_record(msg.token_id.to_string(), msg.data.to_string(), msg.class);
 
     vec![]

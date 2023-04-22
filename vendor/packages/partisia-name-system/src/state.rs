@@ -59,16 +59,7 @@ pub struct Record {
 
 #[repr(u8)]
 #[derive(
-    Eq,
-    PartialEq,
-    Debug,
-    Clone,
-    Ord,
-    PartialOrd,
-    Copy,
-    CreateTypeSpec,
-    ReadWriteState,
-    ReadWriteRPC,
+    Eq, PartialEq, Debug, Clone, Ord, PartialOrd, Copy, CreateTypeSpec, ReadWriteState, ReadWriteRPC,
 )]
 pub enum RecordClass {
     /// Wallet
@@ -306,11 +297,22 @@ impl PartisiaNameSystemContractState {
     }
 
     /// ## Description
-    /// Says is token id minted or not
+    /// Says if token id minted or not
     /// ## Params
     /// * **token_id** is an object of type [`String`]
     pub fn is_minted(&self, token_id: String) -> bool {
         self.tokens.contains_key(&token_id)
+    }
+
+    /// ## Description
+    /// Says if record minted or not
+    /// ## Params
+    /// * **token_id** is an object of type [`String`]
+    ///
+    /// * **class** is an object of type [`RecordClass`]
+    pub fn is_record_minted(&self, token_id: String, class: RecordClass) -> bool {
+        let qualified_name = Self::fully_qualified_name(token_id, class);
+        self.records.contains_key(&qualified_name)
     }
 
     /// ## Description
@@ -345,6 +347,17 @@ impl PartisiaNameSystemContractState {
     /// * **token_id** is an object of type [`String`]
     pub fn token_info(&self, token_id: String) -> Option<&Domain> {
         self.tokens.get(&token_id)
+    }
+
+    /// ## Description
+    /// Returns record info by token id
+    /// ## Params
+    /// * **token_id** is an object of type [`String`]
+    ///
+    /// * **class** is an object of type [`RecordClass`]
+    pub fn record_info(&self, token_id: String, class: RecordClass) -> Option<&Record> {
+        let qualified_name = Self::fully_qualified_name(token_id, class);
+        self.records.get(&qualified_name)
     }
 
     /// ## Description

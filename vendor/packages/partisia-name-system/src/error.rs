@@ -13,6 +13,9 @@ pub enum ContractError {
     #[error("Token with specified id is already minted")]
     Minted,
 
+    #[error("Record with specified token id and class is already minted")]
+    RecordMinted,
+
     #[error("Token with specified id is not minted")]
     NotMinted,
 
