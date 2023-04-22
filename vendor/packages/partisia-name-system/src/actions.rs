@@ -111,25 +111,26 @@ pub fn execute_record_mint(
     state: &mut PartisiaNameSystemContractState,
     msg: &RecordMintMsg,
 ) -> Vec<EventGroup> {
+    let token_id = msg.token_id.to_string();
     assert!(
-        state.minter == ctx.sender,
-        "{}",
-        ContractError::Unauthorized
-    );
-
-    assert!(
-        state.is_minted(msg.token_id.to_string()),
+        state.is_minted(token_id.to_string()),
         "{}",
         ContractError::NotFound
     );
 
     assert!(
-        !state.is_record_minted(msg.token_id.to_string(), msg.class),
+        state.is_token_owner(token_id.to_string(), &ctx.sender),
+        "{}",
+        ContractError::Unauthorized
+    );
+
+    assert!(
+        !state.is_record_minted(token_id.to_string(), msg.class),
         "{}",
         ContractError::RecordMinted
     );
 
-    state.mint_record(msg.token_id.to_string(), msg.data.to_string(), msg.class);
+    state.mint_record(token_id.to_string(), msg.data.to_string(), msg.class);
 
     vec![]
 }
@@ -395,6 +396,12 @@ pub fn execute_record_update(
     );
 
     assert!(
+        state.is_record_minted(token_id.to_string(), msg.class),
+        "{}",
+        ContractError::RecordNotMinted
+    );
+
+    assert!(
         state.is_token_owner(token_id.to_string(), &ctx.sender),
         "{}",
         ContractError::Unauthorized
@@ -428,7 +435,7 @@ pub fn execute_record_delete(
     );
 
     assert!(
-        !state.is_token_owner(token_id.to_string(), &ctx.sender),
+        state.is_token_owner(token_id.to_string(), &ctx.sender),
         "{}",
         ContractError::Unauthorized
     );

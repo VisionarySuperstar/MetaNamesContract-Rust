@@ -30,9 +30,12 @@ const REVOKE: u32 = 0x13;
 const REVOKE_FOR_ALL: u32 = 0x15;
 const BURN: u32 = 0x17;
 
-const MULTI_MINT: u32 = 0x20;
 const CHECKOWNER: u32 = 0x18;
 const UPDATE_MINTER: u32 = 0x19;
+const MULTI_MINT: u32 = 0x20;
+const RECORD_MINT: u32 = 0x21;
+const UPDATE_MINTER: u32 = 0x22;
+const UPDATE_MINTER: u32 = 0x23;
 #[test]
 fn proper_transfer_action_call() {
     let dest = mock_address(30u8);
@@ -122,6 +125,31 @@ fn proper_set_base_uri_action_call() {
 
 #[test]
 fn proper_mint_action_call() {
+    let dest = mock_address(30u8);
+
+    let msg = MintMsg {
+        token_id: "name.meta".to_string(),
+        to: mock_address(1u8),
+        parent: Some("".to_string()),
+    };
+
+    let mut event_group = EventGroup::builder();
+    msg.as_interaction(&mut event_group, &dest);
+
+    let mut test_event_group = EventGroup::builder();
+    test_event_group
+        .call(dest.clone(), Shortname::from_u32(MINT))
+        .argument("name.meta".to_string())
+        .argument(mock_address(1u8))
+        .argument(Some("".to_string()))
+        .done();
+
+    assert_eq!(event_group.build(), test_event_group.build());
+}
+
+
+#[test]
+fn proper_record_mint_action_call() {
     let dest = mock_address(30u8);
 
     let msg = MintMsg {

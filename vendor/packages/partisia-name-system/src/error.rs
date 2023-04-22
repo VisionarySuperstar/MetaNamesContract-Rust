@@ -19,6 +19,9 @@ pub enum ContractError {
     #[error("Token with specified id is not minted")]
     NotMinted,
 
+    #[error("Record with specified token id and class is not minted")]
+    RecordNotMinted,
+
     #[error("Not found")]
     NotFound,
 
