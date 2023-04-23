@@ -435,6 +435,12 @@ pub fn execute_record_delete(
     );
 
     assert!(
+        state.is_record_minted(token_id.to_string(), msg.class),
+        "{}",
+        ContractError::RecordNotMinted
+    );
+
+    assert!(
         state.is_token_owner(token_id.to_string(), &ctx.sender),
         "{}",
         ContractError::Unauthorized

@@ -8,14 +8,14 @@ use pbc_contract_common::{
 use crate::{
     actions::{
         execute_approve, execute_approve_for_all, execute_burn, execute_init, execute_mint,
-        execute_multi_mint, execute_ownership_check, execute_record_mint, execute_revoke,
-        execute_revoke_for_all, execute_set_base_uri, execute_transfer, execute_transfer_from,
-        execute_update_minter, execute_record_update,
+        execute_multi_mint, execute_ownership_check, execute_record_delete, execute_record_mint,
+        execute_record_update, execute_revoke, execute_revoke_for_all, execute_set_base_uri,
+        execute_transfer, execute_transfer_from, execute_update_minter,
     },
     msg::{
         ApproveForAllMsg, ApproveMsg, BurnMsg, CheckOwnerMsg, InitMsg, MintMsg, MultiMintMsg,
-        RecordMintMsg, RevokeForAllMsg, RevokeMsg, SetBaseUriMsg, TransferFromMsg, TransferMsg,
-        UpdateMinterMsg, RecordUpdateMsg,
+        RecordDeleteMsg, RecordMintMsg, RecordUpdateMsg, RevokeForAllMsg, RevokeMsg, SetBaseUriMsg,
+        TransferFromMsg, TransferMsg, UpdateMinterMsg,
     },
     state::{Domain, PartisiaNameSystemContractState, Record, RecordClass},
 };
@@ -436,7 +436,6 @@ fn record_already_minted_on_record_mint() {
     let _ = execute_record_mint(&mock_contract_context(alice), &mut state, &record_mint);
 }
 
-
 #[test]
 fn proper_record_update() {
     let minter = 1u8;
@@ -475,7 +474,11 @@ fn proper_record_update() {
         data: "some new data".to_string(),
     };
 
-    let _ = execute_record_update(&mock_contract_context(alice), &mut state, &update_record_msg);
+    let _ = execute_record_update(
+        &mock_contract_context(alice),
+        &mut state,
+        &update_record_msg,
+    );
 
     let record = state
         .record_info(record_msg.token_id, record_msg.class)
@@ -489,7 +492,6 @@ fn proper_record_update() {
         }
     );
 }
-
 
 #[test]
 #[should_panic(expected = "Unauthorized")]
@@ -598,9 +600,12 @@ fn record_not_minted_on_record_update() {
         data: "some new data".to_string(),
     };
 
-    let _ = execute_record_update(&mock_contract_context(alice), &mut state, &update_record_msg);
+    let _ = execute_record_update(
+        &mock_contract_context(alice),
+        &mut state,
+        &update_record_msg,
+    );
 }
-
 
 #[test]
 fn proper_approve_for_all() {
@@ -646,6 +651,165 @@ fn proper_approve_for_all() {
                 BTreeMap::from([(mock_address(alice), true)])
             )
         ])
+    );
+}
+
+#[test]
+fn proper_record_delete() {
+    let minter = 1u8;
+    let alice = 10u8;
+
+    let msg = InitMsg {
+        owner: None,
+        name: "meta names".to_string(),
+        symbol: "meta".to_string(),
+        base_uri: Some("ipfs://some.some".to_string()),
+        minter: mock_address(minter),
+    };
+
+    let (mut state, events) = execute_init(&mock_contract_context(2), &msg);
+
+    let mint_msg = MintMsg {
+        token_id: "name.meta".to_string(),
+        to: mock_address(alice),
+        parent: None,
+    };
+
+    let _ = execute_mint(&mock_contract_context(minter), &mut state, &mint_msg);
+    assert_eq!(state.supply, 1);
+
+    let record_msg = RecordMintMsg {
+        token_id: mint_msg.token_id.to_string(),
+        class: RecordClass::Wallet {},
+        data: "some data".to_string(),
+    };
+
+    let _ = execute_record_mint(&mock_contract_context(alice), &mut state, &record_msg);
+
+    let delete_record_msg = RecordDeleteMsg {
+        token_id: mint_msg.token_id.to_string(),
+        class: RecordClass::Wallet {},
+    };
+
+    let _ = execute_record_delete(
+        &mock_contract_context(alice),
+        &mut state,
+        &delete_record_msg,
+    );
+
+    let is_minted = state.is_record_minted(record_msg.token_id, record_msg.class);
+
+    assert_eq!(is_minted, false);
+}
+
+#[test]
+#[should_panic(expected = "Unauthorized")]
+fn sender_is_not_token_owner_on_record_delete() {
+    let minter = 1u8;
+    let alice = 10u8;
+    let bob = 11u8;
+
+    let msg = InitMsg {
+        owner: None,
+        name: "Meta Names".to_string(),
+        symbol: "META".to_string(),
+        base_uri: Some("ipfs://some.some".to_string()),
+        minter: mock_address(minter),
+    };
+
+    let (mut state, events) = execute_init(&mock_contract_context(2), &msg);
+
+    let mint_msg = MintMsg {
+        token_id: "name.meta".to_string(),
+        to: mock_address(alice),
+        parent: None,
+    };
+
+    let _ = execute_mint(&mock_contract_context(minter), &mut state, &mint_msg);
+    assert_eq!(state.supply, 1);
+
+    let record_msg = RecordMintMsg {
+        token_id: mint_msg.token_id.to_string(),
+        class: RecordClass::Wallet {},
+        data: "some data".to_string(),
+    };
+
+    let _ = execute_record_mint(&mock_contract_context(alice), &mut state, &record_msg);
+
+    let delete_record_msg = RecordDeleteMsg {
+        token_id: mint_msg.token_id.to_string(),
+        class: RecordClass::Wallet {},
+    };
+
+    let _ = execute_record_delete(&mock_contract_context(bob), &mut state, &delete_record_msg);
+}
+
+#[test]
+#[should_panic(expected = "Record with specified token id and class is not minted")]
+fn token_not_minted_on_record_delete() {
+    let minter = 1u8;
+    let alice = 10u8;
+
+    let msg = InitMsg {
+        owner: None,
+        name: "Meta Names".to_string(),
+        symbol: "META".to_string(),
+        base_uri: Some("ipfs://some.some".to_string()),
+        minter: mock_address(minter),
+    };
+
+    let (mut state, events) = execute_init(&mock_contract_context(2), &msg);
+
+    let mint_msg = MintMsg {
+        token_id: "name.meta".to_string(),
+        to: mock_address(alice),
+        parent: None,
+    };
+
+    let _ = execute_mint(&mock_contract_context(minter), &mut state, &mint_msg);
+
+    let record_delete = RecordDeleteMsg {
+        token_id: "name.meta".to_string(),
+        class: RecordClass::Wallet {},
+    };
+
+    let _ = execute_record_delete(&mock_contract_context(alice), &mut state, &record_delete);
+}
+
+#[test]
+#[should_panic(expected = "Record with specified token id and class is not minted")]
+fn record_not_minted_on_record_delete() {
+    let minter = 1u8;
+    let alice = 10u8;
+
+    let msg = InitMsg {
+        owner: None,
+        name: "meta names".to_string(),
+        symbol: "meta".to_string(),
+        base_uri: Some("ipfs://some.some".to_string()),
+        minter: mock_address(minter),
+    };
+
+    let (mut state, events) = execute_init(&mock_contract_context(2), &msg);
+
+    let mint_msg = MintMsg {
+        token_id: "name.meta".to_string(),
+        to: mock_address(alice),
+        parent: None,
+    };
+
+    let _ = execute_mint(&mock_contract_context(minter), &mut state, &mint_msg);
+    assert_eq!(state.supply, 1);
+
+    let delete_record_msg = RecordDeleteMsg {
+        token_id: mint_msg.token_id,
+        class: RecordClass::Wallet {},
+    };
+
+    let _ = execute_record_delete(
+        &mock_contract_context(alice),
+        &mut state,
+        &delete_record_msg,
     );
 }
 
