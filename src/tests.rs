@@ -1,6 +1,9 @@
-use partisia_name_system::msg::{
-    ApproveForAllMsg, ApproveMsg, BurnMsg, CheckOwnerMsg, MintMsg, MultiMintMsg, RevokeForAllMsg,
-    RevokeMsg, SetBaseUriMsg, TransferFromMsg, TransferMsg, UpdateMinterMsg,
+use partisia_name_system::{
+    msg::{
+        ApproveForAllMsg, ApproveMsg, BurnMsg, CheckOwnerMsg, MintMsg, MultiMintMsg, RecordMintMsg,
+        RevokeForAllMsg, RevokeMsg, SetBaseUriMsg, TransferFromMsg, TransferMsg, UpdateMinterMsg, RecordUpdateMsg, RecordDeleteMsg,
+    },
+    state::RecordClass,
 };
 
 use pbc_contract_common::{
@@ -34,8 +37,8 @@ const CHECKOWNER: u32 = 0x18;
 const UPDATE_MINTER: u32 = 0x19;
 const MULTI_MINT: u32 = 0x20;
 const RECORD_MINT: u32 = 0x21;
-const UPDATE_MINTER: u32 = 0x22;
-const UPDATE_MINTER: u32 = 0x23;
+const RECORD_UPDATE: u32 = 0x22;
+const RECORD_DELETE: u32 = 0x23;
 #[test]
 fn proper_transfer_action_call() {
     let dest = mock_address(30u8);
@@ -147,15 +150,14 @@ fn proper_mint_action_call() {
     assert_eq!(event_group.build(), test_event_group.build());
 }
 
-
 #[test]
 fn proper_record_mint_action_call() {
     let dest = mock_address(30u8);
 
-    let msg = MintMsg {
+    let msg = RecordMintMsg {
         token_id: "name.meta".to_string(),
-        to: mock_address(1u8),
-        parent: Some("".to_string()),
+        class: RecordClass::Wallet {},
+        data: "".to_string(),
     };
 
     let mut event_group = EventGroup::builder();
@@ -163,10 +165,56 @@ fn proper_record_mint_action_call() {
 
     let mut test_event_group = EventGroup::builder();
     test_event_group
-        .call(dest.clone(), Shortname::from_u32(MINT))
+        .call(dest.clone(), Shortname::from_u32(RECORD_MINT))
         .argument("name.meta".to_string())
-        .argument(mock_address(1u8))
-        .argument(Some("".to_string()))
+        .argument(RecordClass::Wallet {})
+        .argument("".to_string())
+        .done();
+
+    assert_eq!(event_group.build(), test_event_group.build());
+}
+
+#[test]
+fn proper_record_update_action_call() {
+    let dest = mock_address(30u8);
+
+    let msg = RecordUpdateMsg {
+        token_id: "name.meta".to_string(),
+        class: RecordClass::Wallet {},
+        data: "".to_string(),
+    };
+
+    let mut event_group = EventGroup::builder();
+    msg.as_interaction(&mut event_group, &dest);
+
+    let mut test_event_group = EventGroup::builder();
+    test_event_group
+        .call(dest.clone(), Shortname::from_u32(RECORD_UPDATE))
+        .argument("name.meta".to_string())
+        .argument(RecordClass::Wallet {})
+        .argument("".to_string())
+        .done();
+
+    assert_eq!(event_group.build(), test_event_group.build());
+}
+
+#[test]
+fn proper_record_delete_action_call() {
+    let dest = mock_address(30u8);
+
+    let msg = RecordDeleteMsg {
+        token_id: "name.meta".to_string(),
+        class: RecordClass::Wallet {},
+    };
+
+    let mut event_group = EventGroup::builder();
+    msg.as_interaction(&mut event_group, &dest);
+
+    let mut test_event_group = EventGroup::builder();
+    test_event_group
+        .call(dest.clone(), Shortname::from_u32(RECORD_DELETE))
+        .argument("name.meta".to_string())
+        .argument(RecordClass::Wallet {})
         .done();
 
     assert_eq!(event_group.build(), test_event_group.build());
@@ -260,7 +308,9 @@ fn proper_revoke_for_all_action_call() {
 fn proper_burn_action_call() {
     let dest = mock_address(30u8);
 
-    let msg = BurnMsg { token_id: "name.meta".to_string() };
+    let msg = BurnMsg {
+        token_id: "name.meta".to_string(),
+    };
 
     let mut event_group = EventGroup::builder();
     msg.as_interaction(&mut event_group, &dest);
@@ -273,6 +323,7 @@ fn proper_burn_action_call() {
 
     assert_eq!(event_group.build(), test_event_group.build());
 }
+
 #[test]
 fn proper_minter_update_action_call() {
     let dest = mock_address(30u8);
