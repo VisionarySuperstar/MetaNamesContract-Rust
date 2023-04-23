@@ -1,9 +1,26 @@
 # Partisia Name System
 
-Updates the MPC721 contract to work with PNS
+Crate which allows contracts to implement a domain name system.
+
+It tries to follow the MPC721 standard.
 
 # Actions
-TODO: Update
+
+## execute_init
+
+Init the PNS
+
+Params:
+
+```json
+InitMsg {
+    "owner": "<optional address>",
+    "name": "<string>",
+    "symbol": "<string>",
+    "base": "<optional string>",
+    "minter": "<address>",
+}
+```
 
 ## execute_set_base_uri
 
@@ -25,9 +42,64 @@ Params:
 
 ```json
 MintMsg {
-    "token_id": 1,
+    "token_id": "name.meta",
     "to": "<address>",
     "token_uri": "<optional uri>",
+}
+```
+
+## execute_multi_mint
+
+Mint a series of new tokens. Can only be executed by minter account.
+
+Params:
+
+```json
+MultiMintMsg {
+    "mints": ["<MintMsg>"]
+}
+```
+
+## execute_record_mint
+
+Mint a new record for a given token id. Can only be executed by owner account of token.
+
+Params:
+
+```json
+RecordMintMsg {
+    "token_id": "name.meta",
+    "class": "<RecordClass>",
+    "data": "<string>",
+}
+```
+
+
+## execute_record_update
+
+Update an existing record data given a token id and record class. Can only be executed by owner account of token.
+
+Params:
+
+```json
+RecordUpdateMsg {
+    "token_id": "name.meta",
+    "class": "<RecordClass>",
+    "data": "<string>",
+}
+```
+
+
+## execute_record_delete
+
+Delete an existing record given a token id and record class. Can only be executed by owner account of token.
+
+Params:
+
+```json
+RecordDeleteMsg {
+    "token_id": "name.meta",
+    "class": "<RecordClass>",
 }
 ```
 
@@ -40,7 +112,7 @@ Params:
 ```json
 TransferMsg {
     "to": "<address>",
-    "token_id": 1,
+    "token_id": "name.meta",
 }
 ```
 
@@ -54,7 +126,7 @@ Params:
 TransferFromMsg {
     "from": "<address>",
     "to": "<address>",
-    "token_id": 1,
+    "token_id": "name.meta",
 }
 ```
 
@@ -67,7 +139,20 @@ Params:
 ```json
 ApproveMsg {
     "spedner": "<address>",
-    "token_id": 1,
+    "token_id": "name.meta",
+}
+```
+
+## execute_ownership_check
+
+Check the ownership of a token given an address.
+
+Params:
+
+```json
+CheckOwnerMsg {
+    "owner": "<address>",
+    "token_id": "name.meta",
 }
 ```
 
@@ -91,8 +176,8 @@ Params:
 
 ```json
 RevokeMsg {
-    "spedner": "<address>",
-    "token_id": 1,
+    "spender": "<address>",
+    "token_id": "name.meta",
 }
 ```
 
@@ -116,6 +201,6 @@ Params:
 
 ```json
 BurnMsg {
-    "token_id": 1,
+    "token_id": "name.meta",
 }
 ```
