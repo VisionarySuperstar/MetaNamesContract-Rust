@@ -49,10 +49,6 @@ pub struct Domain {
 /// This structure describes minted PNS information
 #[derive(ReadWriteRPC, ReadWriteState, CreateTypeSpec, Clone, PartialEq, Eq, Debug)]
 pub struct Record {
-    /// Related domain
-    pub domain: String,
-    /// Class type
-    pub class: RecordClass,
     /// Data
     pub data: String,
 }
@@ -114,11 +110,7 @@ impl PartisiaNameSystemContractState {
     ///
     /// * **class** is an object of type [`RecordClass`]
     pub fn mint_record(&mut self, token_id: String, data: String, class: RecordClass) {
-        let record = Record {
-            domain: token_id.to_string(),
-            class: class,
-            data: data,
-        };
+        let record = Record { data: data };
         let qualified_name = Self::fully_qualified_name(token_id.to_string(), class);
 
         self.records.insert(qualified_name, record);
@@ -373,9 +365,9 @@ impl PartisiaNameSystemContractState {
         );
 
         self.records
-            .values()
-            .into_iter()
-            .filter(|r| r.domain == token_id)
+            .iter()
+            .filter(|(record_key, _)| Self::extract_domain_from(record_key) == token_id)
+            .map(|(_, value)| value)
             .collect()
     }
 
@@ -446,6 +438,12 @@ impl PartisiaNameSystemContractState {
         }
 
         false
+    }
+
+    /// ## Description
+    /// Extract domain from record key
+    fn extract_domain_from(record_key: &String) -> String {
+        record_key.split('.').last().unwrap().to_string()
     }
 
     /// ## Description

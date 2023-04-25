@@ -360,9 +360,7 @@ fn proper_record_mint() {
     assert_eq!(
         *record,
         Record {
-            class: RecordClass::Wallet {},
             data: "some data".to_string(),
-            domain: "name.meta".to_string(),
         }
     );
 }
@@ -486,9 +484,7 @@ fn proper_record_update() {
     assert_eq!(
         *record,
         Record {
-            class: RecordClass::Wallet {},
             data: "some new data".to_string(),
-            domain: "name.meta".to_string(),
         }
     );
 }
