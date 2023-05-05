@@ -19,6 +19,7 @@ create_type_spec_derive = { git = "https://git@gitlab.com/partisiablockchain/lan
 pbc_contract_codegen = { git = "https://git@gitlab.com/partisiablockchain/language/contract-sdk.git", tag = "13.1.0" }
 
 utils = { path = "../utils" }
+mpc721-base = { path = "../mpc721-base" }
 rpc-msg-derive = { path = "../rpc-msg-derive" }
 
 serde_json = "1.0"

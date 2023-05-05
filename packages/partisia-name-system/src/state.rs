@@ -11,6 +11,7 @@ use crate::ContractError;
 /// This structure describes main mpc721 contract state.
 #[derive(ReadWriteState, CreateTypeSpec, Clone, PartialEq, Eq, Debug)]
 pub struct PartisiaNameSystemContractState {
+    pub mpc721: MPC721ContractState,
     /// optional owner address
     pub owner: Option<Address>,
     /// token name
