@@ -1,4 +1,4 @@
-use mpc721_hierarchy::msg::{
+use crate::msg::{
     ApproveForAllMsg, ApproveMsg, BurnMsg, CheckOwnerMsg, MintMsg, MultiMintMsg, RevokeForAllMsg,
     RevokeMsg, SetBaseUriMsg, TransferFromMsg, TransferMsg, UpdateMinterMsg,
 };
@@ -11,7 +11,7 @@ use pbc_contract_common::{
 use utils::events::IntoShortnameRPCEvent;
 
 
-// TODO: Update tests
+// TODO: Add tests for functionality
 // TODO: Test parent
 
 fn mock_address(le: u8) -> Address {
@@ -129,9 +129,10 @@ fn proper_mint_action_call() {
     let dest = mock_address(30u8);
 
     let msg = MintMsg {
-        token_id: 1,
+        token_id: "name.meta".to_string(),
         to: mock_address(1u8),
         token_uri: Some("uri".to_string()),
+        parent_id: None
     };
 
     let mut event_group = EventGroup::builder();
@@ -140,9 +141,10 @@ fn proper_mint_action_call() {
     let mut test_event_group = EventGroup::builder();
     test_event_group
         .call(dest.clone(), Shortname::from_u32(MINT))
-        .argument(1u128)
+        .argument("name.meta".to_string())
         .argument(mock_address(1u8))
         .argument(Some("uri".to_string()))
+        .argument(None::<String>)
         .done();
 
     assert_eq!(event_group.build(), test_event_group.build());
@@ -274,29 +276,34 @@ fn proper_multi_mint_action_call() {
 
     let mints = vec![
         MintMsg {
-            token_id: 1,
+            token_id: "name.meta".to_string(),
             to: mock_address(4),
             token_uri: Some(String::from("Token1")),
+            parent_id: None,
         },
         MintMsg {
-            token_id: 2,
+            token_id: "name2.meta".to_string(),
             to: mock_address(4),
             token_uri: Some(String::from("Token2")),
+            parent_id: None,
         },
         MintMsg {
-            token_id: 3,
+            token_id: "name3.meta".to_string(),
             to: mock_address(5),
             token_uri: Some(String::from("Token3")),
+            parent_id: None,
         },
         MintMsg {
-            token_id: 4,
+            token_id: "name4.meta".to_string(),
             to: mock_address(5),
             token_uri: Some(String::from("Token4")),
+            parent_id: None,
         },
         MintMsg {
-            token_id: 5,
+            token_id: "name5.meta".to_string(),
             to: mock_address(6),
             token_uri: Some(String::from("Token5")),
+            parent_id: None,
         },
     ];
     let msg = MultiMintMsg {

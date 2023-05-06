@@ -1,3 +1,5 @@
+use std::collections::BTreeMap;
+
 use contract_version_base::state::ContractVersionBase;
 use pbc_contract_common::{context::ContractContext, events::EventGroup};
 
@@ -5,10 +7,11 @@ use mpc721_hierarchy::{actions as mpc721_actions, msg as mpc721_msg};
 
 use crate::{
     msg::{
-        ApproveForAllMsg, ApproveMsg, BurnMsg, InitMsg, MintMsg, RevokeForAllMsg,
-        RevokeMsg, SetBaseUriMsg, TransferFromMsg, TransferMsg, UpdateMinterMsg, MultiMintMsg, CheckOwnerMsg,
+        ApproveForAllMsg, ApproveMsg, BurnMsg, CheckOwnerMsg, InitMsg, MintMsg, MultiMintMsg,
+        RevokeForAllMsg, RevokeMsg, SetBaseUriMsg, TransferFromMsg, TransferMsg, UpdateMinterMsg,
     },
-    state::PartisiaNameSystemState,
+    state::{PartisiaNameSystemState, Domain},
+    ContractError,
 };
 
 const CONTRACT_NAME: &str = env!("CARGO_PKG_NAME");
@@ -37,6 +40,7 @@ pub fn execute_init(
     let (mpc721, events) = mpc721_actions::execute_init(&ctx, &mpc721_msg);
     let state = PartisiaNameSystemState {
         mpc721,
+        domains: BTreeMap::new(),
         version: ContractVersionBase::new(CONTRACT_NAME, CONTRACT_VERSION),
     };
 
@@ -166,28 +170,45 @@ pub fn execute_mint(
     state: &mut PartisiaNameSystemState,
     msg: &MintMsg,
 ) -> Vec<EventGroup> {
+    assert!(state.is_minted(&msg.token_id), "{}", ContractError::Minted);
+
+    // TODO: Make actions atomic & permit rollback
+
+    let new_token_id = state.mpc721.supply + 1;
     let mut events = mpc721_actions::execute_mint(
         &ctx,
         &mut state.mpc721,
         &mpc721_msg::MintMsg {
-            token_id: msg.token_id,
+            token_id: new_token_id,
             to: msg.to,
             token_uri: msg.token_uri.clone(),
         },
     );
 
     let mut update_parent_events: Vec<EventGroup> = vec![];
-    if let Some(parent) = msg.parent {
+    if let Some(parent_id) = &msg.parent_id {
+        assert!(state.is_minted(parent_id), "{}", ContractError::NotFound);
+
+        let parent = state.domains.get(parent_id).unwrap();
+
         // TODO: Do not mint if parent does not belong to the owner
+
         update_parent_events = mpc721_actions::execute_update_parent(
             &ctx,
             &mut state.mpc721,
             &mpc721_msg::UpdateParentMsg {
-                token_id: msg.token_id,
-                parent_id: Some(parent),
+                token_id: new_token_id,
+                parent_id: Some(parent.token_id),
             },
         );
     }
+
+    state.domains.insert(
+        msg.token_id.clone(),
+        Domain {
+            token_id: new_token_id,
+        },
+    );
 
     events.extend(update_parent_events);
     events
@@ -349,7 +370,6 @@ pub fn execute_ownership_check(
 
     events
 }
-
 
 /// ## Description
 /// Mint Multiple NFTs in a single function call

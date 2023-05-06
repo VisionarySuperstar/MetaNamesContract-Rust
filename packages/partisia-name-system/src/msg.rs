@@ -75,13 +75,13 @@ pub struct SetBaseUriMsg {
 #[rpc_msg(action = 0x09)]
 pub struct MintMsg {
     /// newly minted token id
-    pub token_id: u128,
+    pub token_id: String,
     /// receiver address
     pub to: Address,
-    /// optional parent
-    pub parent: Option<u128>,
     /// optional token_uri
     pub token_uri: Option<String>,
+    /// optional parent
+    pub parent_id: Option<String>,
 }
 
 /// ## Description
