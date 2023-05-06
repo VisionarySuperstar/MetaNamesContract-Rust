@@ -2,205 +2,41 @@
 
 Crate which allows contracts to implement a domain name system.
 
-It tries to follow the MPC721 standard.
+It uses a fork of MPC 721 to permit hierarchy.
 
-# Actions
+## Actions
+TODO: Update
 
-## execute_init
+- `transfer(to: Address, token_id: u128)`
+- `transfer_from(from: Address, to: Address, token_id: u128)`
+- `approve(spender: Address, token_id: u128)`
+- `set_base_uri(new_base_uri: String)`
+- `mint(token_id: u128, to: Address, token_uri: Option\<String\>)`
 
-Init the PNS
+## State Fields
+TODO: Update
 
-Params:
+Minimal State struct in Json format:
 
 ```json
-InitMsg {
-    "owner": "<optional address>",
-    "name": "<string>",
-    "symbol": "<string>",
-    "base": "<optional string>",
-    "minter": "<address>",
+{
+    "mpc721": {
+        "owner": "<address>" | null,
+        "name": "nft_name",
+        "symbol": "nft_symbol",
+        "base_uri": "nft_base_uri" | null,
+        "minter": "<address>",
+        "supply": 1,
+        "tokens": [
+            {
+                "key": 1, // token_id
+                "value": {
+                    "owner": "<token_owner_address>",
+                    "approvals": [
+                        "<approved_address_1>",
+                        "<approved_address_2>",
+                    ],
+                    "token_uri": "token_uri" | null,
 }
-```
-
-## execute_set_base_uri
-
-Set base uri for the tokens.
-
-Params:
-
-```json
-SetBaseUriMsg {
-    "new_base_uri": "<uri>",
-}
-```
-
-## execute_mint
-
-Mint a new token. Can only be executed by minter account.
-
-Params:
-
-```json
-MintMsg {
-    "token_id": "name.meta",
-    "to": "<address>",
-    "token_uri": "<optional uri>",
-}
-```
-
-## execute_multi_mint
-
-Mint a series of new tokens. Can only be executed by minter account.
-
-Params:
-
-```json
-MultiMintMsg {
-    "mints": ["<MintMsg>"]
-}
-```
-
-## execute_record_mint
-
-Mint a new record for a given token id. Can only be executed by owner account of token.
-
-Params:
-
-```json
-RecordMintMsg {
-    "token_id": "name.meta",
-    "class": "<RecordClass>",
-    "data": "<string>",
-}
-```
-
-
-## execute_record_update
-
-Update an existing record data given a token id and record class. Can only be executed by owner account of token.
-
-Params:
-
-```json
-RecordUpdateMsg {
-    "token_id": "name.meta",
-    "class": "<RecordClass>",
-    "data": "<string>",
-}
-```
-
-
-## execute_record_delete
-
-Delete an existing record given a token id and record class. Can only be executed by owner account of token.
-
-Params:
-
-```json
-RecordDeleteMsg {
-    "token_id": "name.meta",
-    "class": "<RecordClass>",
-}
-```
-
-## execute_transfer
-
-Transfer token to another account.
-
-Params:
-
-```json
-TransferMsg {
-    "to": "<address>",
-    "token_id": "name.meta",
-}
-```
-
-## execute_transfer_from
-
-Only with approval extension. Transfer token from owner to spender.
-
-Params:
-
-```json
-TransferFromMsg {
-    "from": "<address>",
-    "to": "<address>",
-    "token_id": "name.meta",
-}
-```
-
-## execute_approve
-
-Allows spender to transfer token from the owner account.
-
-Params:
-
-```json
-ApproveMsg {
-    "spedner": "<address>",
-    "token_id": "name.meta",
-}
-```
-
-## execute_ownership_check
-
-Check the ownership of a token given an address.
-
-Params:
-
-```json
-CheckOwnerMsg {
-    "owner": "<address>",
-    "token_id": "name.meta",
-}
-```
-
-## execute_approve_for_all
-
-Allows operator to transfer any owner tokens from his account.
-
-Params:
-
-```json
-ApproveForAllMsg {
-    "operator": "<address>",
-}
-```
-
-## execute_revoke
-
-Remove approval.
-
-Params:
-
-```json
-RevokeMsg {
-    "spender": "<address>",
-    "token_id": "name.meta",
-}
-```
-
-## execute_revoke_for_all
-
-Remove operator.
-
-Params:
-
-```json
-RevokeForAllMsg {
-    "operator": "<address>",
-}
-```
-
-## execute_burn
-
-Destroy your token forever.
-
-Params:
-
-```json
-BurnMsg {
-    "token_id": "name.meta",
 }
 ```

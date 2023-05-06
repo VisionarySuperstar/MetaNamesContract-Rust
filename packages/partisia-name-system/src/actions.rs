@@ -1,452 +1,381 @@
-use std::collections::BTreeMap;
-
+use contract_version_base::state::ContractVersionBase;
 use pbc_contract_common::{context::ContractContext, events::EventGroup};
+
+use mpc721_hierarchy::{actions as mpc721_actions, msg as mpc721_msg};
 
 use crate::{
     msg::{
-        ApproveForAllMsg, ApproveMsg, BurnMsg, CheckOwnerMsg, InitMsg, MintMsg, MultiMintMsg,
-        RecordDeleteMsg, RecordMintMsg, RecordUpdateMsg, RevokeForAllMsg, RevokeMsg, SetBaseUriMsg,
-        TransferFromMsg, TransferMsg, UpdateMinterMsg,
+        ApproveForAllMsg, ApproveMsg, BurnMsg, InitMsg, MintMsg, RevokeForAllMsg,
+        RevokeMsg, SetBaseUriMsg, TransferFromMsg, TransferMsg, UpdateMinterMsg, MultiMintMsg, CheckOwnerMsg,
     },
-    state::PartisiaNameSystemContractState,
-    ContractError,
+    state::PartisiaNameSystemState,
 };
+
+const CONTRACT_NAME: &str = env!("CARGO_PKG_NAME");
+const CONTRACT_VERSION: &str = env!("CARGO_PKG_VERSION");
 
 /// ## Description
 /// Inits contract state.
-/// Returns [`(PartisiaNameSystemContractState, Vec<EventGroup>)`] if operation was successful,
+/// Returns [`(PartisiaNameSystemState, Vec<EventGroup>)`] if operation was successful,
 /// otherwise panics with error message defined in [`ContractError`]
 /// ## Params
 /// * **_ctx** is an object of type [`ContractContext`]
 ///
 /// * **msg** is an object of type [`InitMsg`]
 pub fn execute_init(
-    _ctx: &ContractContext,
+    ctx: &ContractContext,
     msg: &InitMsg,
-) -> (PartisiaNameSystemContractState, Vec<EventGroup>) {
-    let state = PartisiaNameSystemContractState {
+) -> (PartisiaNameSystemState, Vec<EventGroup>) {
+    let mpc721_msg = mpc721_msg::InitMsg {
         owner: msg.owner,
         name: msg.name.clone(),
         symbol: msg.symbol.clone(),
         base_uri: msg.base_uri.clone(),
         minter: msg.minter,
-        supply: 0,
-        tokens: BTreeMap::new(),
-        records: BTreeMap::new(),
-        operator_approvals: BTreeMap::new(),
     };
 
-    (state, vec![])
-}
+    let (mpc721, events) = mpc721_actions::execute_init(&ctx, &mpc721_msg);
+    let state = PartisiaNameSystemState {
+        mpc721,
+        version: ContractVersionBase::new(CONTRACT_NAME, CONTRACT_VERSION),
+    };
 
-/// ## Description
-/// Set base uri for the tokens.
-/// Returns [`(PartisiaNameSystemContractState, Vec<EventGroup>)`] if operation was successful,
-/// otherwise panics with error message defined in [`ContractError`]
-/// ## Params
-/// * **ctx** is an object of type [`ContractContext`]
-///
-/// * **state** is an object of type [`PartisiaNameSystemContractState`]
-///
-/// * **msg** is an object of type [`SetBaseUriMsg`]
-pub fn execute_set_base_uri(
-    ctx: &ContractContext,
-    state: &mut PartisiaNameSystemContractState,
-    msg: &SetBaseUriMsg,
-) -> Vec<EventGroup> {
-    assert!(
-        state.is_owner(&ctx.sender),
-        "{}",
-        ContractError::Unauthorized
-    );
-
-    state.set_base_uri(&msg.new_base_uri);
-    vec![]
-}
-
-/// ## Description
-/// Mint a new token. Can only be executed by minter account.
-/// Returns [`(PartisiaNameSystemContractState, Vec<EventGroup>)`] if operation was successful,
-/// otherwise panics with error message defined in [`ContractError`]
-/// ## Params
-/// * **ctx** is an object of type [`ContractContext`]
-///
-/// * **state** is an object of type [`PartisiaNameSystemContractState`]
-///
-/// * **msg** is an object of type [`MintMsg`]
-pub fn execute_mint(
-    ctx: &ContractContext,
-    state: &mut PartisiaNameSystemContractState,
-    msg: &MintMsg,
-) -> Vec<EventGroup> {
-    assert!(
-        state.minter == ctx.sender,
-        "{}",
-        ContractError::Unauthorized
-    );
-
-    assert!(
-        !state.is_minted(msg.token_id.to_string()),
-        "{}",
-        ContractError::Minted
-    );
-
-    state.mint(msg.token_id.to_string(), &msg.to, &msg.parent);
-
-    vec![]
-}
-
-/// ## Description
-/// Mint a new record for a token. Can only be executed from owner account.
-/// Returns [`(PartisiaNameSystemContractState, Vec<EventGroup>)`] if operation was successful,
-/// otherwise panics with error message defined in [`ContractError`]
-/// ## Params
-/// * **ctx** is an object of type [`ContractContext`]
-///
-/// * **state** is an object of type [`PartisiaNameSystemContractState`]
-///
-/// * **msg** is an object of type [`MintMsg`]
-pub fn execute_record_mint(
-    ctx: &ContractContext,
-    state: &mut PartisiaNameSystemContractState,
-    msg: &RecordMintMsg,
-) -> Vec<EventGroup> {
-    let token_id = msg.token_id.to_string();
-    assert!(
-        state.is_minted(token_id.to_string()),
-        "{}",
-        ContractError::NotFound
-    );
-
-    assert!(
-        state.is_token_owner(token_id.to_string(), &ctx.sender),
-        "{}",
-        ContractError::Unauthorized
-    );
-
-    assert!(
-        !state.is_record_minted(token_id.to_string(), msg.class),
-        "{}",
-        ContractError::RecordMinted
-    );
-
-    state.mint_record(token_id.to_string(), msg.data.to_string(), msg.class);
-
-    vec![]
-}
-
-/// ## Description
-/// Updates the minter address checking that the sender is the contract owner address
-/// ## Params
-/// * **ctx** is an object of type [`ContractContext`]
-///
-/// * **state** is an object of type [`PartisiaNameSystemContractState`]
-///
-/// * **msg** is an object of type [`UpdateMinterMsg`]
-pub fn execute_update_minter(
-    ctx: &ContractContext,
-    state: &mut PartisiaNameSystemContractState,
-    msg: UpdateMinterMsg,
-) -> Vec<EventGroup> {
-    assert!(
-        state.owner.is_some() && state.owner.unwrap() == ctx.sender,
-        "{}",
-        ContractError::Unauthorized
-    );
-
-    state.minter = msg.new_minter;
-
-    vec![]
+    (state, events)
 }
 
 /// ## Description
 /// Transfer token to another account.
-/// Returns [`(PartisiaNameSystemContractState, Vec<EventGroup>)`] if operation was successful,
+/// Returns [`Vec<EventGroup>`] if operation was successful,
 /// otherwise panics with error message defined in [`ContractError`]
 /// ## Params
 /// * **ctx** is an object of type [`ContractContext`]
 ///
-/// * **state** is an object of type [`PartisiaNameSystemContractState`]
+/// * **state** is an object of type [`PartisiaNameSystemState`]
 ///
 /// * **msg** is an object of type [`TransferMsg`]
 pub fn execute_transfer(
     ctx: &ContractContext,
-    state: &mut PartisiaNameSystemContractState,
+    state: &mut PartisiaNameSystemState,
     msg: &TransferMsg,
 ) -> Vec<EventGroup> {
-    assert!(
-        state.is_minted(msg.token_id.to_string()),
-        "{}",
-        ContractError::NotFound
+    let events = mpc721_actions::execute_transfer(
+        &ctx,
+        &mut state.mpc721,
+        &mpc721_msg::TransferMsg {
+            to: msg.to,
+            token_id: msg.token_id,
+        },
     );
 
-    state.transfer(&ctx.sender, &msg.to, msg.token_id.to_string());
-    vec![]
+    events
 }
 
 /// ## Description
 /// Only with approval extension. Transfer token from owner to spender.
-/// Returns [`(PartisiaNameSystemContractState, Vec<EventGroup>)`] if operation was successful,
+/// Returns [`Vec<EventGroup>`] if operation was successful,
 /// otherwise panics with error message defined in [`ContractError`]
 /// ## Params
 /// * **ctx** is an object of type [`ContractContext`]
 ///
-/// * **state** is an object of type [`PartisiaNameSystemContractState`]
+/// * **state** is an object of type [`PartisiaNameSystemState`]
 ///
 /// * **msg** is an object of type [`TransferFromMsg`]
 pub fn execute_transfer_from(
     ctx: &ContractContext,
-    state: &mut PartisiaNameSystemContractState,
+    state: &mut PartisiaNameSystemState,
     msg: &TransferFromMsg,
 ) -> Vec<EventGroup> {
-    assert!(
-        state.is_minted(msg.token_id.to_string()),
-        "{}",
-        ContractError::NotFound
+    let events = mpc721_actions::execute_transfer_from(
+        &ctx,
+        &mut state.mpc721,
+        &mpc721_msg::TransferFromMsg {
+            from: msg.from,
+            to: msg.to,
+            token_id: msg.token_id,
+        },
     );
 
-    state.transfer(&msg.from, &msg.to, msg.token_id.to_string());
-    vec![]
+    events
 }
 
 /// ## Description
 /// Allows spender to transfer token from the owner account.
-/// Returns [`(PartisiaNameSystemContractState, Vec<EventGroup>)`] if operation was successful,
+/// Returns [`Vec<EventGroup>`] if operation was successful,
 /// otherwise panics with error message defined in [`ContractError`]
 /// ## Params
 /// * **ctx** is an object of type [`ContractContext`]
 ///
-/// * **state** is an object of type [`PartisiaNameSystemContractState`]
+/// * **state** is an object of type [`PartisiaNameSystemState`]
 ///
 /// * **msg** is an object of type [`ApproveMsg`]
 pub fn execute_approve(
     ctx: &ContractContext,
-    state: &mut PartisiaNameSystemContractState,
+    state: &mut PartisiaNameSystemState,
     msg: &ApproveMsg,
 ) -> Vec<EventGroup> {
-    assert!(
-        state.is_minted(msg.token_id.to_string()),
-        "{}",
-        ContractError::NotFound
+    let events = mpc721_actions::execute_approve(
+        &ctx,
+        &mut state.mpc721,
+        &mpc721_msg::ApproveMsg {
+            spender: msg.spender,
+            token_id: msg.token_id,
+        },
     );
 
-    state.update_approvals(&ctx.sender, &msg.spender, msg.token_id.to_string(), true);
-    vec![]
+    events
+}
+
+/// ## Description
+/// Set base uri for the tokens.
+/// Returns [`Vec<EventGroup>`] if operation was successful,
+/// otherwise panics with error message defined in [`ContractError`]
+/// ## Params
+/// * **ctx** is an object of type [`ContractContext`]
+///
+/// * **state** is an object of type [`PartisiaNameSystemState`]
+///
+/// * **msg** is an object of type [`SetBaseUriMsg`]
+pub fn execute_set_base_uri(
+    ctx: &ContractContext,
+    state: &mut PartisiaNameSystemState,
+    msg: &SetBaseUriMsg,
+) -> Vec<EventGroup> {
+    let events = mpc721_actions::execute_set_base_uri(
+        &ctx,
+        &mut state.mpc721,
+        &mpc721_msg::SetBaseUriMsg {
+            new_base_uri: msg.new_base_uri.clone(),
+        },
+    );
+
+    events
+}
+
+/// ## Description
+/// Mint a new token. Can only be executed by minter account.
+/// Returns [`Vec<EventGroup>`] if operation was successful,
+/// otherwise panics with error message defined in [`ContractError`]
+/// ## Params
+/// * **ctx** is an object of type [`ContractContext`]
+///
+/// * **state** is an object of type [`PartisiaNameSystemState`]
+///
+/// * **msg** is an object of type [`MintMsg`]
+pub fn execute_mint(
+    ctx: &ContractContext,
+    state: &mut PartisiaNameSystemState,
+    msg: &MintMsg,
+) -> Vec<EventGroup> {
+    let mut events = mpc721_actions::execute_mint(
+        &ctx,
+        &mut state.mpc721,
+        &mpc721_msg::MintMsg {
+            token_id: msg.token_id,
+            to: msg.to,
+            token_uri: msg.token_uri.clone(),
+        },
+    );
+
+    let mut update_parent_events: Vec<EventGroup> = vec![];
+    if let Some(parent) = msg.parent {
+        // TODO: Do not mint if parent does not belong to the owner
+        update_parent_events = mpc721_actions::execute_update_parent(
+            &ctx,
+            &mut state.mpc721,
+            &mpc721_msg::UpdateParentMsg {
+                token_id: msg.token_id,
+                parent_id: Some(parent),
+            },
+        );
+    }
+
+    events.extend(update_parent_events);
+    events
 }
 
 /// ## Description
 /// Allows operator to transfer any owner tokens from his account.
-/// Returns [`(PartisiaNameSystemContractState, Vec<EventGroup>)`] if operation was successful,
+/// Returns [`Vec<EventGroup>`] if operation was successful,
 /// otherwise panics with error message defined in [`ContractError`]
 /// ## Params
 /// * **ctx** is an object of type [`ContractContext`]
 ///
-/// * **state** is an object of type [`PartisiaNameSystemContractState`]
+/// * **state** is an object of type [`PartisiaNameSystemState`]
 ///
 /// * **msg** is an object of type [`ApproveForAllMsg`]
 pub fn execute_approve_for_all(
     ctx: &ContractContext,
-    state: &mut PartisiaNameSystemContractState,
+    state: &mut PartisiaNameSystemState,
     msg: &ApproveForAllMsg,
 ) -> Vec<EventGroup> {
-    state.add_operator(&ctx.sender, &msg.operator);
-    vec![]
+    let events = mpc721_actions::execute_approve_for_all(
+        &ctx,
+        &mut state.mpc721,
+        &mpc721_msg::ApproveForAllMsg {
+            operator: msg.operator,
+        },
+    );
+
+    events
 }
 
 /// ## Description
 /// Remove approval.
-/// Returns [`(PartisiaNameSystemContractState, Vec<EventGroup>)`] if operation was successful,
+/// Returns [`Vec<EventGroup>`] if operation was successful,
 /// otherwise panics with error message defined in [`ContractError`]
 /// ## Params
 /// * **ctx** is an object of type [`ContractContext`]
 ///
-/// * **state** is an object of type [`PartisiaNameSystemContractState`]
+/// * **state** is an object of type [`PartisiaNameSystemState`]
 ///
 /// * **msg** is an object of type [`RevokeMsg`]
 pub fn execute_revoke(
     ctx: &ContractContext,
-    state: &mut PartisiaNameSystemContractState,
+    state: &mut PartisiaNameSystemState,
     msg: &RevokeMsg,
 ) -> Vec<EventGroup> {
-    assert!(
-        state.is_minted(msg.token_id.to_string()),
-        "{}",
-        ContractError::NotFound
+    let events = mpc721_actions::execute_revoke(
+        &ctx,
+        &mut state.mpc721,
+        &mpc721_msg::RevokeMsg {
+            spender: msg.spender,
+            token_id: msg.token_id,
+        },
     );
 
-    state.update_approvals(&ctx.sender, &msg.spender, msg.token_id.to_string(), false);
-    vec![]
+    events
 }
 
 /// ## Description
 /// Remove operator.
-/// Returns [`(PartisiaNameSystemContractState, Vec<EventGroup>)`] if operation was successful,
+/// Returns [`Vec<EventGroup>`] if operation was successful,
 /// otherwise panics with error message defined in [`ContractError`]
 /// ## Params
 /// * **ctx** is an object of type [`ContractContext`]
 ///
-/// * **state** is an object of type [`PartisiaNameSystemContractState`]
+/// * **state** is an object of type [`PartisiaNameSystemState`]
 ///
 /// * **msg** is an object of type [`RevokeForAllMsg`]
 pub fn execute_revoke_for_all(
     ctx: &ContractContext,
-    state: &mut PartisiaNameSystemContractState,
+    state: &mut PartisiaNameSystemState,
     msg: &RevokeForAllMsg,
 ) -> Vec<EventGroup> {
-    state.remove_operator(&ctx.sender, &msg.operator);
-    vec![]
+    let events = mpc721_actions::execute_revoke_for_all(
+        &ctx,
+        &mut state.mpc721,
+        &mpc721_msg::RevokeForAllMsg {
+            operator: msg.operator,
+        },
+    );
+
+    events
 }
 
 /// ## Description
 /// Destroy your token forever.
-/// Returns [`(PartisiaNameSystemContractState, Vec<EventGroup>)`] if operation was successful,
+/// Returns [`Vec<EventGroup>`] if operation was successful,
 /// otherwise panics with error message defined in [`ContractError`]
 /// ## Params
 /// * **ctx** is an object of type [`ContractContext`]
 ///
-/// * **state** is an object of type [`PartisiaNameSystemContractState`]
+/// * **state** is an object of type [`PartisiaNameSystemState`]
 ///
 /// * **msg** is an object of type [`BurnMsg`]
 pub fn execute_burn(
     ctx: &ContractContext,
-    state: &mut PartisiaNameSystemContractState,
+    state: &mut PartisiaNameSystemState,
     msg: &BurnMsg,
 ) -> Vec<EventGroup> {
-    assert!(
-        state.is_minted(msg.token_id.to_string()),
-        "{}",
-        ContractError::NotFound
+    let events = mpc721_actions::execute_burn(
+        &ctx,
+        &mut state.mpc721,
+        &mpc721_msg::BurnMsg {
+            token_id: msg.token_id,
+        },
     );
 
-    state.remove_token(&ctx.sender, msg.token_id.to_string());
-    state.supply -= 1;
+    events
+}
 
-    vec![]
+/// ## Description
+/// Updates the minter address checking that the sender is the contract owner address
+/// Returns [`Vec<EventGroup>`] if operation was successful,
+/// ## Params
+/// * **ctx** is an object of type [`ContractContext`]
+///
+/// * **state** is an object of type [`PartisiaNameSystemState`]
+///
+/// * **msg** is an object of type [`UpdateMinterMsg`]
+pub fn execute_update_minter(
+    ctx: &ContractContext,
+    state: &mut PartisiaNameSystemState,
+    msg: UpdateMinterMsg,
+) -> Vec<EventGroup> {
+    let events = mpc721_actions::execute_update_minter(
+        &ctx,
+        &mut state.mpc721,
+        mpc721_msg::UpdateMinterMsg {
+            new_minter: msg.new_minter,
+        },
+    );
+
+    events
 }
 
 /// ## Description
 /// Check if a user owns a particular token. Will revert otherwise
-/// Returns [`(PartisiaNameSystemContractState, Vec<EventGroup>)`] if operation was successful,
+/// Returns [`Vec<EventGroup>`] if operation was successful,
 /// otherwise panics with error message defined in [`ContractError`]
 /// ## Params
 /// * **ctx** is an object of type [`ContractContext`]
 ///
-/// * **state** is an object of type [`PartisiaNameSystemContractState`]
+/// * **state** is an object of type [`PartisiaNameSystemState`]
 ///
 /// * **msg** is an object of type [`CheckOwnerMsg`]
 pub fn execute_ownership_check(
     ctx: &ContractContext,
-    state: &mut PartisiaNameSystemContractState,
+    state: &mut PartisiaNameSystemState,
     msg: &CheckOwnerMsg,
 ) -> Vec<EventGroup> {
-    let token_info = state.token_info(msg.token_id.to_string());
-    match token_info {
-        Some(token_info) => assert!(
-            token_info.owner == msg.owner,
-            "{}",
-            ContractError::IncorrectOwner
-        ),
-        None => panic!("{}", ContractError::NotFound),
-    };
-    vec![]
+    let events = mpc721_actions::execute_ownership_check(
+        &ctx,
+        &mut state.mpc721,
+        &mpc721_msg::CheckOwnerMsg {
+            token_id: msg.token_id,
+            owner: msg.owner,
+        },
+    );
+
+    events
 }
+
 
 /// ## Description
 /// Mint Multiple NFTs in a single function call
-/// Returns [` Vec<EventGroup>)`] if operation was successful,
+/// Returns [`Vec<EventGroup>`] if operation was successful,
 /// otherwise panics with error message defined in [`ContractError`]
 /// ## Params
 /// * **ctx** is an object of type [`ContractContext`]
 ///
-/// * **state** is an object of type [`PartisiaNameSystemContractState`]
+/// * **state** is an object of type [`PartisiaNameSystemState`]
 ///
 /// * **msg** is an object of type [`MultiMintMsg`]
 pub fn execute_multi_mint(
     ctx: &ContractContext,
-    state: &mut PartisiaNameSystemContractState,
+    state: &mut PartisiaNameSystemState,
     msg: &MultiMintMsg,
 ) -> Vec<EventGroup> {
+    let mut events: Vec<EventGroup> = vec![];
     for mint in msg.mints.iter() {
-        execute_mint(ctx, state, mint);
+        let event = execute_mint(ctx, state, mint);
+
+        events.extend(event)
     }
 
-    vec![]
+    events
 }
 
-/// ## Description
-/// Update record related to token
-/// Returns [` Vec<EventGroup>)`] if operation was successful,
-/// otherwise panics with error message defined in [`ContractError`]
-/// ## Params
-/// * **ctx** is an object of type [`ContractContext`]
-///
-/// * **state** is an object of type [`PartisiaNameSystemContractState`]
-///
-/// * **msg** is an object of type [`RecordUpdateMsg`]
-pub fn execute_record_update(
-    ctx: &ContractContext,
-    state: &mut PartisiaNameSystemContractState,
-    msg: &RecordUpdateMsg,
-) -> Vec<EventGroup> {
-    let token_id = msg.token_id.to_string();
-    assert!(
-        state.is_minted(token_id.to_string()),
-        "{}",
-        ContractError::NotMinted
-    );
-
-    assert!(
-        state.is_record_minted(token_id.to_string(), msg.class),
-        "{}",
-        ContractError::RecordNotMinted
-    );
-
-    assert!(
-        state.is_token_owner(token_id.to_string(), &ctx.sender),
-        "{}",
-        ContractError::Unauthorized
-    );
-
-    state.update_record_data(token_id.to_string(), msg.class, msg.data.to_string());
-
-    vec![]
-}
-
-/// ## Description
-/// Delete the record related to token
-/// Returns [` Vec<EventGroup>)`] if operation was successful,
-/// otherwise panics with error message defined in [`ContractError`]
-/// ## Params
-/// * **ctx** is an object of type [`ContractContext`]
-///
-/// * **state** is an object of type [`PartisiaNameSystemContractState`]
-///
-/// * **msg** is an object of type [`RecordDeleteMsg`]
-pub fn execute_record_delete(
-    ctx: &ContractContext,
-    state: &mut PartisiaNameSystemContractState,
-    msg: &RecordDeleteMsg,
-) -> Vec<EventGroup> {
-    let token_id = msg.token_id.to_string();
-    assert!(
-        state.is_minted(token_id.to_string()),
-        "{}",
-        ContractError::NotMinted
-    );
-
-    assert!(
-        state.is_record_minted(token_id.to_string(), msg.class),
-        "{}",
-        ContractError::RecordNotMinted
-    );
-
-    assert!(
-        state.is_token_owner(token_id.to_string(), &ctx.sender),
-        "{}",
-        ContractError::Unauthorized
-    );
-
-    state.delete_record(token_id.to_string(), msg.class);
-
-    vec![]
-}
+// TODO: add mint record
+// TODO: add update record
+// TODO: add delete record

@@ -7,6 +7,8 @@ use utils::events::IntoShortnameRPCEvent;
 
 use crate::state::RecordClass;
 
+// TODO: Convert token_id to String
+
 /// ## Description
 /// This structure describes fields for PNS initialize msg
 #[derive(ReadWriteRPC, CreateTypeSpec, Clone, PartialEq, Eq, Debug)]
@@ -31,7 +33,7 @@ pub struct TransferMsg {
     /// receiver address
     pub to: Address,
     /// token id
-    pub token_id: String,
+    pub token_id: u128,
 }
 
 /// ## Description
@@ -44,7 +46,7 @@ pub struct TransferFromMsg {
     /// receiver address
     pub to: Address,
     /// token id
-    pub token_id: String,
+    pub token_id: u128,
 }
 
 /// ## Description
@@ -55,7 +57,7 @@ pub struct ApproveMsg {
     /// operator address to approve
     pub spender: Address,
     /// token id
-    pub token_id: String,
+    pub token_id: u128,
 }
 
 /// ## Description
@@ -73,11 +75,13 @@ pub struct SetBaseUriMsg {
 #[rpc_msg(action = 0x09)]
 pub struct MintMsg {
     /// newly minted token id
-    pub token_id: String,
+    pub token_id: u128,
     /// receiver address
     pub to: Address,
-    /// parent
-    pub parent: Option<String>,
+    /// optional parent
+    pub parent: Option<u128>,
+    /// optional token_uri
+    pub token_uri: Option<String>,
 }
 
 /// ## Description
@@ -97,7 +101,7 @@ pub struct RevokeMsg {
     /// operator address to revoke
     pub spender: Address,
     /// token id
-    pub token_id: String,
+    pub token_id: u128,
 }
 
 /// ## Description
@@ -115,7 +119,7 @@ pub struct RevokeForAllMsg {
 #[rpc_msg(action = 0x17)]
 pub struct BurnMsg {
     /// token id to burn
-    pub token_id: String,
+    pub token_id: u128,
 }
 
 /// ## Description
@@ -126,7 +130,7 @@ pub struct CheckOwnerMsg {
     /// receiver address
     pub owner: Address,
     /// token id
-    pub token_id: String,
+    pub token_id: u128,
 }
 /// ## Description
 /// This structure describes fields for the Update Minter Msg
@@ -152,7 +156,7 @@ pub struct MultiMintMsg {
 #[rpc_msg(action = 0x21)]
 pub struct RecordMintMsg {
     /// Related domain
-    pub token_id: String,
+    pub token_id: u128,
     /// Class type
     pub class: RecordClass,
     /// Data
@@ -165,7 +169,7 @@ pub struct RecordMintMsg {
 #[rpc_msg(action = 0x22)]
 pub struct RecordUpdateMsg {
     /// Related domain
-    pub token_id: String,
+    pub token_id: u128,
     /// Class type
     pub class: RecordClass,
     /// Data
@@ -178,7 +182,7 @@ pub struct RecordUpdateMsg {
 #[rpc_msg(action = 0x23)]
 pub struct RecordDeleteMsg {
     /// Related domain
-    pub token_id: String,
+    pub token_id: u128,
     /// Class type
     pub class: RecordClass,
 }
