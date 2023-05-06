@@ -170,7 +170,7 @@ pub fn execute_mint(
     state: &mut PartisiaNameSystemState,
     msg: &MintMsg,
 ) -> Vec<EventGroup> {
-    assert!(state.is_minted(&msg.token_id), "{}", ContractError::Minted);
+    assert!(!state.is_minted(&msg.token_id), "{}", ContractError::Minted);
 
     // TODO: Make actions atomic & permit rollback
 

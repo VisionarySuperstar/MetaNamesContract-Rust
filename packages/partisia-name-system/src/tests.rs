@@ -1,15 +1,18 @@
-use crate::msg::{
-    ApproveForAllMsg, ApproveMsg, BurnMsg, CheckOwnerMsg, MintMsg, MultiMintMsg, RevokeForAllMsg,
-    RevokeMsg, SetBaseUriMsg, TransferFromMsg, TransferMsg, UpdateMinterMsg,
+use crate::{
+    actions::{execute_init, execute_mint},
+    msg::{
+        ApproveForAllMsg, ApproveMsg, BurnMsg, CheckOwnerMsg, InitMsg, MintMsg, MultiMintMsg,
+        RevokeForAllMsg, RevokeMsg, SetBaseUriMsg, TransferFromMsg, TransferMsg, UpdateMinterMsg,
+    },
 };
 
 use pbc_contract_common::{
     address::{Address, AddressType, Shortname},
+    context::ContractContext,
     events::EventGroup,
 };
 
 use utils::events::IntoShortnameRPCEvent;
-
 
 // TODO: Add tests for functionality
 // TODO: Test parent
@@ -132,7 +135,7 @@ fn proper_mint_action_call() {
         token_id: "name.meta".to_string(),
         to: mock_address(1u8),
         token_uri: Some("uri".to_string()),
-        parent_id: None
+        parent_id: None,
     };
 
     let mut event_group = EventGroup::builder();
@@ -319,4 +322,52 @@ fn proper_multi_mint_action_call() {
         .done();
 
     assert_eq!(event_group.build(), test_event_group.build());
+}
+
+// Test actions
+
+fn mock_contract_context(sender: u8) -> ContractContext {
+    ContractContext {
+        contract_address: mock_address(1u8),
+        sender: mock_address(sender),
+        block_time: 100,
+        block_production_time: 100,
+        current_transaction: [
+            0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8,
+            0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8,
+        ],
+        original_transaction: [
+            0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8,
+            0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8,
+        ],
+    }
+}
+
+#[test]
+fn proper_mint() {
+    let minter = 1u8;
+    let alice = 10u8;
+
+    let msg = InitMsg {
+        owner: None,
+        name: "Meta Names".to_string(),
+        symbol: "META".to_string(),
+        base_uri: Some("ipfs://some.some".to_string()),
+        minter: mock_address(minter),
+    };
+
+    let (mut state, events) = execute_init(&mock_contract_context(2), &msg);
+
+    let ref token_id = "name.meta".to_string();
+    let mint_msg = MintMsg {
+        token_id: token_id.clone(),
+        to: mock_address(alice),
+        token_uri: Some(String::from("name.meta")),
+        parent_id: None,
+    };
+
+    let _ = execute_mint(&mock_contract_context(minter), &mut state, &mint_msg);
+
+    let num_token_id = state.get_token_id(token_id).unwrap();
+    assert_eq!(num_token_id, 1);
 }
