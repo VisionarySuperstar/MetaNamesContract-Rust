@@ -8,7 +8,8 @@ use mpc721_hierarchy::{actions as mpc721_actions, msg as mpc721_msg};
 use crate::{
     msg::{
         ApproveForAllMsg, ApproveMsg, BurnMsg, CheckOwnerMsg, InitMsg, MintMsg, MultiMintMsg,
-        RevokeForAllMsg, RevokeMsg, SetBaseUriMsg, TransferFromMsg, TransferMsg, UpdateMinterMsg,
+        RecordDeleteMsg, RecordMintMsg, RecordUpdateMsg, RevokeForAllMsg, RevokeMsg, SetBaseUriMsg,
+        TransferFromMsg, TransferMsg, UpdateMinterMsg,
     },
     state::{Domain, PartisiaNameSystemState},
     ContractError,
@@ -41,6 +42,7 @@ pub fn execute_init(
     let state = PartisiaNameSystemState {
         mpc721,
         domains: BTreeMap::new(),
+        records: BTreeMap::new(),
         version: ContractVersionBase::new(CONTRACT_NAME, CONTRACT_VERSION),
     };
 
@@ -62,7 +64,7 @@ pub fn execute_transfer(
     state: &mut PartisiaNameSystemState,
     msg: &TransferMsg,
 ) -> Vec<EventGroup> {
-    let num_token_id = state.get_token_id(&msg.token_id);
+    let num_token_id = state.token_id(&msg.token_id);
     assert!(num_token_id.is_some(), "{}", ContractError::NotFound);
 
     let events = mpc721_actions::execute_transfer(
@@ -92,7 +94,7 @@ pub fn execute_transfer_from(
     state: &mut PartisiaNameSystemState,
     msg: &TransferFromMsg,
 ) -> Vec<EventGroup> {
-    let num_token_id = state.get_token_id(&msg.token_id);
+    let num_token_id = state.token_id(&msg.token_id);
     assert!(num_token_id.is_some(), "{}", ContractError::NotFound);
 
     let events = mpc721_actions::execute_transfer_from(
@@ -123,7 +125,7 @@ pub fn execute_approve(
     state: &mut PartisiaNameSystemState,
     msg: &ApproveMsg,
 ) -> Vec<EventGroup> {
-    let num_token_id = state.get_token_id(&msg.token_id);
+    let num_token_id = state.token_id(&msg.token_id);
     assert!(num_token_id.is_some(), "{}", ContractError::NotFound);
 
     let events = mpc721_actions::execute_approve(
@@ -264,7 +266,7 @@ pub fn execute_revoke(
     state: &mut PartisiaNameSystemState,
     msg: &RevokeMsg,
 ) -> Vec<EventGroup> {
-    let num_token_id = state.get_token_id(&msg.token_id);
+    let num_token_id = state.token_id(&msg.token_id);
     assert!(num_token_id.is_some(), "{}", ContractError::NotFound);
 
     let events = mpc721_actions::execute_revoke(
@@ -320,7 +322,7 @@ pub fn execute_burn(
     state: &mut PartisiaNameSystemState,
     msg: &BurnMsg,
 ) -> Vec<EventGroup> {
-    let num_token_id = state.get_token_id(&msg.token_id);
+    let num_token_id = state.token_id(&msg.token_id);
     assert!(num_token_id.is_some(), "{}", ContractError::NotFound);
 
     let events = mpc721_actions::execute_burn(
@@ -374,7 +376,7 @@ pub fn execute_ownership_check(
     state: &mut PartisiaNameSystemState,
     msg: &CheckOwnerMsg,
 ) -> Vec<EventGroup> {
-    let num_token_id = state.get_token_id(&msg.token_id);
+    let num_token_id = state.token_id(&msg.token_id);
     assert!(num_token_id.is_some(), "{}", ContractError::NotFound);
 
     let events = mpc721_actions::execute_ownership_check(
@@ -414,6 +416,113 @@ pub fn execute_multi_mint(
     events
 }
 
-// TODO: add mint record
-// TODO: add update record
-// TODO: add delete record
+/// ## Description
+/// Mint a new record for a domain
+/// Returns [`Vec<EventGroup>`] if operation was successful,
+/// otherwise panics with error message defined in [`ContractError`]
+/// ## Params
+/// * **ctx** is an object of type [`ContractContext`]
+///
+/// * **state** is an object of type [`PartisiaNameSystemState`]
+///
+/// * **msg** is an object of type [`RecordMintMsg`]
+pub fn execute_mint_record(
+    ctx: &ContractContext,
+    state: &mut PartisiaNameSystemState,
+    msg: &RecordMintMsg,
+) -> Vec<EventGroup> {
+    assert!(
+        state.is_minted(&msg.token_id),
+        "{}",
+        ContractError::NotFound
+    );
+
+    let domain = state.domain_info(&msg.token_id).unwrap();
+    assert!(
+        state.mpc721.allowed_to_manage(&ctx.sender, domain.token_id),
+        "{}",
+        ContractError::Unauthorized
+    );
+
+    state.mint_record(&msg.token_id, &msg.class, &msg.data);
+
+    vec![]
+}
+
+/// ## Description
+/// Update a record for a domain
+/// Returns [`Vec<EventGroup>`] if operation was successful,
+/// otherwise panics with error message defined in [`ContractError`]
+/// ## Params
+/// * **ctx** is an object of type [`ContractContext`]
+///
+/// * **state** is an object of type [`PartisiaNameSystemState`]
+///
+/// * **msg** is an object of type [`RecordUpdateMsg`]
+pub fn execute_update_record(
+    ctx: &ContractContext,
+    state: &mut PartisiaNameSystemState,
+    msg: &RecordUpdateMsg,
+) -> Vec<EventGroup> {
+    assert!(
+        state.is_minted(&msg.token_id),
+        "{}",
+        ContractError::NotFound
+    );
+
+    assert!(
+        state.is_record_minted(&msg.token_id, &msg.class),
+        "{}",
+        ContractError::NotFound
+    );
+
+    let domain = state.domain_info(&msg.token_id).unwrap();
+    assert!(
+        state.mpc721.allowed_to_manage(&ctx.sender, domain.token_id),
+        "{}",
+        ContractError::Unauthorized
+    );
+
+    state.update_record_data(&msg.token_id, &msg.class, &msg.data);
+
+    vec![]
+}
+
+/// ## Description
+/// Delete a record for a domain
+/// Returns [`Vec<EventGroup>`] if operation was successful,
+/// otherwise panics with error message defined in [`ContractError`]
+/// ## Params
+/// * **ctx** is an object of type [`ContractContext`]
+///
+/// * **state** is an object of type [`PartisiaNameSystemState`]
+///
+/// * **msg** is an object of type [`RecordDeleteMsg`]
+pub fn execute_delete_record(
+    ctx: &ContractContext,
+    state: &mut PartisiaNameSystemState,
+    msg: &RecordDeleteMsg,
+) -> Vec<EventGroup> {
+    assert!(
+        state.is_minted(&msg.token_id),
+        "{}",
+        ContractError::NotFound
+    );
+
+    assert!(
+        state.is_record_minted(&msg.token_id, &msg.class),
+        "{}",
+        ContractError::NotFound
+    );
+
+    let domain = state.domain_info(&msg.token_id).unwrap();
+    assert!(
+        state.mpc721.allowed_to_manage(&ctx.sender, domain.token_id),
+        "{}",
+        ContractError::Unauthorized
+    );
+
+    state.delete_record(&msg.token_id, &msg.class);
+
+    vec![]
+}

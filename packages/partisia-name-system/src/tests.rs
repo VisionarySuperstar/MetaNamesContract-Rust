@@ -1,9 +1,14 @@
 use crate::{
-    actions::{execute_init, execute_mint},
+    actions::{
+        execute_delete_record, execute_init, execute_mint, execute_mint_record,
+        execute_update_record,
+    },
     msg::{
         ApproveForAllMsg, ApproveMsg, BurnMsg, CheckOwnerMsg, InitMsg, MintMsg, MultiMintMsg,
-        RevokeForAllMsg, RevokeMsg, SetBaseUriMsg, TransferFromMsg, TransferMsg, UpdateMinterMsg,
+        RecordDeleteMsg, RecordMintMsg, RecordUpdateMsg, RevokeForAllMsg, RevokeMsg, SetBaseUriMsg,
+        TransferFromMsg, TransferMsg, UpdateMinterMsg,
     },
+    state::{Record, RecordClass},
 };
 
 use pbc_contract_common::{
@@ -13,6 +18,8 @@ use pbc_contract_common::{
 };
 
 use utils::events::IntoShortnameRPCEvent;
+
+// TODO: DRY up tests
 
 // TODO: Add tests for functionality
 // TODO: Test parent
@@ -241,7 +248,9 @@ fn proper_revoke_for_all_action_call() {
 fn proper_burn_action_call() {
     let dest = mock_address(30u8);
 
-    let msg = BurnMsg { token_id: "name.meta".to_string() };
+    let msg = BurnMsg {
+        token_id: "name.meta".to_string(),
+    };
 
     let mut event_group = EventGroup::builder();
     msg.as_interaction(&mut event_group, &dest);
@@ -368,9 +377,160 @@ fn proper_mint() {
 
     let _ = execute_mint(&mock_contract_context(minter), &mut state, &mint_msg);
 
-    let num_token_id = state.get_token_id(token_id).unwrap();
+    let num_token_id = state.token_id(token_id).unwrap();
     assert_eq!(num_token_id, 1);
 }
 
 // TODO: test if parent doesn't exist
 // TODO: test if parent is not owned by sender
+
+#[test]
+fn proper_record_mint() {
+    let minter = 1u8;
+    let alice = 10u8;
+
+    let msg = InitMsg {
+        owner: None,
+        name: "Meta Names".to_string(),
+        symbol: "META".to_string(),
+        base_uri: Some("ipfs://some.some".to_string()),
+        minter: mock_address(minter),
+    };
+
+    let (mut state, events) = execute_init(&mock_contract_context(2), &msg);
+
+    let ref token_id = "name.meta".to_string();
+    let mint_msg = MintMsg {
+        token_id: token_id.clone(),
+        to: mock_address(alice),
+        token_uri: Some(String::from("name.meta")),
+        parent_id: None,
+    };
+    let _ = execute_mint(&mock_contract_context(minter), &mut state, &mint_msg);
+
+    let record_class = RecordClass::Twitter {};
+    let record_mint_msg = RecordMintMsg {
+        token_id: token_id.clone(),
+        class: record_class,
+        data: "data".to_string(),
+    };
+    let _ = execute_mint_record(&mock_contract_context(alice), &mut state, &record_mint_msg);
+
+    let record = state.record_info(token_id, &record_class).unwrap();
+    assert_eq!(
+        *record,
+        Record {
+            data: "data".to_string(),
+        }
+    );
+}
+
+// TODO: Test if record doesn't exist
+// TODO: Test if record is not owned by sender
+
+#[test]
+fn proper_record_update() {
+    let minter = 1u8;
+    let alice = 10u8;
+
+    let msg = InitMsg {
+        owner: None,
+        name: "Meta Names".to_string(),
+        symbol: "META".to_string(),
+        base_uri: Some("ipfs://some.some".to_string()),
+        minter: mock_address(minter),
+    };
+
+    let (mut state, events) = execute_init(&mock_contract_context(2), &msg);
+
+    let ref token_id = "name.meta".to_string();
+    let mint_msg = MintMsg {
+        token_id: token_id.clone(),
+        to: mock_address(alice),
+        token_uri: Some(String::from("name.meta")),
+        parent_id: None,
+    };
+    let _ = execute_mint(&mock_contract_context(minter), &mut state, &mint_msg);
+
+    let record_class = RecordClass::Twitter {};
+    let record_mint_msg = RecordMintMsg {
+        token_id: token_id.clone(),
+        class: record_class,
+        data: "data".to_string(),
+    };
+    let _ = execute_mint_record(&mock_contract_context(alice), &mut state, &record_mint_msg);
+
+    let record_update_msg = RecordUpdateMsg {
+        token_id: token_id.clone(),
+        class: record_class,
+        data: "new data".to_string(),
+    };
+
+    let _ = execute_update_record(
+        &mock_contract_context(alice),
+        &mut state,
+        &record_update_msg,
+    );
+
+    let record = state.record_info(token_id, &record_class).unwrap();
+    assert_eq!(
+        *record,
+        Record {
+            data: "new data".to_string(),
+        }
+    );
+}
+
+// TODO: Test if record doesn't exist
+// TODO: Test if record is not owned by sender
+
+#[test]
+fn proper_record_delete() {
+    let minter = 1u8;
+    let alice = 10u8;
+
+    let msg = InitMsg {
+        owner: None,
+        name: "Meta Names".to_string(),
+        symbol: "META".to_string(),
+        base_uri: Some("ipfs://some.some".to_string()),
+        minter: mock_address(minter),
+    };
+
+    let (mut state, events) = execute_init(&mock_contract_context(2), &msg);
+
+    let ref token_id = "name.meta".to_string();
+    let mint_msg = MintMsg {
+        token_id: token_id.clone(),
+        to: mock_address(alice),
+        token_uri: Some(String::from("name.meta")),
+        parent_id: None,
+    };
+    let _ = execute_mint(&mock_contract_context(minter), &mut state, &mint_msg);
+
+    let record_class = RecordClass::Twitter {};
+    let record_mint_msg = RecordMintMsg {
+        token_id: token_id.clone(),
+        class: record_class,
+        data: "data".to_string(),
+    };
+    let _ = execute_mint_record(&mock_contract_context(alice), &mut state, &record_mint_msg);
+
+    let record_delete_msg = RecordDeleteMsg {
+        token_id: token_id.clone(),
+        class: record_class,
+    };
+
+    let _ = execute_delete_record(
+        &mock_contract_context(alice),
+        &mut state,
+        &record_delete_msg,
+    );
+
+    let record = state.record_info(token_id, &record_class);
+
+    assert!(record.is_none());
+}
+
+// TODO: Test if record doesn't exist
+// TODO: Test if record is not owned by sender
