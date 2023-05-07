@@ -10,7 +10,7 @@ use crate::{
         ApproveForAllMsg, ApproveMsg, BurnMsg, CheckOwnerMsg, InitMsg, MintMsg, MultiMintMsg,
         RevokeForAllMsg, RevokeMsg, SetBaseUriMsg, TransferFromMsg, TransferMsg, UpdateMinterMsg,
     },
-    state::{PartisiaNameSystemState, Domain},
+    state::{Domain, PartisiaNameSystemState},
     ContractError,
 };
 
@@ -62,12 +62,15 @@ pub fn execute_transfer(
     state: &mut PartisiaNameSystemState,
     msg: &TransferMsg,
 ) -> Vec<EventGroup> {
+    let num_token_id = state.get_token_id(&msg.token_id);
+    assert!(num_token_id.is_some(), "{}", ContractError::NotFound);
+
     let events = mpc721_actions::execute_transfer(
         &ctx,
         &mut state.mpc721,
         &mpc721_msg::TransferMsg {
             to: msg.to,
-            token_id: msg.token_id,
+            token_id: num_token_id.unwrap(),
         },
     );
 
@@ -89,13 +92,16 @@ pub fn execute_transfer_from(
     state: &mut PartisiaNameSystemState,
     msg: &TransferFromMsg,
 ) -> Vec<EventGroup> {
+    let num_token_id = state.get_token_id(&msg.token_id);
+    assert!(num_token_id.is_some(), "{}", ContractError::NotFound);
+
     let events = mpc721_actions::execute_transfer_from(
         &ctx,
         &mut state.mpc721,
         &mpc721_msg::TransferFromMsg {
             from: msg.from,
             to: msg.to,
-            token_id: msg.token_id,
+            token_id: num_token_id.unwrap(),
         },
     );
 
@@ -117,12 +123,15 @@ pub fn execute_approve(
     state: &mut PartisiaNameSystemState,
     msg: &ApproveMsg,
 ) -> Vec<EventGroup> {
+    let num_token_id = state.get_token_id(&msg.token_id);
+    assert!(num_token_id.is_some(), "{}", ContractError::NotFound);
+
     let events = mpc721_actions::execute_approve(
         &ctx,
         &mut state.mpc721,
         &mpc721_msg::ApproveMsg {
             spender: msg.spender,
-            token_id: msg.token_id,
+            token_id: num_token_id.unwrap(),
         },
     );
 
@@ -255,12 +264,15 @@ pub fn execute_revoke(
     state: &mut PartisiaNameSystemState,
     msg: &RevokeMsg,
 ) -> Vec<EventGroup> {
+    let num_token_id = state.get_token_id(&msg.token_id);
+    assert!(num_token_id.is_some(), "{}", ContractError::NotFound);
+
     let events = mpc721_actions::execute_revoke(
         &ctx,
         &mut state.mpc721,
         &mpc721_msg::RevokeMsg {
             spender: msg.spender,
-            token_id: msg.token_id,
+            token_id: num_token_id.unwrap(),
         },
     );
 
@@ -308,11 +320,14 @@ pub fn execute_burn(
     state: &mut PartisiaNameSystemState,
     msg: &BurnMsg,
 ) -> Vec<EventGroup> {
+    let num_token_id = state.get_token_id(&msg.token_id);
+    assert!(num_token_id.is_some(), "{}", ContractError::NotFound);
+
     let events = mpc721_actions::execute_burn(
         &ctx,
         &mut state.mpc721,
         &mpc721_msg::BurnMsg {
-            token_id: msg.token_id,
+            token_id: num_token_id.unwrap(),
         },
     );
 
@@ -359,11 +374,14 @@ pub fn execute_ownership_check(
     state: &mut PartisiaNameSystemState,
     msg: &CheckOwnerMsg,
 ) -> Vec<EventGroup> {
+    let num_token_id = state.get_token_id(&msg.token_id);
+    assert!(num_token_id.is_some(), "{}", ContractError::NotFound);
+
     let events = mpc721_actions::execute_ownership_check(
         &ctx,
         &mut state.mpc721,
         &mpc721_msg::CheckOwnerMsg {
-            token_id: msg.token_id,
+            token_id: num_token_id.unwrap(),
             owner: msg.owner,
         },
     );

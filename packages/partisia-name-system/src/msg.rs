@@ -33,7 +33,7 @@ pub struct TransferMsg {
     /// receiver address
     pub to: Address,
     /// token id
-    pub token_id: u128,
+    pub token_id: String,
 }
 
 /// ## Description
@@ -46,7 +46,7 @@ pub struct TransferFromMsg {
     /// receiver address
     pub to: Address,
     /// token id
-    pub token_id: u128,
+    pub token_id: String,
 }
 
 /// ## Description
@@ -57,7 +57,7 @@ pub struct ApproveMsg {
     /// operator address to approve
     pub spender: Address,
     /// token id
-    pub token_id: u128,
+    pub token_id: String,
 }
 
 /// ## Description
@@ -101,7 +101,7 @@ pub struct RevokeMsg {
     /// operator address to revoke
     pub spender: Address,
     /// token id
-    pub token_id: u128,
+    pub token_id: String,
 }
 
 /// ## Description
@@ -119,7 +119,7 @@ pub struct RevokeForAllMsg {
 #[rpc_msg(action = 0x17)]
 pub struct BurnMsg {
     /// token id to burn
-    pub token_id: u128,
+    pub token_id: String,
 }
 
 /// ## Description
@@ -130,7 +130,7 @@ pub struct CheckOwnerMsg {
     /// receiver address
     pub owner: Address,
     /// token id
-    pub token_id: u128,
+    pub token_id: String,
 }
 /// ## Description
 /// This structure describes fields for the Update Minter Msg
@@ -156,7 +156,7 @@ pub struct MultiMintMsg {
 #[rpc_msg(action = 0x21)]
 pub struct RecordMintMsg {
     /// Related domain
-    pub token_id: u128,
+    pub token_id: String,
     /// Class type
     pub class: RecordClass,
     /// Data
@@ -169,7 +169,7 @@ pub struct RecordMintMsg {
 #[rpc_msg(action = 0x22)]
 pub struct RecordUpdateMsg {
     /// Related domain
-    pub token_id: u128,
+    pub token_id: String,
     /// Class type
     pub class: RecordClass,
     /// Data
@@ -182,7 +182,7 @@ pub struct RecordUpdateMsg {
 #[rpc_msg(action = 0x23)]
 pub struct RecordDeleteMsg {
     /// Related domain
-    pub token_id: u128,
+    pub token_id: String,
     /// Class type
     pub class: RecordClass,
 }

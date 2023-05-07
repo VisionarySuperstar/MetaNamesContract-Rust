@@ -46,7 +46,7 @@ fn proper_transfer_action_call() {
 
     let msg = TransferMsg {
         to: mock_address(1u8),
-        token_id: 1,
+        token_id: "name.meta".to_string(),
     };
     let mut event_group = EventGroup::builder();
     let mut test_event_group = EventGroup::builder();
@@ -55,7 +55,7 @@ fn proper_transfer_action_call() {
     test_event_group
         .call(dest.clone(), Shortname::from_u32(TRANSFER))
         .argument(mock_address(1u8))
-        .argument(1u128)
+        .argument("name.meta".to_string())
         .done();
 
     assert_eq!(event_group.build(), test_event_group.build());
@@ -68,7 +68,7 @@ fn proper_transfer_from_action_call() {
     let msg = TransferFromMsg {
         from: mock_address(1u8),
         to: mock_address(2u8),
-        token_id: 1,
+        token_id: "name.meta".to_string(),
     };
 
     let mut event_group = EventGroup::builder();
@@ -79,7 +79,7 @@ fn proper_transfer_from_action_call() {
         .call(dest.clone(), Shortname::from_u32(TRANSFER_FROM))
         .argument(mock_address(1u8))
         .argument(mock_address(2u8))
-        .argument(1u128)
+        .argument("name.meta".to_string())
         .done();
 
     assert_eq!(event_group.build(), test_event_group.build());
@@ -91,7 +91,7 @@ fn proper_approve_action_call() {
 
     let msg = ApproveMsg {
         spender: mock_address(1u8),
-        token_id: 1,
+        token_id: "name.meta".to_string(),
     };
 
     let mut event_group = EventGroup::builder();
@@ -101,7 +101,7 @@ fn proper_approve_action_call() {
     test_event_group
         .call(dest.clone(), Shortname::from_u32(APPROVE))
         .argument(mock_address(1u8))
-        .argument(1u128)
+        .argument("name.meta".to_string())
         .done();
 
     assert_eq!(event_group.build(), test_event_group.build());
@@ -159,7 +159,7 @@ fn proper_ownership_check_call() {
 
     let msg = CheckOwnerMsg {
         owner: mock_address(1u8),
-        token_id: 1u128,
+        token_id: "name.meta".to_string(),
     };
 
     let mut event_group = EventGroup::builder();
@@ -169,7 +169,7 @@ fn proper_ownership_check_call() {
     test_event_group
         .call(dest.clone(), Shortname::from_u32(CHECKOWNER))
         .argument(mock_address(1u8))
-        .argument(1u128)
+        .argument("name.meta".to_string())
         .done();
 
     assert_eq!(event_group.build(), test_event_group.build());
@@ -201,7 +201,7 @@ fn proper_revoke_action_call() {
 
     let msg = RevokeMsg {
         spender: mock_address(1u8),
-        token_id: 1,
+        token_id: "name.meta".to_string(),
     };
 
     let mut event_group = EventGroup::builder();
@@ -211,7 +211,7 @@ fn proper_revoke_action_call() {
     test_event_group
         .call(dest.clone(), Shortname::from_u32(REVOKE))
         .argument(mock_address(1u8))
-        .argument(1u128)
+        .argument("name.meta".to_string())
         .done();
 
     assert_eq!(event_group.build(), test_event_group.build());
@@ -241,7 +241,7 @@ fn proper_revoke_for_all_action_call() {
 fn proper_burn_action_call() {
     let dest = mock_address(30u8);
 
-    let msg = BurnMsg { token_id: 1 };
+    let msg = BurnMsg { token_id: "name.meta".to_string() };
 
     let mut event_group = EventGroup::builder();
     msg.as_interaction(&mut event_group, &dest);
@@ -249,7 +249,7 @@ fn proper_burn_action_call() {
     let mut test_event_group = EventGroup::builder();
     test_event_group
         .call(dest.clone(), Shortname::from_u32(BURN))
-        .argument(1u128)
+        .argument("name.meta".to_string())
         .done();
 
     assert_eq!(event_group.build(), test_event_group.build());
@@ -371,3 +371,6 @@ fn proper_mint() {
     let num_token_id = state.get_token_id(token_id).unwrap();
     assert_eq!(num_token_id, 1);
 }
+
+// TODO: test if parent doesn't exist
+// TODO: test if parent is not owned by sender
