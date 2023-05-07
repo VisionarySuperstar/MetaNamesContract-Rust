@@ -264,6 +264,41 @@ impl MPC721ContractState {
         self.tokens.get(&token_id).unwrap().owner
     }
 
+    /// ## Description
+    /// Return boolean if account is allowed to manage specified token id
+    /// ## Params
+    /// * **account** is an object of type [`Address`]
+    ///
+    /// * **token_id** is an object of type [`u128`]
+    pub fn allowed_to_manage(
+        &self,
+        account: &Address,
+        token_id: u128,
+    ) -> bool {
+        assert!(self.is_minted(token_id), "{}", ContractError::NotFound);
+
+        let token = self.tokens.get(&token_id).unwrap();
+        Self::allowed_to_approve(account, token, &self.operator_approvals)
+    }
+
+    fn allowed_to_approve(
+        account: &Address,
+        token: &TokenInfo,
+        operator_approvals: &BTreeMap<Address, BTreeMap<Address, bool>>,
+    ) -> bool {
+        if token.owner == *account {
+            return true;
+        }
+
+        if let Some(owner_approvals) = operator_approvals.get(&token.owner) {
+            if let Some(approved) = owner_approvals.get(account) {
+                return *approved;
+            }
+        }
+
+        false
+    }
+
     fn allowed_to_transfer(
         account: &Address,
         token: &TokenInfo,
@@ -286,21 +321,4 @@ impl MPC721ContractState {
         false
     }
 
-    fn allowed_to_approve(
-        account: &Address,
-        token: &TokenInfo,
-        operator_approvals: &BTreeMap<Address, BTreeMap<Address, bool>>,
-    ) -> bool {
-        if token.owner == *account {
-            return true;
-        }
-
-        if let Some(owner_approvals) = operator_approvals.get(&token.owner) {
-            if let Some(approved) = owner_approvals.get(account) {
-                return *approved;
-            }
-        }
-
-        false
-    }
 }
