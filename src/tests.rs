@@ -1,7 +1,8 @@
 use partisia_name_system::{
     msg::{
-        ApproveForAllMsg, ApproveMsg, BurnMsg, CheckOwnerMsg, MintMsg, MultiMintMsg, RecordMintMsg,
-        RevokeForAllMsg, RevokeMsg, SetBaseUriMsg, TransferFromMsg, TransferMsg, UpdateMinterMsg, RecordUpdateMsg, RecordDeleteMsg,
+        ApproveForAllMsg, ApproveMsg, BurnMsg, CheckOwnerMsg, MintMsg, MultiMintMsg,
+        RecordDeleteMsg, RecordMintMsg, RecordUpdateMsg, RevokeForAllMsg, RevokeMsg, SetBaseUriMsg,
+        TransferFromMsg, TransferMsg, UpdateMinterMsg,
     },
     state::RecordClass,
 };
@@ -133,7 +134,8 @@ fn proper_mint_action_call() {
     let msg = MintMsg {
         token_id: "name.meta".to_string(),
         to: mock_address(1u8),
-        parent: Some("".to_string()),
+        token_uri: None,
+        parent_id: Some("".to_string()),
     };
 
     let mut event_group = EventGroup::builder();
@@ -144,6 +146,7 @@ fn proper_mint_action_call() {
         .call(dest.clone(), Shortname::from_u32(MINT))
         .argument("name.meta".to_string())
         .argument(mock_address(1u8))
+        .argument(None::<String>)
         .argument(Some("".to_string()))
         .done();
 
@@ -350,27 +353,32 @@ fn proper_multi_mint_action_call() {
         MintMsg {
             token_id: "name.meta".to_string(),
             to: mock_address(4),
-            parent: Some("".to_string()),
+            parent_id: Some("".to_string()),
+            token_uri: None,
         },
         MintMsg {
             token_id: "name2.meta".to_string(),
             to: mock_address(4),
-            parent: Some("".to_string()),
+            parent_id: Some("".to_string()),
+            token_uri: None,
         },
         MintMsg {
             token_id: "name3.meta".to_string(),
             to: mock_address(5),
-            parent: Some("".to_string()),
+            parent_id: Some("".to_string()),
+            token_uri: None,
         },
         MintMsg {
             token_id: "name4.meta".to_string(),
             to: mock_address(5),
-            parent: Some("".to_string()),
+            parent_id: Some("".to_string()),
+            token_uri: None,
         },
         MintMsg {
             token_id: "name5.meta".to_string(),
             to: mock_address(6),
-            parent: Some("".to_string()),
+            parent_id: Some("".to_string()),
+            token_uri: None,
         },
     ];
     let msg = MultiMintMsg {

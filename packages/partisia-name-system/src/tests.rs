@@ -1,7 +1,7 @@
 use crate::{
     actions::{
-        execute_delete_record, execute_init, execute_mint, execute_mint_record,
-        execute_update_record,
+        execute_record_delete, execute_init, execute_mint, execute_record_mint,
+        execute_record_update,
     },
     msg::{
         ApproveForAllMsg, ApproveMsg, BurnMsg, CheckOwnerMsg, InitMsg, MintMsg, MultiMintMsg,
@@ -414,7 +414,7 @@ fn proper_record_mint() {
         class: record_class,
         data: "data".to_string(),
     };
-    let _ = execute_mint_record(&mock_contract_context(alice), &mut state, &record_mint_msg);
+    let _ = execute_record_mint(&mock_contract_context(alice), &mut state, &record_mint_msg);
 
     let record = state.record_info(token_id, &record_class).unwrap();
     assert_eq!(
@@ -458,7 +458,7 @@ fn proper_record_update() {
         class: record_class,
         data: "data".to_string(),
     };
-    let _ = execute_mint_record(&mock_contract_context(alice), &mut state, &record_mint_msg);
+    let _ = execute_record_mint(&mock_contract_context(alice), &mut state, &record_mint_msg);
 
     let record_update_msg = RecordUpdateMsg {
         token_id: token_id.clone(),
@@ -466,7 +466,7 @@ fn proper_record_update() {
         data: "new data".to_string(),
     };
 
-    let _ = execute_update_record(
+    let _ = execute_record_update(
         &mock_contract_context(alice),
         &mut state,
         &record_update_msg,
@@ -514,14 +514,14 @@ fn proper_record_delete() {
         class: record_class,
         data: "data".to_string(),
     };
-    let _ = execute_mint_record(&mock_contract_context(alice), &mut state, &record_mint_msg);
+    let _ = execute_record_mint(&mock_contract_context(alice), &mut state, &record_mint_msg);
 
     let record_delete_msg = RecordDeleteMsg {
         token_id: token_id.clone(),
         class: record_class,
     };
 
-    let _ = execute_delete_record(
+    let _ = execute_record_delete(
         &mock_contract_context(alice),
         &mut state,
         &record_delete_msg,

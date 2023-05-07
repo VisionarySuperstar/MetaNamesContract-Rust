@@ -426,7 +426,7 @@ pub fn execute_multi_mint(
 /// * **state** is an object of type [`PartisiaNameSystemState`]
 ///
 /// * **msg** is an object of type [`RecordMintMsg`]
-pub fn execute_mint_record(
+pub fn execute_record_mint(
     ctx: &ContractContext,
     state: &mut PartisiaNameSystemState,
     msg: &RecordMintMsg,
@@ -459,7 +459,7 @@ pub fn execute_mint_record(
 /// * **state** is an object of type [`PartisiaNameSystemState`]
 ///
 /// * **msg** is an object of type [`RecordUpdateMsg`]
-pub fn execute_update_record(
+pub fn execute_record_update(
     ctx: &ContractContext,
     state: &mut PartisiaNameSystemState,
     msg: &RecordUpdateMsg,
@@ -498,7 +498,7 @@ pub fn execute_update_record(
 /// * **state** is an object of type [`PartisiaNameSystemState`]
 ///
 /// * **msg** is an object of type [`RecordDeleteMsg`]
-pub fn execute_delete_record(
+pub fn execute_record_delete(
     ctx: &ContractContext,
     state: &mut PartisiaNameSystemState,
     msg: &RecordDeleteMsg,
