@@ -54,6 +54,5 @@ jobs:
       - name: Run tests for partisia name system
         run: cargo test -p partisia-name-system
 
-      # TODO Activate full tests
-      # - name: Run tests
-      #   run: cargo test
+      - name: Run tests
+        run: cargo test
