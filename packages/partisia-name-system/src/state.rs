@@ -80,7 +80,6 @@ impl PartisiaNameSystemState {
     /// ## Params
     /// * `domain` is an object of type [`String`]
     pub fn token_id(&self, domain: &String) -> Option<u128> {
-        // TODO: Remove
         self.domains.get(domain).map(|d| d.token_id)
     }
 

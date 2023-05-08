@@ -11,9 +11,9 @@ use partisia_name_system::{
         execute_transfer, execute_transfer_from, execute_update_minter,
     },
     msg::{
-        ApproveForAllMsg, ApproveMsg, BurnMsg, CheckOwnerMsg, InitMsg, MintMsg, MultiMintMsg,
-        RecordDeleteMsg, RecordMintMsg, RecordUpdateMsg, RevokeForAllMsg, RevokeMsg, SetBaseUriMsg,
-        TransferFromMsg, TransferMsg, UpdateMinterMsg,
+        PnsApproveForAllMsg, PnsApproveMsg, PnsBurnMsg, PnsCheckOwnerMsg, PnsInitMsg, PnsMintMsg, PnsMultiMintMsg,
+        RecordDeleteMsg, RecordMintMsg, RecordUpdateMsg, PnsRevokeForAllMsg, PnsRevokeMsg, PnsSetBaseUriMsg,
+        PnsTransferFromMsg, PnsTransferMsg, PnsUpdateMinterMsg,
     },
     state::RecordClass,
 };
@@ -22,7 +22,7 @@ const CONTRACT_NAME: &str = env!("CARGO_PKG_NAME");
 const CONTRACT_VERSION: &str = env!("CARGO_PKG_VERSION");
 
 #[init]
-pub fn initialize(ctx: ContractContext, msg: InitMsg) -> (ContractState, Vec<EventGroup>) {
+pub fn initialize(ctx: ContractContext, msg: PnsInitMsg) -> (ContractState, Vec<EventGroup>) {
     let (pns, events) = execute_init(&ctx, &msg);
     let state = ContractState {
         pns,
@@ -40,7 +40,7 @@ pub fn transfer(
     token_id: String,
 ) -> (ContractState, Vec<EventGroup>) {
     let mut state = state;
-    let events = execute_transfer(&ctx, &mut state.pns, &TransferMsg { to, token_id });
+    let events = execute_transfer(&ctx, &mut state.pns, &PnsTransferMsg { to, token_id });
 
     (state, events)
 }
@@ -57,7 +57,7 @@ pub fn transfer_from(
     let events = execute_transfer_from(
         &ctx,
         &mut state.pns,
-        &TransferFromMsg { from, to, token_id },
+        &PnsTransferFromMsg { from, to, token_id },
     );
 
     (state, events)
@@ -71,7 +71,7 @@ pub fn approve(
     token_id: String,
 ) -> (ContractState, Vec<EventGroup>) {
     let mut state = state;
-    let events = execute_approve(&ctx, &mut state.pns, &ApproveMsg { spender, token_id });
+    let events = execute_approve(&ctx, &mut state.pns, &PnsApproveMsg { spender, token_id });
 
     (state, events)
 }
@@ -83,7 +83,7 @@ pub fn set_base_uri(
     new_base_uri: String,
 ) -> (ContractState, Vec<EventGroup>) {
     let mut state = state;
-    let events = execute_set_base_uri(&ctx, &mut state.pns, &SetBaseUriMsg { new_base_uri });
+    let events = execute_set_base_uri(&ctx, &mut state.pns, &PnsSetBaseUriMsg { new_base_uri });
 
     (state, events)
 }
@@ -101,7 +101,7 @@ pub fn mint(
     let events = execute_mint(
         &ctx,
         &mut state.pns,
-        &MintMsg {
+        &PnsMintMsg {
             token_id,
             to,
             token_uri,
@@ -119,7 +119,7 @@ pub fn approve_for_all(
     operator: Address,
 ) -> (ContractState, Vec<EventGroup>) {
     let mut state = state;
-    let events = execute_approve_for_all(&ctx, &mut state.pns, &ApproveForAllMsg { operator });
+    let events = execute_approve_for_all(&ctx, &mut state.pns, &PnsApproveForAllMsg { operator });
 
     (state, events)
 }
@@ -132,7 +132,7 @@ pub fn revoke(
     token_id: String,
 ) -> (ContractState, Vec<EventGroup>) {
     let mut state = state;
-    let events = execute_revoke(&ctx, &mut state.pns, &RevokeMsg { spender, token_id });
+    let events = execute_revoke(&ctx, &mut state.pns, &PnsRevokeMsg { spender, token_id });
 
     (state, events)
 }
@@ -144,7 +144,7 @@ pub fn revoke_for_all(
     operator: Address,
 ) -> (ContractState, Vec<EventGroup>) {
     let mut state = state;
-    let events = execute_revoke_for_all(&ctx, &mut state.pns, &RevokeForAllMsg { operator });
+    let events = execute_revoke_for_all(&ctx, &mut state.pns, &PnsRevokeForAllMsg { operator });
 
     (state, events)
 }
@@ -156,7 +156,7 @@ pub fn burn(
     token_id: String,
 ) -> (ContractState, Vec<EventGroup>) {
     let mut state = state;
-    let events = execute_burn(&ctx, &mut state.pns, &BurnMsg { token_id });
+    let events = execute_burn(&ctx, &mut state.pns, &PnsBurnMsg { token_id });
 
     (state, events)
 }
@@ -169,7 +169,7 @@ pub fn check_ownership(
     token_id: String,
 ) -> (ContractState, Vec<EventGroup>) {
     let mut state = state;
-    let events = execute_ownership_check(&ctx, &mut state.pns, &CheckOwnerMsg { owner, token_id });
+    let events = execute_ownership_check(&ctx, &mut state.pns, &PnsCheckOwnerMsg { owner, token_id });
     (state, events)
 }
 #[action(shortname = 0x19)]
@@ -179,18 +179,18 @@ pub fn update_minter(
     new_minter: Address,
 ) -> (ContractState, Vec<EventGroup>) {
     let mut state = state;
-    let events = execute_update_minter(&ctx, &mut state.pns, UpdateMinterMsg { new_minter });
+    let events = execute_update_minter(&ctx, &mut state.pns, &PnsUpdateMinterMsg { new_minter });
     (state, events)
 }
 #[action(shortname = 0x20)]
 pub fn multi_mint(
     ctx: ContractContext,
     state: ContractState,
-    mints: Vec<MintMsg>,
+    mints: Vec<PnsMintMsg>,
 ) -> (ContractState, Vec<EventGroup>) {
     let mut state = state;
 
-    execute_multi_mint(&ctx, &mut state.pns, &MultiMintMsg { mints });
+    execute_multi_mint(&ctx, &mut state.pns, &PnsMultiMintMsg { mints });
     (state, vec![])
 }
 

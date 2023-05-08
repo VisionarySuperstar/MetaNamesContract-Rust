@@ -7,9 +7,9 @@ use mpc721_hierarchy::{actions as mpc721_actions, msg as mpc721_msg};
 
 use crate::{
     msg::{
-        ApproveForAllMsg, ApproveMsg, BurnMsg, CheckOwnerMsg, InitMsg, MintMsg, MultiMintMsg,
-        RecordDeleteMsg, RecordMintMsg, RecordUpdateMsg, RevokeForAllMsg, RevokeMsg, SetBaseUriMsg,
-        TransferFromMsg, TransferMsg, UpdateMinterMsg,
+        PnsApproveForAllMsg, PnsApproveMsg, PnsBurnMsg, PnsCheckOwnerMsg, PnsInitMsg, PnsMintMsg, PnsMultiMintMsg,
+        RecordDeleteMsg, RecordMintMsg, RecordUpdateMsg, PnsRevokeForAllMsg, PnsRevokeMsg, PnsSetBaseUriMsg,
+        PnsTransferFromMsg, PnsTransferMsg, PnsUpdateMinterMsg,
     },
     state::{Domain, PartisiaNameSystemState},
     ContractError,
@@ -28,7 +28,7 @@ const CONTRACT_VERSION: &str = env!("CARGO_PKG_VERSION");
 /// * **msg** is an object of type [`InitMsg`]
 pub fn execute_init(
     ctx: &ContractContext,
-    msg: &InitMsg,
+    msg: &PnsInitMsg,
 ) -> (PartisiaNameSystemState, Vec<EventGroup>) {
     let mpc721_msg = mpc721_msg::InitMsg {
         owner: msg.owner,
@@ -62,7 +62,7 @@ pub fn execute_init(
 pub fn execute_transfer(
     ctx: &ContractContext,
     state: &mut PartisiaNameSystemState,
-    msg: &TransferMsg,
+    msg: &PnsTransferMsg,
 ) -> Vec<EventGroup> {
     let num_token_id = state.token_id(&msg.token_id);
     assert!(num_token_id.is_some(), "{}", ContractError::NotFound);
@@ -92,7 +92,7 @@ pub fn execute_transfer(
 pub fn execute_transfer_from(
     ctx: &ContractContext,
     state: &mut PartisiaNameSystemState,
-    msg: &TransferFromMsg,
+    msg: &PnsTransferFromMsg,
 ) -> Vec<EventGroup> {
     let num_token_id = state.token_id(&msg.token_id);
     assert!(num_token_id.is_some(), "{}", ContractError::NotFound);
@@ -123,7 +123,7 @@ pub fn execute_transfer_from(
 pub fn execute_approve(
     ctx: &ContractContext,
     state: &mut PartisiaNameSystemState,
-    msg: &ApproveMsg,
+    msg: &PnsApproveMsg,
 ) -> Vec<EventGroup> {
     let num_token_id = state.token_id(&msg.token_id);
     assert!(num_token_id.is_some(), "{}", ContractError::NotFound);
@@ -153,7 +153,7 @@ pub fn execute_approve(
 pub fn execute_set_base_uri(
     ctx: &ContractContext,
     state: &mut PartisiaNameSystemState,
-    msg: &SetBaseUriMsg,
+    msg: &PnsSetBaseUriMsg,
 ) -> Vec<EventGroup> {
     let events = mpc721_actions::execute_set_base_uri(
         &ctx,
@@ -179,7 +179,7 @@ pub fn execute_set_base_uri(
 pub fn execute_mint(
     ctx: &ContractContext,
     state: &mut PartisiaNameSystemState,
-    msg: &MintMsg,
+    msg: &PnsMintMsg,
 ) -> Vec<EventGroup> {
     assert!(!state.is_minted(&msg.token_id), "{}", ContractError::Minted);
 
@@ -238,7 +238,7 @@ pub fn execute_mint(
 pub fn execute_approve_for_all(
     ctx: &ContractContext,
     state: &mut PartisiaNameSystemState,
-    msg: &ApproveForAllMsg,
+    msg: &PnsApproveForAllMsg,
 ) -> Vec<EventGroup> {
     let events = mpc721_actions::execute_approve_for_all(
         &ctx,
@@ -264,7 +264,7 @@ pub fn execute_approve_for_all(
 pub fn execute_revoke(
     ctx: &ContractContext,
     state: &mut PartisiaNameSystemState,
-    msg: &RevokeMsg,
+    msg: &PnsRevokeMsg,
 ) -> Vec<EventGroup> {
     let num_token_id = state.token_id(&msg.token_id);
     assert!(num_token_id.is_some(), "{}", ContractError::NotFound);
@@ -294,7 +294,7 @@ pub fn execute_revoke(
 pub fn execute_revoke_for_all(
     ctx: &ContractContext,
     state: &mut PartisiaNameSystemState,
-    msg: &RevokeForAllMsg,
+    msg: &PnsRevokeForAllMsg,
 ) -> Vec<EventGroup> {
     let events = mpc721_actions::execute_revoke_for_all(
         &ctx,
@@ -320,7 +320,7 @@ pub fn execute_revoke_for_all(
 pub fn execute_burn(
     ctx: &ContractContext,
     state: &mut PartisiaNameSystemState,
-    msg: &BurnMsg,
+    msg: &PnsBurnMsg,
 ) -> Vec<EventGroup> {
     let num_token_id = state.token_id(&msg.token_id);
     assert!(num_token_id.is_some(), "{}", ContractError::NotFound);
@@ -348,7 +348,7 @@ pub fn execute_burn(
 pub fn execute_update_minter(
     ctx: &ContractContext,
     state: &mut PartisiaNameSystemState,
-    msg: UpdateMinterMsg,
+    msg: &PnsUpdateMinterMsg,
 ) -> Vec<EventGroup> {
     let events = mpc721_actions::execute_update_minter(
         &ctx,
@@ -374,7 +374,7 @@ pub fn execute_update_minter(
 pub fn execute_ownership_check(
     ctx: &ContractContext,
     state: &mut PartisiaNameSystemState,
-    msg: &CheckOwnerMsg,
+    msg: &PnsCheckOwnerMsg,
 ) -> Vec<EventGroup> {
     let num_token_id = state.token_id(&msg.token_id);
     assert!(num_token_id.is_some(), "{}", ContractError::NotFound);
@@ -404,7 +404,7 @@ pub fn execute_ownership_check(
 pub fn execute_multi_mint(
     ctx: &ContractContext,
     state: &mut PartisiaNameSystemState,
-    msg: &MultiMintMsg,
+    msg: &PnsMultiMintMsg,
 ) -> Vec<EventGroup> {
     let mut events: Vec<EventGroup> = vec![];
     for mint in msg.mints.iter() {

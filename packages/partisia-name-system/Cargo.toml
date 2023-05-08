@@ -27,4 +27,4 @@ serde_json = "1.0"
 thiserror = "1.0.31"
 
 [features]
-abi = ["pbc_contract_common/abi", "pbc_contract_codegen/abi", "pbc_traits/abi", "create_type_spec_derive/abi", "mpc721-hierarchy/abi", "contract-version-base/abi", "utils/abi"]
+abi = ["pbc_contract_common/abi", "pbc_contract_codegen/abi", "pbc_traits/abi", "mpc721-hierarchy/abi", "create_type_spec_derive/abi", "contract-version-base/abi", "utils/abi"]
