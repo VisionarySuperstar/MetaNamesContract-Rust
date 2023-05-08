@@ -1,8 +1,8 @@
 use partisia_name_system::{
     msg::{
-        ApproveForAllMsg, ApproveMsg, BurnMsg, CheckOwnerMsg, MintMsg, MultiMintMsg,
-        RecordDeleteMsg, RecordMintMsg, RecordUpdateMsg, RevokeForAllMsg, RevokeMsg, SetBaseUriMsg,
-        TransferFromMsg, TransferMsg, UpdateMinterMsg,
+        PnsApproveForAllMsg, PnsApproveMsg, PnsBurnMsg, PnsCheckOwnerMsg, PnsMintMsg, PnsMultiMintMsg,
+        RecordDeleteMsg, RecordMintMsg, RecordUpdateMsg, PnsRevokeForAllMsg, PnsRevokeMsg, PnsSetBaseUriMsg,
+        PnsTransferFromMsg, PnsTransferMsg, PnsUpdateMinterMsg,
     },
     state::RecordClass,
 };
@@ -44,7 +44,7 @@ const RECORD_DELETE: u32 = 0x23;
 fn proper_transfer_action_call() {
     let dest = mock_address(30u8);
 
-    let msg = TransferMsg {
+    let msg = PnsTransferMsg {
         to: mock_address(1u8),
         token_id: "name.meta".to_string(),
     };
@@ -65,7 +65,7 @@ fn proper_transfer_action_call() {
 fn proper_transfer_from_action_call() {
     let dest = mock_address(30u8);
 
-    let msg = TransferFromMsg {
+    let msg = PnsTransferFromMsg {
         from: mock_address(1u8),
         to: mock_address(2u8),
         token_id: "name.meta".to_string(),
@@ -89,7 +89,7 @@ fn proper_transfer_from_action_call() {
 fn proper_approve_action_call() {
     let dest = mock_address(30u8);
 
-    let msg = ApproveMsg {
+    let msg = PnsApproveMsg {
         spender: mock_address(1u8),
         token_id: "name.meta".to_string(),
     };
@@ -111,7 +111,7 @@ fn proper_approve_action_call() {
 fn proper_set_base_uri_action_call() {
     let dest = mock_address(30u8);
 
-    let msg = SetBaseUriMsg {
+    let msg = PnsSetBaseUriMsg {
         new_base_uri: "new".to_string(),
     };
 
@@ -131,7 +131,7 @@ fn proper_set_base_uri_action_call() {
 fn proper_mint_action_call() {
     let dest = mock_address(30u8);
 
-    let msg = MintMsg {
+    let msg = PnsMintMsg {
         token_id: "name.meta".to_string(),
         to: mock_address(1u8),
         token_uri: None,
@@ -227,7 +227,7 @@ fn proper_record_delete_action_call() {
 fn proper_ownership_check_call() {
     let dest = mock_address(30u8);
 
-    let msg = CheckOwnerMsg {
+    let msg = PnsCheckOwnerMsg {
         owner: mock_address(1u8),
         token_id: "name.meta".to_string(),
     };
@@ -249,7 +249,7 @@ fn proper_ownership_check_call() {
 fn proper_approve_for_all_action_call() {
     let dest = mock_address(30u8);
 
-    let msg = ApproveForAllMsg {
+    let msg = PnsApproveForAllMsg {
         operator: mock_address(1u8),
     };
 
@@ -269,7 +269,7 @@ fn proper_approve_for_all_action_call() {
 fn proper_revoke_action_call() {
     let dest = mock_address(30u8);
 
-    let msg = RevokeMsg {
+    let msg = PnsRevokeMsg {
         spender: mock_address(1u8),
         token_id: "name.meta".to_string(),
     };
@@ -291,7 +291,7 @@ fn proper_revoke_action_call() {
 fn proper_revoke_for_all_action_call() {
     let dest = mock_address(30u8);
 
-    let msg = RevokeForAllMsg {
+    let msg = PnsRevokeForAllMsg {
         operator: mock_address(1u8),
     };
 
@@ -311,7 +311,7 @@ fn proper_revoke_for_all_action_call() {
 fn proper_burn_action_call() {
     let dest = mock_address(30u8);
 
-    let msg = BurnMsg {
+    let msg = PnsBurnMsg {
         token_id: "name.meta".to_string(),
     };
 
@@ -330,7 +330,7 @@ fn proper_burn_action_call() {
 fn proper_minter_update_action_call() {
     let dest = mock_address(30u8);
 
-    let msg = UpdateMinterMsg {
+    let msg = PnsUpdateMinterMsg {
         new_minter: mock_address(19u8),
     };
 
@@ -350,38 +350,38 @@ fn proper_multi_mint_action_call() {
     let dest = mock_address(30u8);
 
     let mints = vec![
-        MintMsg {
+        PnsMintMsg {
             token_id: "name.meta".to_string(),
             to: mock_address(4),
             parent_id: Some("".to_string()),
             token_uri: None,
         },
-        MintMsg {
+        PnsMintMsg {
             token_id: "name2.meta".to_string(),
             to: mock_address(4),
             parent_id: Some("".to_string()),
             token_uri: None,
         },
-        MintMsg {
+        PnsMintMsg {
             token_id: "name3.meta".to_string(),
             to: mock_address(5),
             parent_id: Some("".to_string()),
             token_uri: None,
         },
-        MintMsg {
+        PnsMintMsg {
             token_id: "name4.meta".to_string(),
             to: mock_address(5),
             parent_id: Some("".to_string()),
             token_uri: None,
         },
-        MintMsg {
+        PnsMintMsg {
             token_id: "name5.meta".to_string(),
             to: mock_address(6),
             parent_id: Some("".to_string()),
             token_uri: None,
         },
     ];
-    let msg = MultiMintMsg {
+    let msg = PnsMultiMintMsg {
         mints: mints.clone(),
     };
     let mut event_group = EventGroup::builder();

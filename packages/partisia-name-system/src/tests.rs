@@ -4,9 +4,9 @@ use crate::{
         execute_record_update,
     },
     msg::{
-        PnsApproveForAllMsg, ApproveMsg, PnsBurnMsg, PnsCheckOwnerMsg, InitMsg, PnsMintMsg, PnsMultiMintMsg,
-        RecordDeleteMsg, RecordMintMsg, RecordUpdateMsg, PnsRevokeForAllMsg, PnsRevokeMsg, SetBaseUriMsg,
-        TransferFromMsg, TransferMsg, PnsUpdateMinterMsg,
+        PnsApproveForAllMsg, PnsApproveMsg, PnsBurnMsg, PnsCheckOwnerMsg, PnsInitMsg, PnsMintMsg, PnsMultiMintMsg,
+        RecordDeleteMsg, RecordMintMsg, RecordUpdateMsg, PnsRevokeForAllMsg, PnsRevokeMsg, PnsSetBaseUriMsg,
+        PnsTransferFromMsg, PnsTransferMsg, PnsUpdateMinterMsg,
     },
     state::{Record, RecordClass},
 };
@@ -51,7 +51,7 @@ const UPDATE_MINTER: u32 = 0x19;
 fn proper_transfer_action_call() {
     let dest = mock_address(30u8);
 
-    let msg = TransferMsg {
+    let msg = PnsTransferMsg {
         to: mock_address(1u8),
         token_id: "name.meta".to_string(),
     };
@@ -72,7 +72,7 @@ fn proper_transfer_action_call() {
 fn proper_transfer_from_action_call() {
     let dest = mock_address(30u8);
 
-    let msg = TransferFromMsg {
+    let msg = PnsTransferFromMsg {
         from: mock_address(1u8),
         to: mock_address(2u8),
         token_id: "name.meta".to_string(),
@@ -96,7 +96,7 @@ fn proper_transfer_from_action_call() {
 fn proper_approve_action_call() {
     let dest = mock_address(30u8);
 
-    let msg = ApproveMsg {
+    let msg = PnsApproveMsg {
         spender: mock_address(1u8),
         token_id: "name.meta".to_string(),
     };
@@ -118,7 +118,7 @@ fn proper_approve_action_call() {
 fn proper_set_base_uri_action_call() {
     let dest = mock_address(30u8);
 
-    let msg = SetBaseUriMsg {
+    let msg = PnsSetBaseUriMsg {
         new_base_uri: "new".to_string(),
     };
 
@@ -357,7 +357,7 @@ fn proper_mint() {
     let minter = 1u8;
     let alice = 10u8;
 
-    let msg = InitMsg {
+    let msg = PnsInitMsg {
         owner: None,
         name: "Meta Names".to_string(),
         symbol: "META".to_string(),
@@ -389,7 +389,7 @@ fn proper_record_mint() {
     let minter = 1u8;
     let alice = 10u8;
 
-    let msg = InitMsg {
+    let msg = PnsInitMsg {
         owner: None,
         name: "Meta Names".to_string(),
         symbol: "META".to_string(),
@@ -433,7 +433,7 @@ fn proper_record_update() {
     let minter = 1u8;
     let alice = 10u8;
 
-    let msg = InitMsg {
+    let msg = PnsInitMsg {
         owner: None,
         name: "Meta Names".to_string(),
         symbol: "META".to_string(),
@@ -489,7 +489,7 @@ fn proper_record_delete() {
     let minter = 1u8;
     let alice = 10u8;
 
-    let msg = InitMsg {
+    let msg = PnsInitMsg {
         owner: None,
         name: "Meta Names".to_string(),
         symbol: "META".to_string(),
