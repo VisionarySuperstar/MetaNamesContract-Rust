@@ -201,8 +201,11 @@ pub fn execute_mint(
         assert!(state.is_minted(parent_id), "{}", ContractError::NotFound);
 
         let parent = state.domains.get(parent_id).unwrap();
-
-        // TODO: Do not mint if parent does not belong to the owner
+        assert!(
+            state.mpc721.allowed_to_manage(&ctx.sender, parent.token_id),
+            "{}",
+            ContractError::Unauthorized
+        );
 
         update_parent_events = mpc721_actions::execute_update_parent(
             &ctx,
