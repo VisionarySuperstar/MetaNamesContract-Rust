@@ -1,12 +1,12 @@
 use crate::{
     actions::{
-        execute_record_delete, execute_init, execute_mint, execute_record_mint,
+        execute_init, execute_mint, execute_record_delete, execute_record_mint,
         execute_record_update,
     },
     msg::{
-        PnsApproveForAllMsg, PnsApproveMsg, PnsBurnMsg, PnsCheckOwnerMsg, PnsInitMsg, PnsMintMsg, PnsMultiMintMsg,
-        RecordDeleteMsg, RecordMintMsg, RecordUpdateMsg, PnsRevokeForAllMsg, PnsRevokeMsg, PnsSetBaseUriMsg,
-        PnsTransferFromMsg, PnsTransferMsg, PnsUpdateMinterMsg,
+        PnsApproveForAllMsg, PnsApproveMsg, PnsBurnMsg, PnsCheckOwnerMsg, PnsInitMsg, PnsMintMsg,
+        PnsMultiMintMsg, PnsRevokeForAllMsg, PnsRevokeMsg, PnsSetBaseUriMsg, PnsTransferFromMsg,
+        PnsTransferMsg, PnsUpdateMinterMsg, RecordDeleteMsg, RecordMintMsg, RecordUpdateMsg,
     },
     state::{Record, RecordClass},
 };
@@ -22,7 +22,6 @@ use utils::events::IntoShortnameRPCEvent;
 // TODO: DRY up tests
 
 // TODO: Add tests for functionality
-// TODO: Test parent
 
 fn mock_address(le: u8) -> Address {
     Address {
@@ -381,8 +380,131 @@ fn proper_mint() {
     assert_eq!(num_token_id, 1);
 }
 
-// TODO: test if parent doesn't exist
-// TODO: test if parent is not owned by sender
+#[test]
+#[should_panic(expected = "Unauthorized")]
+fn sender_is_not_minter_on_mint() {
+    let minter = 1u8;
+    let alice = 10u8;
+
+    let msg = PnsInitMsg {
+        owner: None,
+        name: "Meta Names".to_string(),
+        symbol: "META".to_string(),
+        base_uri: Some("ipfs://some.some".to_string()),
+        minter: mock_address(minter),
+    };
+
+    let (mut state, events) = execute_init(&mock_contract_context(2), &msg);
+
+    let mint_msg = PnsMintMsg {
+        token_id: "name.meta".to_string(),
+        to: mock_address(alice),
+        token_uri: Some("name.meta".to_string()),
+        parent_id: None,
+    };
+
+    let _ = execute_mint(&mock_contract_context(alice), &mut state, &mint_msg);
+}
+
+#[test]
+#[should_panic(expected = "Token with specified id is already minted")]
+fn token_already_minted_on_mint() {
+    let minter = 1u8;
+    let alice = 10u8;
+
+    let msg = PnsInitMsg {
+        owner: None,
+        name: "Meta Names".to_string(),
+        symbol: "META".to_string(),
+        base_uri: Some("ipfs://some.some".to_string()),
+        minter: mock_address(minter),
+    };
+
+    let (mut state, events) = execute_init(&mock_contract_context(2), &msg);
+
+    let mint_msg = PnsMintMsg {
+        token_id: "name.meta".to_string(),
+        token_uri: Some("name.meta".to_string()),
+        to: mock_address(alice),
+        parent_id: None,
+    };
+
+    let _ = execute_mint(&mock_contract_context(minter), &mut state, &mint_msg);
+
+    let mint_msg = PnsMintMsg {
+        token_id: "name.meta".to_string(),
+        token_uri: Some("name.meta".to_string()),
+        to: mock_address(alice),
+        parent_id: None,
+    };
+
+    let _ = execute_mint(&mock_contract_context(minter), &mut state, &mint_msg);
+}
+
+#[test]
+#[should_panic(expected = "Not found")]
+fn mint_fails_when_parent_does_not_exist() {
+    let minter = 1u8;
+    let alice = 10u8;
+
+    let msg = PnsInitMsg {
+        owner: None,
+        name: "Meta Names".to_string(),
+        symbol: "META".to_string(),
+        base_uri: Some("ipfs://some.some".to_string()),
+        minter: mock_address(minter),
+    };
+
+    let (mut state, events) = execute_init(&mock_contract_context(2), &msg);
+
+    let ref token_id = "name.meta".to_string();
+    let mint_msg = PnsMintMsg {
+        token_id: token_id.clone(),
+        to: mock_address(alice),
+        token_uri: Some(String::from("name.meta")),
+        parent_id: Some("not.existing.meta".to_string()),
+    };
+
+    let _ = execute_mint(&mock_contract_context(minter), &mut state, &mint_msg);
+}
+
+#[test]
+#[should_panic(expected = "Unauthorized")]
+fn mint_fails_when_parent_does_is_not_owned() {
+    let minter = 1u8;
+    let alice = 10u8;
+    let bob = 20u8;
+
+    let msg = PnsInitMsg {
+        owner: None,
+        name: "Meta Names".to_string(),
+        symbol: "META".to_string(),
+        base_uri: Some("ipfs://some.some".to_string()),
+        minter: mock_address(minter),
+    };
+
+    let (mut state, events) = execute_init(&mock_contract_context(2), &msg);
+
+    let ref token_id = "name.meta".to_string();
+    let mint_msg = PnsMintMsg {
+        token_id: token_id.clone(),
+        to: mock_address(alice),
+        token_uri: Some(String::from("name.meta")),
+        parent_id: None,
+    };
+
+    let _ = execute_mint(&mock_contract_context(minter), &mut state, &mint_msg);
+
+    let ref token_id = "bob.name.meta".to_string();
+    let mint_msg = PnsMintMsg {
+        token_id: token_id.clone(),
+        to: mock_address(alice),
+        token_uri: Some(String::from("bob.name.meta")),
+        parent_id: Some("name.meta".to_string()),
+    };
+
+    let _ = execute_mint(&mock_contract_context(minter), &mut state, &mint_msg);
+}
 
 #[test]
 fn proper_record_mint() {
@@ -425,8 +547,109 @@ fn proper_record_mint() {
     );
 }
 
-// TODO: Test if record doesn't exist
-// TODO: Test if record is not owned by sender
+#[test]
+#[should_panic(expected = "Not found")]
+fn when_token_not_present_record_mint_fails() {
+    let minter = 1u8;
+    let alice = 10u8;
+
+    let msg = PnsInitMsg {
+        owner: None,
+        name: "Meta Names".to_string(),
+        symbol: "META".to_string(),
+        base_uri: Some("ipfs://some.some".to_string()),
+        minter: mock_address(minter),
+    };
+
+    let (mut state, events) = execute_init(&mock_contract_context(2), &msg);
+
+    let mint_msg = PnsMintMsg {
+        token_id: "name.meta".to_string(),
+        to: mock_address(alice),
+        token_uri: Some("name.meta".to_string()),
+        parent_id: None,
+    };
+
+    let _ = execute_mint(&mock_contract_context(minter), &mut state, &mint_msg);
+
+    let record_mint = RecordMintMsg {
+        token_id: "not-existing.meta".to_string(),
+        class: RecordClass::Wallet {},
+        data: "some data".to_string(),
+    };
+
+    let _ = execute_record_mint(&mock_contract_context(alice), &mut state, &record_mint);
+}
+
+#[test]
+#[should_panic(expected = "Unauthorized")]
+fn when_token_not_owned_record_mint_fails() {
+    let minter = 1u8;
+    let alice = 10u8;
+    let bob = 20u8;
+
+    let msg = PnsInitMsg {
+        owner: None,
+        name: "Meta Names".to_string(),
+        symbol: "META".to_string(),
+        base_uri: Some("ipfs://some.some".to_string()),
+        minter: mock_address(minter),
+    };
+
+    let (mut state, events) = execute_init(&mock_contract_context(2), &msg);
+
+    let mint_msg = PnsMintMsg {
+        token_id: "name.meta".to_string(),
+        to: mock_address(alice),
+        token_uri: Some("name.meta".to_string()),
+        parent_id: None,
+    };
+
+    let _ = execute_mint(&mock_contract_context(minter), &mut state, &mint_msg);
+
+    let record_mint = RecordMintMsg {
+        token_id: "name.meta".to_string(),
+        class: RecordClass::Wallet {},
+        data: "some data".to_string(),
+    };
+
+    let _ = execute_record_mint(&mock_contract_context(bob), &mut state, &record_mint);
+}
+
+#[test]
+#[should_panic(expected = "Record with specified token id and class is already minted")]
+fn record_already_minted_on_record_mint() {
+    let minter = 1u8;
+    let alice = 10u8;
+
+    let msg = PnsInitMsg {
+        owner: None,
+        name: "Meta Names".to_string(),
+        symbol: "META".to_string(),
+        base_uri: Some("ipfs://some.some".to_string()),
+        minter: mock_address(minter),
+    };
+
+    let (mut state, events) = execute_init(&mock_contract_context(2), &msg);
+
+    let mint_msg = PnsMintMsg {
+        token_id: "name.meta".to_string(),
+        to: mock_address(alice),
+        token_uri: Some("name.meta".to_string()),
+        parent_id: None,
+    };
+
+    let _ = execute_mint(&mock_contract_context(minter), &mut state, &mint_msg);
+
+    let record_mint = RecordMintMsg {
+        token_id: "name.meta".to_string(),
+        class: RecordClass::Wallet {},
+        data: "some data".to_string(),
+    };
+
+    let _ = execute_record_mint(&mock_contract_context(alice), &mut state, &record_mint);
+    let _ = execute_record_mint(&mock_contract_context(alice), &mut state, &record_mint);
+}
 
 #[test]
 fn proper_record_update() {
@@ -481,8 +704,85 @@ fn proper_record_update() {
     );
 }
 
-// TODO: Test if record doesn't exist
-// TODO: Test if record is not owned by sender
+#[test]
+#[should_panic(expected = "Not found")]
+fn when_record_does_not_exist_record_update_fails() {
+    let minter = 1u8;
+    let alice = 10u8;
+
+    let msg = PnsInitMsg {
+        owner: None,
+        name: "Meta Names".to_string(),
+        symbol: "META".to_string(),
+        base_uri: Some("ipfs://some.some".to_string()),
+        minter: mock_address(minter),
+    };
+
+    let (mut state, events) = execute_init(&mock_contract_context(2), &msg);
+
+    let record_update_msg = RecordUpdateMsg {
+        token_id: "name.meta".to_string(),
+        class: RecordClass::Twitter {},
+        data: "new data".to_string(),
+    };
+
+    let _ = execute_record_update(
+        &mock_contract_context(alice),
+        &mut state,
+        &record_update_msg,
+    );
+}
+
+#[test]
+#[should_panic(expected = "Unauthorized")]
+fn when_record_is_not_owned_record_update_fails() {
+    let minter = 1u8;
+    let alice = 10u8;
+    let bob = 20u8;
+
+    let msg = PnsInitMsg {
+        owner: None,
+        name: "Meta Names".to_string(),
+        symbol: "META".to_string(),
+        base_uri: Some("ipfs://some.some".to_string()),
+        minter: mock_address(minter),
+    };
+
+    let (mut state, events) = execute_init(&mock_contract_context(2), &msg);
+
+    let ref token_id = "name.meta".to_string();
+    let mint_msg = PnsMintMsg {
+        token_id: token_id.clone(),
+        to: mock_address(alice),
+        token_uri: Some(String::from("name.meta")),
+        parent_id: None,
+    };
+    let _ = execute_mint(&mock_contract_context(minter), &mut state, &mint_msg);
+
+    let record_class = RecordClass::Twitter {};
+    let record_mint_msg = RecordMintMsg {
+        token_id: token_id.clone(),
+        class: record_class,
+        data: "data".to_string(),
+    };
+    let _ = execute_record_mint(&mock_contract_context(alice), &mut state, &record_mint_msg);
+
+    let record_update_msg = RecordUpdateMsg {
+        token_id: token_id.clone(),
+        class: record_class,
+        data: "new data".to_string(),
+    };
+
+    let _ = execute_record_update(&mock_contract_context(bob), &mut state, &record_update_msg);
+
+    let record = state.record_info(token_id, &record_class).unwrap();
+    assert_eq!(
+        *record,
+        Record {
+            data: "new data".to_string(),
+        }
+    );
+}
 
 #[test]
 fn proper_record_delete() {
@@ -532,5 +832,72 @@ fn proper_record_delete() {
     assert!(record.is_none());
 }
 
-// TODO: Test if record doesn't exist
-// TODO: Test if record is not owned by sender
+#[test]
+#[should_panic(expected = "Not found")]
+fn when_record_does_not_exist_record_delete_fails() {
+    let minter = 1u8;
+    let alice = 10u8;
+
+    let msg = PnsInitMsg {
+        owner: None,
+        name: "Meta Names".to_string(),
+        symbol: "META".to_string(),
+        base_uri: Some("ipfs://some.some".to_string()),
+        minter: mock_address(minter),
+    };
+
+    let (mut state, events) = execute_init(&mock_contract_context(2), &msg);
+
+    let record_delete_msg = RecordDeleteMsg {
+        token_id: "name.meta".to_string(),
+        class: RecordClass::Twitter {},
+    };
+
+    let _ = execute_record_delete(
+        &mock_contract_context(alice),
+        &mut state,
+        &record_delete_msg,
+    );
+}
+
+#[test]
+#[should_panic(expected = "Unauthorized")]
+fn when_record_is_not_owned_record_delete_fails() {
+    let minter = 1u8;
+    let alice = 10u8;
+    let bob = 20u8;
+
+    let msg = PnsInitMsg {
+        owner: None,
+        name: "Meta Names".to_string(),
+        symbol: "META".to_string(),
+        base_uri: Some("ipfs://some.some".to_string()),
+        minter: mock_address(minter),
+    };
+
+    let (mut state, events) = execute_init(&mock_contract_context(2), &msg);
+
+    let ref token_id = "name.meta".to_string();
+    let mint_msg = PnsMintMsg {
+        token_id: token_id.clone(),
+        to: mock_address(alice),
+        token_uri: Some(String::from("name.meta")),
+        parent_id: None,
+    };
+    let _ = execute_mint(&mock_contract_context(minter), &mut state, &mint_msg);
+
+    let record_class = RecordClass::Twitter {};
+    let record_mint_msg = RecordMintMsg {
+        token_id: token_id.clone(),
+        class: record_class,
+        data: "data".to_string(),
+    };
+    let _ = execute_record_mint(&mock_contract_context(alice), &mut state, &record_mint_msg);
+
+    let record_delete_msg = RecordDeleteMsg {
+        token_id: token_id.clone(),
+        class: record_class,
+    };
+
+    let _ = execute_record_delete(&mock_contract_context(bob), &mut state, &record_delete_msg);
+}
