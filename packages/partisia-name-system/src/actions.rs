@@ -183,7 +183,17 @@ pub fn execute_mint(
 ) -> Vec<EventGroup> {
     assert!(!state.is_minted(&msg.token_id), "{}", ContractError::Minted);
 
-    // TODO: Make actions atomic & permit rollback
+    // Guards to test validity of parent before creating a new domain
+    if let Some(parent_id) = &msg.parent_id {
+        assert!(state.is_minted(parent_id), "{}", ContractError::NotFound);
+
+        let parent = state.domains.get(parent_id).unwrap();
+        assert!(
+            state.mpc721.allowed_to_manage(&ctx.sender, parent.token_id),
+            "{}",
+            ContractError::Unauthorized
+        );
+    }
 
     let new_token_id = state.mpc721.supply + 1;
     let mut events = mpc721_actions::execute_mint(
@@ -198,15 +208,7 @@ pub fn execute_mint(
 
     let mut update_parent_events: Vec<EventGroup> = vec![];
     if let Some(parent_id) = &msg.parent_id {
-        assert!(state.is_minted(parent_id), "{}", ContractError::NotFound);
-
         let parent = state.domains.get(parent_id).unwrap();
-        assert!(
-            state.mpc721.allowed_to_manage(&ctx.sender, parent.token_id),
-            "{}",
-            ContractError::Unauthorized
-        );
-
         update_parent_events = mpc721_actions::execute_update_parent(
             &ctx,
             &mut state.mpc721,
