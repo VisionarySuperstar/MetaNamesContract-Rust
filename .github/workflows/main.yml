@@ -1,0 +1,58 @@
+name: Rust CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Setup Rust
+        uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          toolchain: stable
+
+      - name: Setup caching dependencies
+        uses: Swatinem/rust-cache@v2
+
+      - name: Install cargo audit
+        run: cargo install cargo-audit
+
+      - name: Fetch dependencies
+        run: cargo fetch
+
+      - name: Run audit
+        run: cargo audit
+
+
+  test:
+    runs-on: ubuntu-latest
+    needs: audit
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Setup Rust
+        uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          toolchain: stable
+
+      - name: Setup caching dependencies
+        uses: Swatinem/rust-cache@v2
+
+      - name: Fetch dependencies
+        run: cargo fetch
+
+      - name: Run tests for partisia name system
+        run: cargo test -p partisia-name-system
+
+      - name: Run tests
+        run: cargo test

@@ -1,15 +1,18 @@
 use thiserror::Error;
 
 /// ## Description
-/// This enum describes mpc1155 contract errors
+/// This enum describes mpc721 contract errors
 #[derive(Error, Debug)]
 pub enum ContractError {
     #[error("Unauthorized")]
     Unauthorized,
 
+    #[error("Token with specified id is already minted")]
+    Minted,
+
     #[error("Not found")]
     NotFound,
 
-    #[error("Balance check has failed")]
-    InadequateBalance,
+    #[error("Incorrect Owner")]
+    IncorrectOwner,
 }

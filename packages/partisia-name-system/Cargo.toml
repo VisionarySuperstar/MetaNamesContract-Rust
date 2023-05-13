@@ -19,10 +19,12 @@ create_type_spec_derive = { git = "https://git@gitlab.com/partisiablockchain/lan
 pbc_contract_codegen = { git = "https://git@gitlab.com/partisiablockchain/language/contract-sdk.git", tag = "13.1.0" }
 
 utils = { path = "../utils" }
+mpc721-hierarchy = { path = "../mpc721-hierarchy" }
+contract-version-base = { path = "../contract-version-base"}
 rpc-msg-derive = { path = "../rpc-msg-derive" }
 
 serde_json = "1.0"
 thiserror = "1.0.31"
 
 [features]
-abi = ["pbc_contract_common/abi", "pbc_contract_codegen/abi", "pbc_traits/abi", "create_type_spec_derive/abi"]
+abi = ["pbc_contract_common/abi", "pbc_contract_codegen/abi", "pbc_traits/abi", "mpc721-hierarchy/abi", "create_type_spec_derive/abi", "contract-version-base/abi", "utils/abi"]
