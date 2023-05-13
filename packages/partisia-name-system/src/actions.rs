@@ -38,13 +38,30 @@ pub fn execute_init(
         minter: msg.minter,
     };
 
-    let (mpc721, events) = mpc721_actions::execute_init(&ctx, &mpc721_msg);
-    let state = PartisiaNameSystemState {
+    let (mpc721, mut events) = mpc721_actions::execute_init(&ctx, &mpc721_msg);
+    let mut state = PartisiaNameSystemState {
         mpc721,
         domains: BTreeMap::new(),
         records: BTreeMap::new(),
         version: ContractVersionBase::new(CONTRACT_NAME, CONTRACT_VERSION),
     };
+
+    let mut mint_events: Vec<EventGroup> = vec![];
+    if let Some(tld) = &msg.tld {
+        let mint_msg = PnsMintMsg {
+            token_id: tld.clone(),
+            to: msg.minter,
+            token_uri: Some(tld.clone()),
+            parent_id: None
+        };
+        let ctx_with_sender = ContractContext {
+            sender: msg.minter.clone(),
+            ..*ctx.clone()
+        };
+        mint_events = execute_mint(&ctx_with_sender, &mut state, &mint_msg);
+    }
+
+    events.extend(mint_events);
 
     (state, events)
 }

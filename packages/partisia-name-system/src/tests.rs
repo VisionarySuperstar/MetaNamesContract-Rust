@@ -23,8 +23,6 @@ use utils::events::IntoShortnameRPCEvent;
 
 // TODO: DRY up tests
 
-// TODO: Add tests for functionality
-
 fn mock_address(le: u8) -> Address {
     Address {
         address_type: AddressType::Account,
@@ -48,13 +46,14 @@ const BURN: u32 = 0x17;
 const MULTI_MINT: u32 = 0x20;
 const CHECKOWNER: u32 = 0x18;
 const UPDATE_MINTER: u32 = 0x19;
+
 #[test]
 fn proper_transfer_action_call() {
     let dest = mock_address(30u8);
 
     let msg = PnsTransferMsg {
         to: mock_address(1u8),
-        token_id: "name.meta".to_string(),
+        token_id: "name".to_string(),
     };
     let mut event_group = EventGroup::builder();
     let mut test_event_group = EventGroup::builder();
@@ -63,7 +62,7 @@ fn proper_transfer_action_call() {
     test_event_group
         .call(dest.clone(), Shortname::from_u32(TRANSFER))
         .argument(mock_address(1u8))
-        .argument("name.meta".to_string())
+        .argument("name".to_string())
         .done();
 
     assert_eq!(event_group.build(), test_event_group.build());
@@ -76,7 +75,7 @@ fn proper_transfer_from_action_call() {
     let msg = PnsTransferFromMsg {
         from: mock_address(1u8),
         to: mock_address(2u8),
-        token_id: "name.meta".to_string(),
+        token_id: "name".to_string(),
     };
 
     let mut event_group = EventGroup::builder();
@@ -87,7 +86,7 @@ fn proper_transfer_from_action_call() {
         .call(dest.clone(), Shortname::from_u32(TRANSFER_FROM))
         .argument(mock_address(1u8))
         .argument(mock_address(2u8))
-        .argument("name.meta".to_string())
+        .argument("name".to_string())
         .done();
 
     assert_eq!(event_group.build(), test_event_group.build());
@@ -99,7 +98,7 @@ fn proper_approve_action_call() {
 
     let msg = PnsApproveMsg {
         spender: mock_address(1u8),
-        token_id: "name.meta".to_string(),
+        token_id: "name".to_string(),
     };
 
     let mut event_group = EventGroup::builder();
@@ -109,7 +108,7 @@ fn proper_approve_action_call() {
     test_event_group
         .call(dest.clone(), Shortname::from_u32(APPROVE))
         .argument(mock_address(1u8))
-        .argument("name.meta".to_string())
+        .argument("name".to_string())
         .done();
 
     assert_eq!(event_group.build(), test_event_group.build());
@@ -140,10 +139,10 @@ fn proper_mint_action_call() {
     let dest = mock_address(30u8);
 
     let msg = PnsMintMsg {
-        token_id: "name.meta".to_string(),
+        token_id: "name".to_string(),
         to: mock_address(1u8),
         token_uri: Some("uri".to_string()),
-        parent_id: None,
+        parent_id: Some("meta".to_string()),
     };
 
     let mut event_group = EventGroup::builder();
@@ -152,10 +151,10 @@ fn proper_mint_action_call() {
     let mut test_event_group = EventGroup::builder();
     test_event_group
         .call(dest.clone(), Shortname::from_u32(MINT))
-        .argument("name.meta".to_string())
+        .argument("name".to_string())
         .argument(mock_address(1u8))
         .argument(Some("uri".to_string()))
-        .argument(None::<String>)
+        .argument(Some("meta".to_string()))
         .done();
 
     assert_eq!(event_group.build(), test_event_group.build());
@@ -167,7 +166,7 @@ fn proper_ownership_check_call() {
 
     let msg = PnsCheckOwnerMsg {
         owner: mock_address(1u8),
-        token_id: "name.meta".to_string(),
+        token_id: "name".to_string(),
     };
 
     let mut event_group = EventGroup::builder();
@@ -177,7 +176,7 @@ fn proper_ownership_check_call() {
     test_event_group
         .call(dest.clone(), Shortname::from_u32(CHECKOWNER))
         .argument(mock_address(1u8))
-        .argument("name.meta".to_string())
+        .argument("name".to_string())
         .done();
 
     assert_eq!(event_group.build(), test_event_group.build());
@@ -209,7 +208,7 @@ fn proper_revoke_action_call() {
 
     let msg = PnsRevokeMsg {
         spender: mock_address(1u8),
-        token_id: "name.meta".to_string(),
+        token_id: "name".to_string(),
     };
 
     let mut event_group = EventGroup::builder();
@@ -219,7 +218,7 @@ fn proper_revoke_action_call() {
     test_event_group
         .call(dest.clone(), Shortname::from_u32(REVOKE))
         .argument(mock_address(1u8))
-        .argument("name.meta".to_string())
+        .argument("name".to_string())
         .done();
 
     assert_eq!(event_group.build(), test_event_group.build());
@@ -250,7 +249,7 @@ fn proper_burn_action_call() {
     let dest = mock_address(30u8);
 
     let msg = PnsBurnMsg {
-        token_id: "name.meta".to_string(),
+        token_id: "name".to_string(),
     };
 
     let mut event_group = EventGroup::builder();
@@ -259,7 +258,7 @@ fn proper_burn_action_call() {
     let mut test_event_group = EventGroup::builder();
     test_event_group
         .call(dest.clone(), Shortname::from_u32(BURN))
-        .argument("name.meta".to_string())
+        .argument("name".to_string())
         .done();
 
     assert_eq!(event_group.build(), test_event_group.build());
@@ -289,34 +288,34 @@ fn proper_multi_mint_action_call() {
 
     let mints = vec![
         PnsMintMsg {
-            token_id: "name.meta".to_string(),
+            token_id: "name".to_string(),
             to: mock_address(4),
             token_uri: Some(String::from("Token1")),
-            parent_id: None,
+            parent_id: Some("meta".to_string()),
         },
         PnsMintMsg {
-            token_id: "name2.meta".to_string(),
+            token_id: "name2".to_string(),
             to: mock_address(4),
             token_uri: Some(String::from("Token2")),
-            parent_id: None,
+            parent_id: Some("meta".to_string()),
         },
         PnsMintMsg {
-            token_id: "name3.meta".to_string(),
+            token_id: "name3".to_string(),
             to: mock_address(5),
             token_uri: Some(String::from("Token3")),
-            parent_id: None,
+            parent_id: Some("meta".to_string()),
         },
         PnsMintMsg {
-            token_id: "name4.meta".to_string(),
+            token_id: "name4".to_string(),
             to: mock_address(5),
             token_uri: Some(String::from("Token4")),
-            parent_id: None,
+            parent_id: Some("meta".to_string()),
         },
         PnsMintMsg {
-            token_id: "name5.meta".to_string(),
+            token_id: "name5".to_string(),
             to: mock_address(6),
             token_uri: Some(String::from("Token5")),
-            parent_id: None,
+            parent_id: Some("meta".to_string()),
         },
     ];
     let msg = PnsMultiMintMsg {
@@ -364,22 +363,23 @@ fn proper_mint() {
         symbol: "META".to_string(),
         base_uri: Some("ipfs://some.some".to_string()),
         minter: mock_address(minter),
+        tld: Some("meta".to_string()),
     };
 
     let (mut state, events) = execute_init(&mock_contract_context(2), &msg);
 
-    let ref token_id = "name.meta".to_string();
+    let ref token_id = "name".to_string();
     let mint_msg = PnsMintMsg {
         token_id: token_id.clone(),
         to: mock_address(alice),
-        token_uri: Some(String::from("name.meta")),
-        parent_id: None,
+        token_uri: Some(String::from("name")),
+        parent_id: Some("meta".to_string()),
     };
 
     let _ = execute_mint(&mock_contract_context(minter), &mut state, &mint_msg);
 
     let num_token_id = state.token_id(token_id).unwrap();
-    assert_eq!(num_token_id, 1);
+    assert_eq!(num_token_id, 2);
 }
 
 #[test]
@@ -394,15 +394,16 @@ fn sender_is_not_minter_on_mint() {
         symbol: "META".to_string(),
         base_uri: Some("ipfs://some.some".to_string()),
         minter: mock_address(minter),
+        tld: Some("meta".to_string()),
     };
 
     let (mut state, events) = execute_init(&mock_contract_context(2), &msg);
 
     let mint_msg = PnsMintMsg {
-        token_id: "name.meta".to_string(),
+        token_id: "name".to_string(),
         to: mock_address(alice),
-        token_uri: Some("name.meta".to_string()),
-        parent_id: None,
+        token_uri: Some("name".to_string()),
+        parent_id: Some("meta".to_string()),
     };
 
     let _ = execute_mint(&mock_contract_context(alice), &mut state, &mint_msg);
@@ -420,24 +421,25 @@ fn token_already_minted_on_mint() {
         symbol: "META".to_string(),
         base_uri: Some("ipfs://some.some".to_string()),
         minter: mock_address(minter),
+        tld: Some("meta".to_string()),
     };
 
     let (mut state, events) = execute_init(&mock_contract_context(2), &msg);
 
     let mint_msg = PnsMintMsg {
-        token_id: "name.meta".to_string(),
-        token_uri: Some("name.meta".to_string()),
+        token_id: "name".to_string(),
+        token_uri: Some("name".to_string()),
         to: mock_address(alice),
-        parent_id: None,
+        parent_id: Some("meta".to_string()),
     };
 
     let _ = execute_mint(&mock_contract_context(minter), &mut state, &mint_msg);
 
     let mint_msg = PnsMintMsg {
-        token_id: "name.meta".to_string(),
-        token_uri: Some("name.meta".to_string()),
+        token_id: "name".to_string(),
+        token_uri: Some("name".to_string()),
         to: mock_address(alice),
-        parent_id: None,
+        parent_id: Some("meta".to_string()),
     };
 
     let _ = execute_mint(&mock_contract_context(minter), &mut state, &mint_msg);
@@ -455,15 +457,16 @@ fn mint_fails_when_parent_does_not_exist() {
         symbol: "META".to_string(),
         base_uri: Some("ipfs://some.some".to_string()),
         minter: mock_address(minter),
+        tld: Some("meta".to_string()),
     };
 
     let (mut state, events) = execute_init(&mock_contract_context(2), &msg);
 
-    let ref token_id = "name.meta".to_string();
+    let ref token_id = "name".to_string();
     let mint_msg = PnsMintMsg {
         token_id: token_id.clone(),
         to: mock_address(alice),
-        token_uri: Some(String::from("name.meta")),
+        token_uri: Some(String::from("name")),
         parent_id: Some("not.existing.meta".to_string()),
     };
 
@@ -483,26 +486,27 @@ fn mint_fails_when_parent_is_not_owned() {
         symbol: "META".to_string(),
         base_uri: Some("ipfs://some.some".to_string()),
         minter: mock_address(minter),
+        tld: Some("meta".to_string()),
     };
 
     let (mut state, events) = execute_init(&mock_contract_context(2), &msg);
 
-    let ref token_id = "name.meta".to_string();
+    let ref token_id = "name".to_string();
     let mint_msg = PnsMintMsg {
         token_id: token_id.clone(),
         to: mock_address(alice),
-        token_uri: Some(String::from("name.meta")),
-        parent_id: None,
+        token_uri: Some(String::from("name")),
+        parent_id: Some("meta".to_string()),
     };
 
     let _ = execute_mint(&mock_contract_context(minter), &mut state, &mint_msg);
 
-    let ref token_id = "bob.name.meta".to_string();
+    let ref token_id = "bob.name".to_string();
     let mint_msg = PnsMintMsg {
         token_id: token_id.clone(),
         to: mock_address(alice),
-        token_uri: Some(String::from("bob.name.meta")),
-        parent_id: Some("name.meta".to_string()),
+        token_uri: Some(String::from("bob.name")),
+        parent_id: Some("name".to_string()),
     };
 
     let _ = execute_mint(&mock_contract_context(minter), &mut state, &mint_msg);
@@ -520,15 +524,16 @@ fn when_parent_is_not_owned_no_mint() {
         symbol: "META".to_string(),
         base_uri: Some("ipfs://some.some".to_string()),
         minter: mock_address(minter),
+        tld: Some("meta".to_string()),
     };
 
     let (state, events) = execute_init(&mock_contract_context(2), &msg);
 
-    let ref token_id = "name.meta".to_string();
+    let ref token_id = "name".to_string();
     let mint_msg = PnsMintMsg {
         token_id: token_id.clone(),
         to: mock_address(alice),
-        token_uri: Some(String::from("name.meta")),
+        token_uri: Some(String::from("name")),
         parent_id: Some("not.existing.meta".to_string()),
     };
 
@@ -540,7 +545,15 @@ fn when_parent_is_not_owned_no_mint() {
 
     let err = state_mutex.lock().err().unwrap();
 
-    assert_eq!(err.get_ref().mpc721.tokens.len(), 0);
+    let ref mpc721 = err.get_ref().mpc721;
+    // The only domain present is the TLD
+    assert_eq!(mpc721.tokens.len(), 1);
+
+    // Check that the TLD is present
+    let (_, token) = mpc721.tokens.first_key_value().unwrap();
+    assert_eq!(token.owner, mock_address(minter));
+    assert_eq!(token.token_uri, Some("meta".to_string()));
+    assert_eq!(token.parent_id, None);
 }
 
 #[test]
@@ -554,16 +567,17 @@ fn proper_record_mint() {
         symbol: "META".to_string(),
         base_uri: Some("ipfs://some.some".to_string()),
         minter: mock_address(minter),
+        tld: Some("meta".to_string()),
     };
 
     let (mut state, events) = execute_init(&mock_contract_context(2), &msg);
 
-    let ref token_id = "name.meta".to_string();
+    let ref token_id = "name".to_string();
     let mint_msg = PnsMintMsg {
         token_id: token_id.clone(),
         to: mock_address(alice),
-        token_uri: Some(String::from("name.meta")),
-        parent_id: None,
+        token_uri: Some(String::from("name")),
+        parent_id: Some("meta".to_string()),
     };
     let _ = execute_mint(&mock_contract_context(minter), &mut state, &mint_msg);
 
@@ -596,15 +610,16 @@ fn when_token_not_present_record_mint_fails() {
         symbol: "META".to_string(),
         base_uri: Some("ipfs://some.some".to_string()),
         minter: mock_address(minter),
+        tld: Some("meta".to_string()),
     };
 
     let (mut state, events) = execute_init(&mock_contract_context(2), &msg);
 
     let mint_msg = PnsMintMsg {
-        token_id: "name.meta".to_string(),
+        token_id: "name".to_string(),
         to: mock_address(alice),
-        token_uri: Some("name.meta".to_string()),
-        parent_id: None,
+        token_uri: Some("name".to_string()),
+        parent_id: Some("meta".to_string()),
     };
 
     let _ = execute_mint(&mock_contract_context(minter), &mut state, &mint_msg);
@@ -631,21 +646,22 @@ fn when_token_not_owned_record_mint_fails() {
         symbol: "META".to_string(),
         base_uri: Some("ipfs://some.some".to_string()),
         minter: mock_address(minter),
+        tld: Some("meta".to_string()),
     };
 
     let (mut state, events) = execute_init(&mock_contract_context(2), &msg);
 
     let mint_msg = PnsMintMsg {
-        token_id: "name.meta".to_string(),
+        token_id: "name".to_string(),
         to: mock_address(alice),
-        token_uri: Some("name.meta".to_string()),
-        parent_id: None,
+        token_uri: Some("name".to_string()),
+        parent_id: Some("meta".to_string()),
     };
 
     let _ = execute_mint(&mock_contract_context(minter), &mut state, &mint_msg);
 
     let record_mint = RecordMintMsg {
-        token_id: "name.meta".to_string(),
+        token_id: "name".to_string(),
         class: RecordClass::Wallet {},
         data: "some data".to_string(),
     };
@@ -665,21 +681,22 @@ fn record_already_minted_on_record_mint() {
         symbol: "META".to_string(),
         base_uri: Some("ipfs://some.some".to_string()),
         minter: mock_address(minter),
+        tld: Some("meta".to_string()),
     };
 
     let (mut state, events) = execute_init(&mock_contract_context(2), &msg);
 
     let mint_msg = PnsMintMsg {
-        token_id: "name.meta".to_string(),
+        token_id: "name".to_string(),
         to: mock_address(alice),
-        token_uri: Some("name.meta".to_string()),
-        parent_id: None,
+        token_uri: Some("name".to_string()),
+        parent_id: Some("meta".to_string()),
     };
 
     let _ = execute_mint(&mock_contract_context(minter), &mut state, &mint_msg);
 
     let record_mint = RecordMintMsg {
-        token_id: "name.meta".to_string(),
+        token_id: "name".to_string(),
         class: RecordClass::Wallet {},
         data: "some data".to_string(),
     };
@@ -699,16 +716,17 @@ fn proper_record_update() {
         symbol: "META".to_string(),
         base_uri: Some("ipfs://some.some".to_string()),
         minter: mock_address(minter),
+        tld: Some("meta".to_string()),
     };
 
     let (mut state, events) = execute_init(&mock_contract_context(2), &msg);
 
-    let ref token_id = "name.meta".to_string();
+    let ref token_id = "name".to_string();
     let mint_msg = PnsMintMsg {
         token_id: token_id.clone(),
         to: mock_address(alice),
-        token_uri: Some(String::from("name.meta")),
-        parent_id: None,
+        token_uri: Some(String::from("name")),
+        parent_id: Some("meta".to_string()),
     };
     let _ = execute_mint(&mock_contract_context(minter), &mut state, &mint_msg);
 
@@ -753,12 +771,13 @@ fn when_record_does_not_exist_record_update_fails() {
         symbol: "META".to_string(),
         base_uri: Some("ipfs://some.some".to_string()),
         minter: mock_address(minter),
+        tld: Some("meta".to_string()),
     };
 
     let (mut state, events) = execute_init(&mock_contract_context(2), &msg);
 
     let record_update_msg = RecordUpdateMsg {
-        token_id: "name.meta".to_string(),
+        token_id: "name".to_string(),
         class: RecordClass::Twitter {},
         data: "new data".to_string(),
     };
@@ -783,16 +802,17 @@ fn when_record_is_not_owned_record_update_fails() {
         symbol: "META".to_string(),
         base_uri: Some("ipfs://some.some".to_string()),
         minter: mock_address(minter),
+        tld: Some("meta".to_string()),
     };
 
     let (mut state, events) = execute_init(&mock_contract_context(2), &msg);
 
-    let ref token_id = "name.meta".to_string();
+    let ref token_id = "name".to_string();
     let mint_msg = PnsMintMsg {
         token_id: token_id.clone(),
         to: mock_address(alice),
-        token_uri: Some(String::from("name.meta")),
-        parent_id: None,
+        token_uri: Some(String::from("name")),
+        parent_id: Some("meta".to_string()),
     };
     let _ = execute_mint(&mock_contract_context(minter), &mut state, &mint_msg);
 
@@ -832,16 +852,17 @@ fn proper_record_delete() {
         symbol: "META".to_string(),
         base_uri: Some("ipfs://some.some".to_string()),
         minter: mock_address(minter),
+        tld: Some("meta".to_string()),
     };
 
     let (mut state, events) = execute_init(&mock_contract_context(2), &msg);
 
-    let ref token_id = "name.meta".to_string();
+    let ref token_id = "name".to_string();
     let mint_msg = PnsMintMsg {
         token_id: token_id.clone(),
         to: mock_address(alice),
-        token_uri: Some(String::from("name.meta")),
-        parent_id: None,
+        token_uri: Some(String::from("name")),
+        parent_id: Some("meta".to_string()),
     };
     let _ = execute_mint(&mock_contract_context(minter), &mut state, &mint_msg);
 
@@ -881,12 +902,13 @@ fn when_record_does_not_exist_record_delete_fails() {
         symbol: "META".to_string(),
         base_uri: Some("ipfs://some.some".to_string()),
         minter: mock_address(minter),
+        tld: Some("meta".to_string()),
     };
 
     let (mut state, events) = execute_init(&mock_contract_context(2), &msg);
 
     let record_delete_msg = RecordDeleteMsg {
-        token_id: "name.meta".to_string(),
+        token_id: "name".to_string(),
         class: RecordClass::Twitter {},
     };
 
@@ -910,16 +932,17 @@ fn when_record_is_not_owned_record_delete_fails() {
         symbol: "META".to_string(),
         base_uri: Some("ipfs://some.some".to_string()),
         minter: mock_address(minter),
+        tld: Some("meta".to_string()),
     };
 
     let (mut state, events) = execute_init(&mock_contract_context(2), &msg);
 
-    let ref token_id = "name.meta".to_string();
+    let ref token_id = "name".to_string();
     let mint_msg = PnsMintMsg {
         token_id: token_id.clone(),
         to: mock_address(alice),
-        token_uri: Some(String::from("name.meta")),
-        parent_id: None,
+        token_uri: Some(String::from("name")),
+        parent_id: Some("meta".to_string()),
     };
     let _ = execute_mint(&mock_contract_context(minter), &mut state, &mint_msg);
 
