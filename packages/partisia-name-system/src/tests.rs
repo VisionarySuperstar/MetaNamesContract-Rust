@@ -1,3 +1,5 @@
+use std::{panic::catch_unwind, rc::Rc, sync::Mutex};
+
 use crate::{
     actions::{
         execute_init, execute_mint, execute_record_delete, execute_record_mint,
@@ -470,7 +472,7 @@ fn mint_fails_when_parent_does_not_exist() {
 
 #[test]
 #[should_panic(expected = "Unauthorized")]
-fn mint_fails_when_parent_does_is_not_owned() {
+fn mint_fails_when_parent_is_not_owned() {
     let minter = 1u8;
     let alice = 10u8;
     let bob = 20u8;
@@ -504,6 +506,41 @@ fn mint_fails_when_parent_does_is_not_owned() {
     };
 
     let _ = execute_mint(&mock_contract_context(minter), &mut state, &mint_msg);
+}
+
+#[test]
+fn when_parent_is_not_owned_no_mint() {
+    let minter = 1u8;
+    let alice = 10u8;
+    let bob = 20u8;
+
+    let msg = PnsInitMsg {
+        owner: None,
+        name: "Meta Names".to_string(),
+        symbol: "META".to_string(),
+        base_uri: Some("ipfs://some.some".to_string()),
+        minter: mock_address(minter),
+    };
+
+    let (state, events) = execute_init(&mock_contract_context(2), &msg);
+
+    let ref token_id = "name.meta".to_string();
+    let mint_msg = PnsMintMsg {
+        token_id: token_id.clone(),
+        to: mock_address(alice),
+        token_uri: Some(String::from("name.meta")),
+        parent_id: Some("not.existing.meta".to_string()),
+    };
+
+    let state_mutex = Rc::new(Mutex::new(state));
+    let _ = catch_unwind(|| {
+        let mut state_mut = state_mutex.lock().unwrap();
+        let _ = execute_mint(&mock_contract_context(minter), &mut state_mut, &mint_msg);
+    });
+
+    let err = state_mutex.lock().err().unwrap();
+
+    assert_eq!(err.get_ref().mpc721.tokens.len(), 0);
 }
 
 #[test]
