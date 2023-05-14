@@ -51,7 +51,7 @@ pub fn execute_init(
         let mint_msg = PnsMintMsg {
             token_id: tld.clone(),
             to: msg.minter,
-            token_uri: Some(tld.clone()),
+            token_uri: msg.tld_uri.clone(),
             parent_id: None
         };
         let ctx_with_sender = ContractContext {
