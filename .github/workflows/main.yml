@@ -7,6 +7,25 @@ on:
     branches: [main]
 
 jobs:
+  wasm-check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          toolchain: stable
+          target: wasm32-unknown-unknown
+
+      - name: Setup caching dependencies
+        uses: Swatinem/rust-cache@v2
+
+      - name: Fetch dependencies
+        run: cargo fetch
+
+      - name: Check build
+        run: cargo check --target wasm32-unknown-unknown
+
+
   audit:
     runs-on: ubuntu-latest
 
