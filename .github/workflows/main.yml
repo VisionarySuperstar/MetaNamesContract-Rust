@@ -56,3 +56,27 @@ jobs:
 
       - name: Run tests
         run: cargo test
+
+
+  wasm-check:
+    runs-on: ubuntu-latest
+    needs: audit
+    
+    steps:
+      - uses: actions/checkout@v3 
+    
+      - name: Setup Rust
+        uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          toolchain: stable
+          target: wasm32-unknown-unknown
+
+      - name: Setup caching dependencies
+        uses: Swatinem/rust-cache@v2
+
+      - name: Fetch dependencies
+        run: cargo fetch --target wasm32-unknown-unknown
+
+      - name: Check build
+        run: cargo check --target wasm32-unknown-unknown
