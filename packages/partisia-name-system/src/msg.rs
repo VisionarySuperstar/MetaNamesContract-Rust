@@ -7,8 +7,6 @@ use utils::events::IntoShortnameRPCEvent;
 
 use crate::state::RecordClass;
 
-// TODO: Convert token_id to String
-
 /// ## Description
 /// This structure describes fields for PNS initialize msg
 #[derive(ReadWriteRPC, CreateTypeSpec, Clone, PartialEq, Eq, Debug)]
