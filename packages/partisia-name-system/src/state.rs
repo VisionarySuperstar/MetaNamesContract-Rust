@@ -51,24 +51,24 @@ impl PartisiaNameSystemState {
     /// ## Description
     /// Returns domain info by token id
     /// ## Params
-    /// * **domain** is an object of type [`Vec<u8>`]
-    pub fn domain_info(&self, domain: &Vec<u8>) -> Option<&Domain> {
+    /// * **domain** is an object of type [`&[u8]`]
+    pub fn domain_info(&self, domain: &[u8]) -> Option<&Domain> {
         self.domains.get(domain)
     }
 
     /// ## Description
     /// Says is token id minted or not
     /// ## Params
-    /// * **token_id** is an object of type [`Vec<u8>`]
-    pub fn is_minted(&self, token_id: &Vec<u8>) -> bool {
+    /// * **token_id** is an object of type [`&[u8]`]
+    pub fn is_minted(&self, token_id: &[u8]) -> bool {
         self.domains.contains_key(token_id)
     }
 
     /// ## Description
     /// Returns token info by domain
     /// ## Params
-    /// * **domain** is an object of type [`Vec<u8>`]
-    pub fn token_info(&self, domain: &Vec<u8>) -> Option<&TokenInfo> {
+    /// * **domain** is an object of type [`&[u8]`]
+    pub fn token_info(&self, domain: &[u8]) -> Option<&TokenInfo> {
         let domain = self.domain_info(domain);
         if domain.is_none() {
             return None;
@@ -80,18 +80,18 @@ impl PartisiaNameSystemState {
     /// ## Description
     /// This function returns token id for given domain
     /// ## Params
-    /// * `domain` is an object of type [`Vec<u8>`]
-    pub fn token_id(&self, domain: &Vec<u8>) -> Option<u128> {
+    /// * `domain` is an object of type [`&[u8]`]
+    pub fn token_id(&self, domain: &[u8]) -> Option<u128> {
         self.domains.get(domain).map(|d| d.token_id)
     }
 
     /// ## Description
     /// Returns record info by token id
     /// ## Params
-    /// * **token_id** is an object of type [`Vec<u8>`]
+    /// * **token_id** is an object of type [`&[u8]`]
     ///
     /// * **class** is an object of type [`RecordClass`]
-    pub fn record_info(&self, token_id: &Vec<u8>, class: &RecordClass) -> Option<&Record> {
+    pub fn record_info(&self, token_id: &[u8], class: &RecordClass) -> Option<&Record> {
         let qualified_name = Self::fully_qualified_name(token_id, class);
         self.records.get(&qualified_name)
     }
@@ -101,8 +101,8 @@ impl PartisiaNameSystemState {
     /// ## Params
     /// * **account** is an object of type [`Address`]
     ///
-    /// * **domain** is an object of type [`Vec<u8>`]
-    pub fn allowed_to_manage(&self, account: &Address, domain: &Vec<u8>) -> bool {
+    /// * **domain** is an object of type [`&[u8]`]
+    pub fn allowed_to_manage(&self, account: &Address, domain: &[u8]) -> bool {
         let domain = self.domain_info(domain);
         if domain.is_none() {
             return false;
@@ -117,12 +117,12 @@ impl PartisiaNameSystemState {
     /// ## Params
     /// * **actor** is an object of type [`Address`]
     ///
-    /// * **token_id** is a field of type [`Vec<u8>`]
+    /// * **token_id** is a field of type [`&[u8]`]
     ///
     /// * **data** is an object of type [`String`]
     ///
     /// * **class** is an object of type [`RecordClass`]
-    pub fn mint_record(&mut self, token_id: &Vec<u8>, class: &RecordClass, data: &String) {
+    pub fn mint_record(&mut self, token_id: &[u8], class: &RecordClass, data: &String) {
         let record = Record { data: data.clone() };
         let qualified_name = Self::fully_qualified_name(token_id, class);
         assert!(
@@ -137,12 +137,12 @@ impl PartisiaNameSystemState {
     /// ## Description
     /// Update data of a record
     /// ## Params
-    /// * **token_id** is an object of type [`Vec<u8>`]
+    /// * **token_id** is an object of type [`&[u8]`]
     ///
     /// * **class** is an object of type [`RecordClass`]
     ///
     /// * **data** is an object of type [`String`]
-    pub fn update_record_data(&mut self, token_id: &Vec<u8>, class: &RecordClass, data: &String) {
+    pub fn update_record_data(&mut self, token_id: &[u8], class: &RecordClass, data: &String) {
         assert!(self.is_minted(token_id), "{}", ContractError::NotMinted);
 
         let qualified_name = Self::fully_qualified_name(token_id, class);
@@ -154,10 +154,10 @@ impl PartisiaNameSystemState {
     /// ## Description
     /// Remove a record
     /// ## Params
-    /// * **token_id** is an object of type [`Vec<u8>`]
+    /// * **token_id** is an object of type [`&[u8]`]
     ///
     /// * **class** is an object of type [`RecordClass`]
-    pub fn delete_record(&mut self, token_id: &Vec<u8>, class: &RecordClass) {
+    pub fn delete_record(&mut self, token_id: &[u8], class: &RecordClass) {
         assert!(self.is_minted(token_id), "{}", ContractError::NotMinted);
 
         let qualified_name = Self::fully_qualified_name(token_id, class);
@@ -171,10 +171,10 @@ impl PartisiaNameSystemState {
     /// ## Description
     /// Says if record minted or not
     /// ## Params
-    /// * **token_id** is an object of type [`Vec<u8>`]
+    /// * **token_id** is an object of type [`&[u8]`]
     ///
     /// * **class** is an object of type [`RecordClass`]
-    pub fn is_record_minted(&self, token_id: &Vec<u8>, class: &RecordClass) -> bool {
+    pub fn is_record_minted(&self, token_id: &[u8], class: &RecordClass) -> bool {
         let qualified_name = Self::fully_qualified_name(token_id, class);
         self.records.contains_key(&qualified_name)
     }
@@ -184,7 +184,7 @@ impl PartisiaNameSystemState {
     /// It's a vector of bytes where first byte is a class hex and the rest is a name hash
     /// ## Example
     /// 0x0 + 0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef
-    fn fully_qualified_name(token_id: &Vec<u8>, class: &RecordClass) -> Vec<u8> {
+    fn fully_qualified_name(token_id: &[u8], class: &RecordClass) -> Vec<u8> {
         let class_hex: u8 = match class {
             RecordClass::Wallet {} => 0x0,
             RecordClass::Uri {} => 0x1,
