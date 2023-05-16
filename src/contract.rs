@@ -37,7 +37,7 @@ pub fn transfer(
     ctx: ContractContext,
     state: ContractState,
     to: Address,
-    token_id: String,
+    token_id: Vec<u8>,
 ) -> (ContractState, Vec<EventGroup>) {
     let mut state = state;
     let events = execute_transfer(&ctx, &mut state.pns, &PnsTransferMsg { to, token_id });
@@ -51,7 +51,7 @@ pub fn transfer_from(
     state: ContractState,
     from: Address,
     to: Address,
-    token_id: String,
+    token_id: Vec<u8>,
 ) -> (ContractState, Vec<EventGroup>) {
     let mut state = state;
     let events = execute_transfer_from(
@@ -68,7 +68,7 @@ pub fn approve(
     ctx: ContractContext,
     state: ContractState,
     spender: Address,
-    token_id: String,
+    token_id: Vec<u8>,
 ) -> (ContractState, Vec<EventGroup>) {
     let mut state = state;
     let events = execute_approve(&ctx, &mut state.pns, &PnsApproveMsg { spender, token_id });
@@ -92,10 +92,10 @@ pub fn set_base_uri(
 pub fn mint(
     ctx: ContractContext,
     state: ContractState,
-    token_id: String,
+    token_id: Vec<u8>,
     to: Address,
     token_uri: Option<String>,
-    parent_id: Option<String>,
+    parent_id: Option<Vec<u8>>,
 ) -> (ContractState, Vec<EventGroup>) {
     let mut state = state;
     let events = execute_mint(
@@ -129,7 +129,7 @@ pub fn revoke(
     ctx: ContractContext,
     state: ContractState,
     spender: Address,
-    token_id: String,
+    token_id: Vec<u8>,
 ) -> (ContractState, Vec<EventGroup>) {
     let mut state = state;
     let events = execute_revoke(&ctx, &mut state.pns, &PnsRevokeMsg { spender, token_id });
@@ -153,7 +153,7 @@ pub fn revoke_for_all(
 pub fn burn(
     ctx: ContractContext,
     state: ContractState,
-    token_id: String,
+    token_id: Vec<u8>,
 ) -> (ContractState, Vec<EventGroup>) {
     let mut state = state;
     let events = execute_burn(&ctx, &mut state.pns, &PnsBurnMsg { token_id });
@@ -166,7 +166,7 @@ pub fn check_ownership(
     ctx: ContractContext,
     state: ContractState,
     owner: Address,
-    token_id: String,
+    token_id: Vec<u8>,
 ) -> (ContractState, Vec<EventGroup>) {
     let mut state = state;
     let events = execute_ownership_check(&ctx, &mut state.pns, &PnsCheckOwnerMsg { owner, token_id });
@@ -198,7 +198,7 @@ pub fn multi_mint(
 pub fn mint_record(
     ctx: ContractContext,
     state: ContractState,
-    token_id: String,
+    token_id: Vec<u8>,
     class: RecordClass,
     data: String,
 ) -> (ContractState, Vec<EventGroup>) {
@@ -220,7 +220,7 @@ pub fn mint_record(
 pub fn update_record(
     ctx: ContractContext,
     state: ContractState,
-    token_id: String,
+    token_id: Vec<u8>,
     class: RecordClass,
     data: String,
 ) -> (ContractState, Vec<EventGroup>) {
@@ -242,7 +242,7 @@ pub fn update_record(
 pub fn delete_record(
     ctx: ContractContext,
     state: ContractState,
-    token_id: String,
+    token_id: Vec<u8>,
     class: RecordClass,
 ) -> (ContractState, Vec<EventGroup>) {
     let mut state = state;

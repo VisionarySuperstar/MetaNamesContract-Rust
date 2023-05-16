@@ -22,10 +22,6 @@ const CONTRACT_VERSION: &str = env!("CARGO_PKG_VERSION");
 /// Inits contract state.
 /// Returns [`(PartisiaNameSystemState, Vec<EventGroup>)`] if operation was successful,
 /// otherwise panics with error message defined in [`ContractError`]
-/// ## Params
-/// * **_ctx** is an object of type [`ContractContext`]
-///
-/// * **msg** is an object of type [`InitMsg`]
 pub fn execute_init(
     ctx: &ContractContext,
     msg: &PnsInitMsg,
@@ -51,7 +47,7 @@ pub fn execute_init(
         let mint_msg = PnsMintMsg {
             token_id: tld.clone(),
             to: msg.minter,
-            token_uri: Some(tld.clone()),
+            token_uri: msg.tld_uri.clone(),
             parent_id: None
         };
         let ctx_with_sender = ContractContext {
@@ -70,12 +66,6 @@ pub fn execute_init(
 /// Transfer token to another account.
 /// Returns [`Vec<EventGroup>`] if operation was successful,
 /// otherwise panics with error message defined in [`ContractError`]
-/// ## Params
-/// * **ctx** is an object of type [`ContractContext`]
-///
-/// * **state** is an object of type [`PartisiaNameSystemState`]
-///
-/// * **msg** is an object of type [`TransferMsg`]
 pub fn execute_transfer(
     ctx: &ContractContext,
     state: &mut PartisiaNameSystemState,
@@ -100,12 +90,6 @@ pub fn execute_transfer(
 /// Only with approval extension. Transfer token from owner to spender.
 /// Returns [`Vec<EventGroup>`] if operation was successful,
 /// otherwise panics with error message defined in [`ContractError`]
-/// ## Params
-/// * **ctx** is an object of type [`ContractContext`]
-///
-/// * **state** is an object of type [`PartisiaNameSystemState`]
-///
-/// * **msg** is an object of type [`TransferFromMsg`]
 pub fn execute_transfer_from(
     ctx: &ContractContext,
     state: &mut PartisiaNameSystemState,
@@ -131,12 +115,6 @@ pub fn execute_transfer_from(
 /// Allows spender to transfer token from the owner account.
 /// Returns [`Vec<EventGroup>`] if operation was successful,
 /// otherwise panics with error message defined in [`ContractError`]
-/// ## Params
-/// * **ctx** is an object of type [`ContractContext`]
-///
-/// * **state** is an object of type [`PartisiaNameSystemState`]
-///
-/// * **msg** is an object of type [`ApproveMsg`]
 pub fn execute_approve(
     ctx: &ContractContext,
     state: &mut PartisiaNameSystemState,
@@ -161,12 +139,6 @@ pub fn execute_approve(
 /// Set base uri for the tokens.
 /// Returns [`Vec<EventGroup>`] if operation was successful,
 /// otherwise panics with error message defined in [`ContractError`]
-/// ## Params
-/// * **ctx** is an object of type [`ContractContext`]
-///
-/// * **state** is an object of type [`PartisiaNameSystemState`]
-///
-/// * **msg** is an object of type [`SetBaseUriMsg`]
 pub fn execute_set_base_uri(
     ctx: &ContractContext,
     state: &mut PartisiaNameSystemState,
@@ -187,12 +159,6 @@ pub fn execute_set_base_uri(
 /// Mint a new token. Can only be executed by minter account.
 /// Returns [`Vec<EventGroup>`] if operation was successful,
 /// otherwise panics with error message defined in [`ContractError`]
-/// ## Params
-/// * **ctx** is an object of type [`ContractContext`]
-///
-/// * **state** is an object of type [`PartisiaNameSystemState`]
-///
-/// * **msg** is an object of type [`MintMsg`]
 pub fn execute_mint(
     ctx: &ContractContext,
     state: &mut PartisiaNameSystemState,
@@ -251,12 +217,6 @@ pub fn execute_mint(
 /// Allows operator to transfer any owner tokens from his account.
 /// Returns [`Vec<EventGroup>`] if operation was successful,
 /// otherwise panics with error message defined in [`ContractError`]
-/// ## Params
-/// * **ctx** is an object of type [`ContractContext`]
-///
-/// * **state** is an object of type [`PartisiaNameSystemState`]
-///
-/// * **msg** is an object of type [`ApproveForAllMsg`]
 pub fn execute_approve_for_all(
     ctx: &ContractContext,
     state: &mut PartisiaNameSystemState,
@@ -277,12 +237,6 @@ pub fn execute_approve_for_all(
 /// Remove approval.
 /// Returns [`Vec<EventGroup>`] if operation was successful,
 /// otherwise panics with error message defined in [`ContractError`]
-/// ## Params
-/// * **ctx** is an object of type [`ContractContext`]
-///
-/// * **state** is an object of type [`PartisiaNameSystemState`]
-///
-/// * **msg** is an object of type [`RevokeMsg`]
 pub fn execute_revoke(
     ctx: &ContractContext,
     state: &mut PartisiaNameSystemState,
@@ -307,12 +261,6 @@ pub fn execute_revoke(
 /// Remove operator.
 /// Returns [`Vec<EventGroup>`] if operation was successful,
 /// otherwise panics with error message defined in [`ContractError`]
-/// ## Params
-/// * **ctx** is an object of type [`ContractContext`]
-///
-/// * **state** is an object of type [`PartisiaNameSystemState`]
-///
-/// * **msg** is an object of type [`RevokeForAllMsg`]
 pub fn execute_revoke_for_all(
     ctx: &ContractContext,
     state: &mut PartisiaNameSystemState,
@@ -333,12 +281,6 @@ pub fn execute_revoke_for_all(
 /// Destroy your token forever.
 /// Returns [`Vec<EventGroup>`] if operation was successful,
 /// otherwise panics with error message defined in [`ContractError`]
-/// ## Params
-/// * **ctx** is an object of type [`ContractContext`]
-///
-/// * **state** is an object of type [`PartisiaNameSystemState`]
-///
-/// * **msg** is an object of type [`BurnMsg`]
 pub fn execute_burn(
     ctx: &ContractContext,
     state: &mut PartisiaNameSystemState,
@@ -361,12 +303,6 @@ pub fn execute_burn(
 /// ## Description
 /// Updates the minter address checking that the sender is the contract owner address
 /// Returns [`Vec<EventGroup>`] if operation was successful,
-/// ## Params
-/// * **ctx** is an object of type [`ContractContext`]
-///
-/// * **state** is an object of type [`PartisiaNameSystemState`]
-///
-/// * **msg** is an object of type [`UpdateMinterMsg`]
 pub fn execute_update_minter(
     ctx: &ContractContext,
     state: &mut PartisiaNameSystemState,
@@ -387,12 +323,6 @@ pub fn execute_update_minter(
 /// Check if a user owns a particular token. Will revert otherwise
 /// Returns [`Vec<EventGroup>`] if operation was successful,
 /// otherwise panics with error message defined in [`ContractError`]
-/// ## Params
-/// * **ctx** is an object of type [`ContractContext`]
-///
-/// * **state** is an object of type [`PartisiaNameSystemState`]
-///
-/// * **msg** is an object of type [`CheckOwnerMsg`]
 pub fn execute_ownership_check(
     ctx: &ContractContext,
     state: &mut PartisiaNameSystemState,
@@ -417,12 +347,6 @@ pub fn execute_ownership_check(
 /// Mint Multiple NFTs in a single function call
 /// Returns [`Vec<EventGroup>`] if operation was successful,
 /// otherwise panics with error message defined in [`ContractError`]
-/// ## Params
-/// * **ctx** is an object of type [`ContractContext`]
-///
-/// * **state** is an object of type [`PartisiaNameSystemState`]
-///
-/// * **msg** is an object of type [`MultiMintMsg`]
 pub fn execute_multi_mint(
     ctx: &ContractContext,
     state: &mut PartisiaNameSystemState,
@@ -442,12 +366,6 @@ pub fn execute_multi_mint(
 /// Mint a new record for a domain
 /// Returns [`Vec<EventGroup>`] if operation was successful,
 /// otherwise panics with error message defined in [`ContractError`]
-/// ## Params
-/// * **ctx** is an object of type [`ContractContext`]
-///
-/// * **state** is an object of type [`PartisiaNameSystemState`]
-///
-/// * **msg** is an object of type [`RecordMintMsg`]
 pub fn execute_record_mint(
     ctx: &ContractContext,
     state: &mut PartisiaNameSystemState,
@@ -475,12 +393,6 @@ pub fn execute_record_mint(
 /// Update a record for a domain
 /// Returns [`Vec<EventGroup>`] if operation was successful,
 /// otherwise panics with error message defined in [`ContractError`]
-/// ## Params
-/// * **ctx** is an object of type [`ContractContext`]
-///
-/// * **state** is an object of type [`PartisiaNameSystemState`]
-///
-/// * **msg** is an object of type [`RecordUpdateMsg`]
 pub fn execute_record_update(
     ctx: &ContractContext,
     state: &mut PartisiaNameSystemState,
@@ -514,12 +426,6 @@ pub fn execute_record_update(
 /// Delete a record for a domain
 /// Returns [`Vec<EventGroup>`] if operation was successful,
 /// otherwise panics with error message defined in [`ContractError`]
-/// ## Params
-/// * **ctx** is an object of type [`ContractContext`]
-///
-/// * **state** is an object of type [`PartisiaNameSystemState`]
-///
-/// * **msg** is an object of type [`RecordDeleteMsg`]
 pub fn execute_record_delete(
     ctx: &ContractContext,
     state: &mut PartisiaNameSystemState,

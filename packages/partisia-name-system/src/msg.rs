@@ -7,8 +7,6 @@ use utils::events::IntoShortnameRPCEvent;
 
 use crate::state::RecordClass;
 
-// TODO: Convert token_id to String
-
 /// ## Description
 /// This structure describes fields for PNS initialize msg
 #[derive(ReadWriteRPC, CreateTypeSpec, Clone, PartialEq, Eq, Debug)]
@@ -24,7 +22,9 @@ pub struct PnsInitMsg {
     /// token minter address
     pub minter: Address,
     /// optional top level domain
-    pub tld: Option<String>,
+    pub tld: Option<Vec<u8>>,
+    /// optional top level domain uri
+    pub tld_uri: Option<String>,
 }
 
 /// ## Description
@@ -35,7 +35,7 @@ pub struct PnsTransferMsg {
     /// receiver address
     pub to: Address,
     /// token id
-    pub token_id: String,
+    pub token_id: Vec<u8>,
 }
 
 /// ## Description
@@ -48,7 +48,7 @@ pub struct PnsTransferFromMsg {
     /// receiver address
     pub to: Address,
     /// token id
-    pub token_id: String,
+    pub token_id: Vec<u8>,
 }
 
 /// ## Description
@@ -59,7 +59,7 @@ pub struct PnsApproveMsg {
     /// operator address to approve
     pub spender: Address,
     /// token id
-    pub token_id: String,
+    pub token_id: Vec<u8>,
 }
 
 /// ## Description
@@ -77,13 +77,13 @@ pub struct PnsSetBaseUriMsg {
 #[rpc_msg(action = 0x09)]
 pub struct PnsMintMsg {
     /// newly minted token id
-    pub token_id: String,
+    pub token_id: Vec<u8>,
     /// receiver address
     pub to: Address,
     /// optional token_uri
     pub token_uri: Option<String>,
     /// optional parent
-    pub parent_id: Option<String>,
+    pub parent_id: Option<Vec<u8>>,
 }
 
 /// ## Description
@@ -103,7 +103,7 @@ pub struct PnsRevokeMsg {
     /// operator address to revoke
     pub spender: Address,
     /// token id
-    pub token_id: String,
+    pub token_id: Vec<u8>,
 }
 
 /// ## Description
@@ -121,7 +121,7 @@ pub struct PnsRevokeForAllMsg {
 #[rpc_msg(action = 0x17)]
 pub struct PnsBurnMsg {
     /// token id to burn
-    pub token_id: String,
+    pub token_id: Vec<u8>,
 }
 
 /// ## Description
@@ -132,7 +132,7 @@ pub struct PnsCheckOwnerMsg {
     /// receiver address
     pub owner: Address,
     /// token id
-    pub token_id: String,
+    pub token_id: Vec<u8>,
 }
 /// ## Description
 /// This structure describes fields for the Update Minter Msg
@@ -158,7 +158,7 @@ pub struct PnsMultiMintMsg {
 #[rpc_msg(action = 0x21)]
 pub struct RecordMintMsg {
     /// Related domain
-    pub token_id: String,
+    pub token_id: Vec<u8>,
     /// Class type
     pub class: RecordClass,
     /// Data
@@ -171,7 +171,7 @@ pub struct RecordMintMsg {
 #[rpc_msg(action = 0x22)]
 pub struct RecordUpdateMsg {
     /// Related domain
-    pub token_id: String,
+    pub token_id: Vec<u8>,
     /// Class type
     pub class: RecordClass,
     /// Data
@@ -184,7 +184,7 @@ pub struct RecordUpdateMsg {
 #[rpc_msg(action = 0x23)]
 pub struct RecordDeleteMsg {
     /// Related domain
-    pub token_id: String,
+    pub token_id: Vec<u8>,
     /// Class type
     pub class: RecordClass,
 }

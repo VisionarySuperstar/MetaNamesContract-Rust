@@ -1,4 +1,4 @@
-use std::collections::BTreeMap;
+use std::{collections::BTreeMap};
 
 use contract_version_base::state::ContractVersionBase;
 use create_type_spec_derive::CreateTypeSpec;
@@ -10,13 +10,15 @@ use read_write_state_derive::ReadWriteState;
 use crate::ContractError;
 
 /// ## Description
-/// This structure describes partisia name system state
+/// This structure describes Partisia Name System state
 #[derive(ReadWriteState, CreateTypeSpec, Clone, PartialEq, Eq, Debug)]
 pub struct PartisiaNameSystemState {
     pub mpc721: MPC721ContractState,
     pub version: ContractVersionBase,
-    pub domains: BTreeMap<String, Domain>,
-    pub records: BTreeMap<String, Record>,
+    /// the domain key is a name hash
+    pub domains: BTreeMap<Vec<u8>, Domain>,
+    /// The records are stored in a BTreeMap with the key being the fully qualified name
+    pub records: BTreeMap<Vec<u8>, Record>,
 }
 
 #[derive(ReadWriteState, CreateTypeSpec, Clone, PartialEq, Eq, Debug)]
@@ -48,25 +50,19 @@ pub enum RecordClass {
 impl PartisiaNameSystemState {
     /// ## Description
     /// Returns domain info by token id
-    /// ## Params
-    /// * **domain** is an object of type [`String`]
-    pub fn domain_info(&self, domain: &String) -> Option<&Domain> {
+    pub fn domain_info(&self, domain: &[u8]) -> Option<&Domain> {
         self.domains.get(domain)
     }
 
     /// ## Description
     /// Says is token id minted or not
-    /// ## Params
-    /// * **token_id** is an object of type [`String`]
-    pub fn is_minted(&self, token_id: &String) -> bool {
+    pub fn is_minted(&self, token_id: &[u8]) -> bool {
         self.domains.contains_key(token_id)
     }
 
     /// ## Description
     /// Returns token info by domain
-    /// ## Params
-    /// * **domain** is an object of type [`String`]
-    pub fn token_info(&self, domain: &String) -> Option<&TokenInfo> {
+    pub fn token_info(&self, domain: &[u8]) -> Option<&TokenInfo> {
         let domain = self.domain_info(domain);
         if domain.is_none() {
             return None;
@@ -77,19 +73,13 @@ impl PartisiaNameSystemState {
 
     /// ## Description
     /// This function returns token id for given domain
-    /// ## Params
-    /// * `domain` is an object of type [`String`]
-    pub fn token_id(&self, domain: &String) -> Option<u128> {
+    pub fn token_id(&self, domain: &[u8]) -> Option<u128> {
         self.domains.get(domain).map(|d| d.token_id)
     }
 
     /// ## Description
     /// Returns record info by token id
-    /// ## Params
-    /// * **token_id** is an object of type [`String`]
-    ///
-    /// * **class** is an object of type [`RecordClass`]
-    pub fn record_info(&self, token_id: &String, class: &RecordClass) -> Option<&Record> {
+    pub fn record_info(&self, token_id: &[u8], class: &RecordClass) -> Option<&Record> {
         let qualified_name = Self::fully_qualified_name(token_id, class);
         self.records.get(&qualified_name)
     }
@@ -97,10 +87,7 @@ impl PartisiaNameSystemState {
     /// ## Description
     /// Returns boolean if account is allowed to manage domain
     /// ## Params
-    /// * **account** is an object of type [`Address`]
-    ///
-    /// * **domain** is an object of type [`String`]
-    pub fn allowed_to_manage(&self, account: &Address, domain: &String) -> bool {
+    pub fn allowed_to_manage(&self, account: &Address, domain: &[u8]) -> bool {
         let domain = self.domain_info(domain);
         if domain.is_none() {
             return false;
@@ -112,15 +99,7 @@ impl PartisiaNameSystemState {
 
     /// ## Description
     /// Mints record for token
-    /// ## Params
-    /// * **actor** is an object of type [`Address`]
-    ///
-    /// * **token_id** is a field of type [`String`]
-    ///
-    /// * **data** is an object of type [`String`]
-    ///
-    /// * **class** is an object of type [`RecordClass`]
-    pub fn mint_record(&mut self, token_id: &String, class: &RecordClass, data: &String) {
+    pub fn mint_record(&mut self, token_id: &[u8], class: &RecordClass, data: &String) {
         let record = Record { data: data.clone() };
         let qualified_name = Self::fully_qualified_name(token_id, class);
         assert!(
@@ -134,13 +113,7 @@ impl PartisiaNameSystemState {
 
     /// ## Description
     /// Update data of a record
-    /// ## Params
-    /// * **token_id** is an object of type [`String`]
-    ///
-    /// * **class** is an object of type [`RecordClass`]
-    ///
-    /// * **data** is an object of type [`String`]
-    pub fn update_record_data(&mut self, token_id: &String, class: &RecordClass, data: &String) {
+    pub fn update_record_data(&mut self, token_id: &[u8], class: &RecordClass, data: &String) {
         assert!(self.is_minted(token_id), "{}", ContractError::NotMinted);
 
         let qualified_name = Self::fully_qualified_name(token_id, class);
@@ -151,11 +124,7 @@ impl PartisiaNameSystemState {
 
     /// ## Description
     /// Remove a record
-    /// ## Params
-    /// * **token_id** is an object of type [`String`]
-    ///
-    /// * **class** is an object of type [`RecordClass`]
-    pub fn delete_record(&mut self, token_id: &String, class: &RecordClass) {
+    pub fn delete_record(&mut self, token_id: &[u8], class: &RecordClass) {
         assert!(self.is_minted(token_id), "{}", ContractError::NotMinted);
 
         let qualified_name = Self::fully_qualified_name(token_id, class);
@@ -168,25 +137,26 @@ impl PartisiaNameSystemState {
 
     /// ## Description
     /// Says if record minted or not
-    /// ## Params
-    /// * **token_id** is an object of type [`String`]
-    ///
-    /// * **class** is an object of type [`RecordClass`]
-    pub fn is_record_minted(&self, token_id: &String, class: &RecordClass) -> bool {
+    pub fn is_record_minted(&self, token_id: &[u8], class: &RecordClass) -> bool {
         let qualified_name = Self::fully_qualified_name(token_id, class);
         self.records.contains_key(&qualified_name)
     }
 
     /// ## Description
-    /// Get fully qualified name for token and record class
-    fn fully_qualified_name(token_id: &String, class: &RecordClass) -> String {
-        // TODO: Optimize memory usage
-        let class_name = match class {
-            RecordClass::Wallet {} => "wallet",
-            RecordClass::Uri {} => "uri",
-            RecordClass::Twitter {} => "twitter",
+    /// Get fully qualified name for token and record class.
+    /// It's a vector of bytes where first byte is a class hex and the rest is a name hash
+    /// ## Example
+    /// 0x0 + 0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef
+    fn fully_qualified_name(token_id: &[u8], class: &RecordClass) -> Vec<u8> {
+        let class_hex: u8 = match class {
+            RecordClass::Wallet {} => 0x0,
+            RecordClass::Uri {} => 0x1,
+            RecordClass::Twitter {} => 0x2,
         };
 
-        format!("{}.{}", class_name, token_id)
+        let mut vec: Vec<u8> = vec![class_hex];
+
+        vec.extend(token_id);
+        vec
     }
 }

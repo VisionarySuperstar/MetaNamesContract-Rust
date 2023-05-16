@@ -14,6 +14,8 @@ use pbc_contract_common::{
 
 use utils::events::IntoShortnameRPCEvent;
 
+// TODO: DRY up tests
+
 fn mock_address(le: u8) -> Address {
     Address {
         address_type: AddressType::Account,
@@ -22,6 +24,10 @@ fn mock_address(le: u8) -> Address {
             0u8, 0u8, 0u8,
         ],
     }
+}
+
+fn string_to_bytes(s: &str) -> Vec<u8> {
+    s.to_string().into_bytes()
 }
 
 const TRANSFER: u32 = 0x01;
@@ -46,7 +52,7 @@ fn proper_transfer_action_call() {
 
     let msg = PnsTransferMsg {
         to: mock_address(1u8),
-        token_id: "name.meta".to_string(),
+        token_id: string_to_bytes("name.meta"),
     };
     let mut event_group = EventGroup::builder();
     let mut test_event_group = EventGroup::builder();
@@ -55,7 +61,7 @@ fn proper_transfer_action_call() {
     test_event_group
         .call(dest.clone(), Shortname::from_u32(TRANSFER))
         .argument(mock_address(1u8))
-        .argument("name.meta".to_string())
+        .argument(string_to_bytes("name.meta"))
         .done();
 
     assert_eq!(event_group.build(), test_event_group.build());
@@ -68,7 +74,7 @@ fn proper_transfer_from_action_call() {
     let msg = PnsTransferFromMsg {
         from: mock_address(1u8),
         to: mock_address(2u8),
-        token_id: "name.meta".to_string(),
+        token_id: string_to_bytes("name.meta"),
     };
 
     let mut event_group = EventGroup::builder();
@@ -79,7 +85,7 @@ fn proper_transfer_from_action_call() {
         .call(dest.clone(), Shortname::from_u32(TRANSFER_FROM))
         .argument(mock_address(1u8))
         .argument(mock_address(2u8))
-        .argument("name.meta".to_string())
+        .argument(string_to_bytes("name.meta"))
         .done();
 
     assert_eq!(event_group.build(), test_event_group.build());
@@ -91,7 +97,7 @@ fn proper_approve_action_call() {
 
     let msg = PnsApproveMsg {
         spender: mock_address(1u8),
-        token_id: "name.meta".to_string(),
+        token_id: string_to_bytes("name.meta"),
     };
 
     let mut event_group = EventGroup::builder();
@@ -101,7 +107,7 @@ fn proper_approve_action_call() {
     test_event_group
         .call(dest.clone(), Shortname::from_u32(APPROVE))
         .argument(mock_address(1u8))
-        .argument("name.meta".to_string())
+        .argument(string_to_bytes("name.meta"))
         .done();
 
     assert_eq!(event_group.build(), test_event_group.build());
@@ -132,10 +138,10 @@ fn proper_mint_action_call() {
     let dest = mock_address(30u8);
 
     let msg = PnsMintMsg {
-        token_id: "name.meta".to_string(),
+        token_id: string_to_bytes("name.meta"),
         to: mock_address(1u8),
         token_uri: None,
-        parent_id: Some("".to_string()),
+        parent_id: Some(string_to_bytes("")),
     };
 
     let mut event_group = EventGroup::builder();
@@ -144,7 +150,7 @@ fn proper_mint_action_call() {
     let mut test_event_group = EventGroup::builder();
     test_event_group
         .call(dest.clone(), Shortname::from_u32(MINT))
-        .argument("name.meta".to_string())
+        .argument(string_to_bytes("name.meta"))
         .argument(mock_address(1u8))
         .argument(None::<String>)
         .argument(Some("".to_string()))
@@ -158,7 +164,7 @@ fn proper_record_mint_action_call() {
     let dest = mock_address(30u8);
 
     let msg = RecordMintMsg {
-        token_id: "name.meta".to_string(),
+        token_id: string_to_bytes("name.meta"),
         class: RecordClass::Wallet {},
         data: "".to_string(),
     };
@@ -169,7 +175,7 @@ fn proper_record_mint_action_call() {
     let mut test_event_group = EventGroup::builder();
     test_event_group
         .call(dest.clone(), Shortname::from_u32(RECORD_MINT))
-        .argument("name.meta".to_string())
+        .argument(string_to_bytes("name.meta"))
         .argument(RecordClass::Wallet {})
         .argument("".to_string())
         .done();
@@ -182,7 +188,7 @@ fn proper_record_update_action_call() {
     let dest = mock_address(30u8);
 
     let msg = RecordUpdateMsg {
-        token_id: "name.meta".to_string(),
+        token_id: string_to_bytes("name.meta"),
         class: RecordClass::Wallet {},
         data: "".to_string(),
     };
@@ -193,7 +199,7 @@ fn proper_record_update_action_call() {
     let mut test_event_group = EventGroup::builder();
     test_event_group
         .call(dest.clone(), Shortname::from_u32(RECORD_UPDATE))
-        .argument("name.meta".to_string())
+        .argument(string_to_bytes("name.meta"))
         .argument(RecordClass::Wallet {})
         .argument("".to_string())
         .done();
@@ -206,7 +212,7 @@ fn proper_record_delete_action_call() {
     let dest = mock_address(30u8);
 
     let msg = RecordDeleteMsg {
-        token_id: "name.meta".to_string(),
+        token_id: string_to_bytes("name.meta"),
         class: RecordClass::Wallet {},
     };
 
@@ -216,7 +222,7 @@ fn proper_record_delete_action_call() {
     let mut test_event_group = EventGroup::builder();
     test_event_group
         .call(dest.clone(), Shortname::from_u32(RECORD_DELETE))
-        .argument("name.meta".to_string())
+        .argument(string_to_bytes("name.meta"))
         .argument(RecordClass::Wallet {})
         .done();
 
@@ -229,7 +235,7 @@ fn proper_ownership_check_call() {
 
     let msg = PnsCheckOwnerMsg {
         owner: mock_address(1u8),
-        token_id: "name.meta".to_string(),
+        token_id: string_to_bytes("name.meta"),
     };
 
     let mut event_group = EventGroup::builder();
@@ -239,7 +245,7 @@ fn proper_ownership_check_call() {
     test_event_group
         .call(dest.clone(), Shortname::from_u32(CHECKOWNER))
         .argument(mock_address(1u8))
-        .argument("name.meta".to_string())
+        .argument(string_to_bytes("name.meta"))
         .done();
 
     assert_eq!(event_group.build(), test_event_group.build());
@@ -271,7 +277,7 @@ fn proper_revoke_action_call() {
 
     let msg = PnsRevokeMsg {
         spender: mock_address(1u8),
-        token_id: "name.meta".to_string(),
+        token_id: string_to_bytes("name.meta"),
     };
 
     let mut event_group = EventGroup::builder();
@@ -281,7 +287,7 @@ fn proper_revoke_action_call() {
     test_event_group
         .call(dest.clone(), Shortname::from_u32(REVOKE))
         .argument(mock_address(1u8))
-        .argument("name.meta".to_string())
+        .argument(string_to_bytes("name.meta"))
         .done();
 
     assert_eq!(event_group.build(), test_event_group.build());
@@ -312,7 +318,7 @@ fn proper_burn_action_call() {
     let dest = mock_address(30u8);
 
     let msg = PnsBurnMsg {
-        token_id: "name.meta".to_string(),
+        token_id: string_to_bytes("name.meta"),
     };
 
     let mut event_group = EventGroup::builder();
@@ -321,7 +327,7 @@ fn proper_burn_action_call() {
     let mut test_event_group = EventGroup::builder();
     test_event_group
         .call(dest.clone(), Shortname::from_u32(BURN))
-        .argument("name.meta".to_string())
+        .argument(string_to_bytes("name.meta"))
         .done();
 
     assert_eq!(event_group.build(), test_event_group.build());
@@ -351,33 +357,33 @@ fn proper_multi_mint_action_call() {
 
     let mints = vec![
         PnsMintMsg {
-            token_id: "name.meta".to_string(),
+            token_id: string_to_bytes("name.meta"),
             to: mock_address(4),
-            parent_id: Some("".to_string()),
+            parent_id: None,
             token_uri: None,
         },
         PnsMintMsg {
-            token_id: "name2.meta".to_string(),
+            token_id: string_to_bytes("name2.meta"),
             to: mock_address(4),
-            parent_id: Some("".to_string()),
+            parent_id: None,
             token_uri: None,
         },
         PnsMintMsg {
-            token_id: "name3.meta".to_string(),
+            token_id: string_to_bytes("name3.meta"),
             to: mock_address(5),
-            parent_id: Some("".to_string()),
+            parent_id: None,
             token_uri: None,
         },
         PnsMintMsg {
-            token_id: "name4.meta".to_string(),
+            token_id: string_to_bytes("name4.meta"),
             to: mock_address(5),
-            parent_id: Some("".to_string()),
+            parent_id: None,
             token_uri: None,
         },
         PnsMintMsg {
-            token_id: "name5.meta".to_string(),
+            token_id: string_to_bytes("name5.meta"),
             to: mock_address(6),
-            parent_id: Some("".to_string()),
+            parent_id: None,
             token_uri: None,
         },
     ];
