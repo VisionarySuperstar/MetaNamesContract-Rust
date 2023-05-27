@@ -1,9 +1,7 @@
-use std::{collections::BTreeMap};
-
 use contract_version_base::state::ContractVersionBase;
 use create_type_spec_derive::CreateTypeSpec;
 use mpc721_hierarchy::state::{MPC721ContractState, TokenInfo};
-use pbc_contract_common::address::Address;
+use pbc_contract_common::{address::Address, sorted_vec_map::SortedVecMap};
 use read_write_rpc_derive::ReadWriteRPC;
 use read_write_state_derive::ReadWriteState;
 
@@ -15,10 +13,8 @@ use crate::ContractError;
 pub struct PartisiaNameSystemState {
     pub mpc721: MPC721ContractState,
     pub version: ContractVersionBase,
-    /// the domain key is a name hash
-    pub domains: BTreeMap<Vec<u8>, Domain>,
-    /// The records are stored in a BTreeMap with the key being the fully qualified name
-    pub records: BTreeMap<Vec<u8>, Record>,
+    pub domains: SortedVecMap<Vec<u8>, Domain>,
+    pub records: SortedVecMap<Vec<u8>, Record>,
 }
 
 #[derive(ReadWriteState, CreateTypeSpec, Clone, PartialEq, Eq, Debug)]
@@ -51,30 +47,28 @@ impl PartisiaNameSystemState {
     /// ## Description
     /// Returns domain info by token id
     pub fn domain_info(&self, domain: &[u8]) -> Option<&Domain> {
-        self.domains.get(domain)
+        self.domains.get(&domain.to_vec())
     }
 
     /// ## Description
     /// Says is token id minted or not
     pub fn is_minted(&self, token_id: &[u8]) -> bool {
-        self.domains.contains_key(token_id)
+        self.domains.contains_key(&token_id.to_vec())
     }
 
     /// ## Description
     /// Returns token info by domain
     pub fn token_info(&self, domain: &[u8]) -> Option<&TokenInfo> {
-        let domain = self.domain_info(domain);
-        if domain.is_none() {
-            return None;
+        match self.domain_info(domain) {
+            Some(domain) => self.mpc721.token_info(domain.token_id),
+            None => None,
         }
-
-        self.mpc721.token_info(domain.unwrap().token_id)
     }
 
     /// ## Description
     /// This function returns token id for given domain
     pub fn token_id(&self, domain: &[u8]) -> Option<u128> {
-        self.domains.get(domain).map(|d| d.token_id)
+        self.domains.get(&domain.to_vec()).map(|d| d.token_id)
     }
 
     /// ## Description
@@ -88,19 +82,18 @@ impl PartisiaNameSystemState {
     /// Returns boolean if account is allowed to manage domain
     /// ## Params
     pub fn allowed_to_manage(&self, account: &Address, domain: &[u8]) -> bool {
-        let domain = self.domain_info(domain);
-        if domain.is_none() {
-            return false;
+        match self.domain_info(domain) {
+            Some(domain) => self.mpc721.allowed_to_manage(account, domain.token_id),
+            None => false,
         }
-
-        self.mpc721
-            .allowed_to_manage(account, domain.unwrap().token_id)
     }
 
     /// ## Description
     /// Mints record for token
-    pub fn mint_record(&mut self, token_id: &[u8], class: &RecordClass, data: &String) {
-        let record = Record { data: data.clone() };
+    pub fn mint_record(&mut self, token_id: &[u8], class: &RecordClass, data: &str) {
+        let record = Record {
+            data: data.to_string(),
+        };
         let qualified_name = Self::fully_qualified_name(token_id, class);
         assert!(
             !self.records.contains_key(&qualified_name),
@@ -113,12 +106,13 @@ impl PartisiaNameSystemState {
 
     /// ## Description
     /// Update data of a record
-    pub fn update_record_data(&mut self, token_id: &[u8], class: &RecordClass, data: &String) {
+    pub fn update_record_data(&mut self, token_id: &[u8], class: &RecordClass, data: &str) {
         assert!(self.is_minted(token_id), "{}", ContractError::NotMinted);
 
         let qualified_name = Self::fully_qualified_name(token_id, class);
-        self.records.entry(qualified_name).and_modify(|t| {
-            t.data = data.clone();
+        self.records.get_mut(&qualified_name).map(|record| {
+            record.data = data.to_string();
+            record
         });
     }
 

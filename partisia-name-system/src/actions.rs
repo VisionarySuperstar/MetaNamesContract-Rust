@@ -1,15 +1,15 @@
-use std::collections::BTreeMap;
-
 use contract_version_base::state::ContractVersionBase;
-use pbc_contract_common::{context::ContractContext, events::EventGroup};
+use pbc_contract_common::{
+    context::ContractContext, events::EventGroup, sorted_vec_map::SortedVecMap,
+};
 
 use mpc721_hierarchy::{actions as mpc721_actions, msg as mpc721_msg};
 
 use crate::{
     msg::{
-        PnsApproveForAllMsg, PnsApproveMsg, PnsBurnMsg, PnsCheckOwnerMsg, PnsInitMsg, PnsMintMsg, PnsMultiMintMsg,
-        RecordDeleteMsg, RecordMintMsg, RecordUpdateMsg, PnsRevokeForAllMsg, PnsRevokeMsg, PnsSetBaseUriMsg,
-        PnsTransferFromMsg, PnsTransferMsg, PnsUpdateMinterMsg,
+        PnsApproveForAllMsg, PnsApproveMsg, PnsBurnMsg, PnsCheckOwnerMsg, PnsInitMsg, PnsMintMsg,
+        PnsMultiMintMsg, PnsRevokeForAllMsg, PnsRevokeMsg, PnsSetBaseUriMsg, PnsTransferFromMsg,
+        PnsTransferMsg, PnsUpdateMinterMsg, RecordDeleteMsg, RecordMintMsg, RecordUpdateMsg,
     },
     state::{Domain, PartisiaNameSystemState},
     ContractError,
@@ -34,11 +34,11 @@ pub fn execute_init(
         minter: msg.minter,
     };
 
-    let (mpc721, mut events) = mpc721_actions::execute_init(&ctx, &mpc721_msg);
+    let (mpc721, mut events) = mpc721_actions::execute_init(ctx, &mpc721_msg);
     let mut state = PartisiaNameSystemState {
         mpc721,
-        domains: BTreeMap::new(),
-        records: BTreeMap::new(),
+        domains: SortedVecMap::new(),
+        records: SortedVecMap::new(),
         version: ContractVersionBase::new(CONTRACT_NAME, CONTRACT_VERSION),
     };
 
@@ -48,12 +48,16 @@ pub fn execute_init(
             token_id: tld.clone(),
             to: msg.minter,
             token_uri: msg.tld_uri.clone(),
-            parent_id: None
+            parent_id: None,
         };
+
         let ctx_with_sender = ContractContext {
-            sender: msg.minter.clone(),
-            ..*ctx.clone()
+            sender: msg.minter,
+            current_transaction: ctx.current_transaction.to_owned(),
+            original_transaction: ctx.original_transaction.to_owned(),
+            ..*ctx
         };
+
         mint_events = execute_mint(&ctx_with_sender, &mut state, &mint_msg);
     }
 
@@ -74,16 +78,14 @@ pub fn execute_transfer(
     let num_token_id = state.token_id(&msg.token_id);
     assert!(num_token_id.is_some(), "{}", ContractError::NotFound);
 
-    let events = mpc721_actions::execute_transfer(
-        &ctx,
+    mpc721_actions::execute_transfer(
+        ctx,
         &mut state.mpc721,
         &mpc721_msg::TransferMsg {
             to: msg.to,
             token_id: num_token_id.unwrap(),
         },
-    );
-
-    events
+    )
 }
 
 /// ## Description
@@ -98,17 +100,15 @@ pub fn execute_transfer_from(
     let num_token_id = state.token_id(&msg.token_id);
     assert!(num_token_id.is_some(), "{}", ContractError::NotFound);
 
-    let events = mpc721_actions::execute_transfer_from(
-        &ctx,
+    mpc721_actions::execute_transfer_from(
+        ctx,
         &mut state.mpc721,
         &mpc721_msg::TransferFromMsg {
             from: msg.from,
             to: msg.to,
             token_id: num_token_id.unwrap(),
         },
-    );
-
-    events
+    )
 }
 
 /// ## Description
@@ -123,16 +123,14 @@ pub fn execute_approve(
     let num_token_id = state.token_id(&msg.token_id);
     assert!(num_token_id.is_some(), "{}", ContractError::NotFound);
 
-    let events = mpc721_actions::execute_approve(
-        &ctx,
+    mpc721_actions::execute_approve(
+        ctx,
         &mut state.mpc721,
         &mpc721_msg::ApproveMsg {
             spender: msg.spender,
             token_id: num_token_id.unwrap(),
         },
-    );
-
-    events
+    )
 }
 
 /// ## Description
@@ -144,15 +142,13 @@ pub fn execute_set_base_uri(
     state: &mut PartisiaNameSystemState,
     msg: &PnsSetBaseUriMsg,
 ) -> Vec<EventGroup> {
-    let events = mpc721_actions::execute_set_base_uri(
-        &ctx,
+    mpc721_actions::execute_set_base_uri(
+        ctx,
         &mut state.mpc721,
         &mpc721_msg::SetBaseUriMsg {
             new_base_uri: msg.new_base_uri.clone(),
         },
-    );
-
-    events
+    )
 }
 
 /// ## Description
@@ -180,7 +176,7 @@ pub fn execute_mint(
 
     let new_token_id = state.mpc721.supply + 1;
     let mut events = mpc721_actions::execute_mint(
-        &ctx,
+        ctx,
         &mut state.mpc721,
         &mpc721_msg::MintMsg {
             token_id: new_token_id,
@@ -193,7 +189,7 @@ pub fn execute_mint(
     if let Some(parent_id) = &msg.parent_id {
         let parent = state.domains.get(parent_id).unwrap();
         update_parent_events = mpc721_actions::execute_update_parent(
-            &ctx,
+            ctx,
             &mut state.mpc721,
             &mpc721_msg::UpdateParentMsg {
                 token_id: new_token_id,
@@ -222,15 +218,13 @@ pub fn execute_approve_for_all(
     state: &mut PartisiaNameSystemState,
     msg: &PnsApproveForAllMsg,
 ) -> Vec<EventGroup> {
-    let events = mpc721_actions::execute_approve_for_all(
-        &ctx,
+    mpc721_actions::execute_approve_for_all(
+        ctx,
         &mut state.mpc721,
         &mpc721_msg::ApproveForAllMsg {
             operator: msg.operator,
         },
-    );
-
-    events
+    )
 }
 
 /// ## Description
@@ -245,16 +239,14 @@ pub fn execute_revoke(
     let num_token_id = state.token_id(&msg.token_id);
     assert!(num_token_id.is_some(), "{}", ContractError::NotFound);
 
-    let events = mpc721_actions::execute_revoke(
-        &ctx,
+    mpc721_actions::execute_revoke(
+        ctx,
         &mut state.mpc721,
         &mpc721_msg::RevokeMsg {
             spender: msg.spender,
             token_id: num_token_id.unwrap(),
         },
-    );
-
-    events
+    )
 }
 
 /// ## Description
@@ -266,15 +258,13 @@ pub fn execute_revoke_for_all(
     state: &mut PartisiaNameSystemState,
     msg: &PnsRevokeForAllMsg,
 ) -> Vec<EventGroup> {
-    let events = mpc721_actions::execute_revoke_for_all(
-        &ctx,
+    mpc721_actions::execute_revoke_for_all(
+        ctx,
         &mut state.mpc721,
         &mpc721_msg::RevokeForAllMsg {
             operator: msg.operator,
         },
-    );
-
-    events
+    )
 }
 
 /// ## Description
@@ -289,15 +279,13 @@ pub fn execute_burn(
     let num_token_id = state.token_id(&msg.token_id);
     assert!(num_token_id.is_some(), "{}", ContractError::NotFound);
 
-    let events = mpc721_actions::execute_burn(
-        &ctx,
+    mpc721_actions::execute_burn(
+        ctx,
         &mut state.mpc721,
         &mpc721_msg::BurnMsg {
             token_id: num_token_id.unwrap(),
         },
-    );
-
-    events
+    )
 }
 
 /// ## Description
@@ -308,15 +296,13 @@ pub fn execute_update_minter(
     state: &mut PartisiaNameSystemState,
     msg: &PnsUpdateMinterMsg,
 ) -> Vec<EventGroup> {
-    let events = mpc721_actions::execute_update_minter(
-        &ctx,
+    mpc721_actions::execute_update_minter(
+        ctx,
         &mut state.mpc721,
         mpc721_msg::UpdateMinterMsg {
             new_minter: msg.new_minter,
         },
-    );
-
-    events
+    )
 }
 
 /// ## Description
@@ -331,16 +317,14 @@ pub fn execute_ownership_check(
     let num_token_id = state.token_id(&msg.token_id);
     assert!(num_token_id.is_some(), "{}", ContractError::NotFound);
 
-    let events = mpc721_actions::execute_ownership_check(
-        &ctx,
+    mpc721_actions::execute_ownership_check(
+        ctx,
         &mut state.mpc721,
         &mpc721_msg::CheckOwnerMsg {
             token_id: num_token_id.unwrap(),
             owner: msg.owner,
         },
-    );
-
-    events
+    )
 }
 
 /// ## Description
