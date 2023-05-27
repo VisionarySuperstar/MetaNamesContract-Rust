@@ -38,9 +38,9 @@ jobs:
 
       - name: Build release contract
         run: |
-        cargo partisia-contract build --release
-        cd target/wasm32-unknown-unknown/release
-        zip meta_names_contract.zip meta_names_contract.wasm meta_names_contract.abi
+          cargo partisia-contract build --release
+          cd target/wasm32-unknown-unknown/release
+          zip meta_names_contract.zip meta_names_contract.wasm meta_names_contract.abi
 
       - name: Upload contract artifacts
         uses: actions/upload-artifact@v2
