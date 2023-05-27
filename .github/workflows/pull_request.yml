@@ -5,12 +5,12 @@ on:
 
 jobs:
   audit:
-    extend: ./actions/audit.yml
+    uses: ./actions/audit.yml
 
   test:
-    extend: ./actions/test.yml
+    uses: ./actions/test.yml
     needs: audit
 
   wasm-check:
-    extend: ./actions/wasm-check.yml
+    uses: ./actions/wasm-check.yml
     needs: audit
