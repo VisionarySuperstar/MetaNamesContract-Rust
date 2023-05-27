@@ -1,55 +1,21 @@
 use pbc_contract_common::sorted_vec_map::SortedVecMap;
-use pbc_contract_common::{Hash};
 
-use pbc_contract_common::{
-    address::{Address, AddressType},
-    context::ContractContext,
-};
+use utils::tests::{mock_address, mock_contract_context};
 
 use crate::{
     actions::{
         execute_approve, execute_approve_for_all, execute_burn, execute_init, execute_mint,
         execute_multi_mint, execute_ownership_check, execute_revoke, execute_revoke_for_all,
         execute_set_base_uri, execute_transfer, execute_transfer_from, execute_update_minter,
-        execute_update_parent
+        execute_update_parent,
     },
     msg::{
         ApproveForAllMsg, ApproveMsg, BurnMsg, CheckOwnerMsg, InitMsg, MintMsg, MultiMintMsg,
         RevokeForAllMsg, RevokeMsg, SetBaseUriMsg, TransferFromMsg, TransferMsg, UpdateMinterMsg,
-        UpdateParentMsg
+        UpdateParentMsg,
     },
     state::{MPC721ContractState, TokenInfo},
 };
-
-fn mock_address(le: u8) -> Address {
-    Address {
-        address_type: AddressType::Account,
-        identifier: [
-            le, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8,
-            0u8, 0u8, 0u8,
-        ],
-    }
-}
-
-fn mock_hash() -> Hash {
-    Hash {
-        bytes:[
-            0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8,
-            0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8,
-            ]
-    }
-}
-
-fn mock_contract_context(sender: u8) -> ContractContext {
-    ContractContext {
-        contract_address: mock_address(1u8),
-        sender: mock_address(sender),
-        block_time: 100,
-        block_production_time: 100,
-        current_transaction: mock_hash(),
-        original_transaction: mock_hash(),
-    }
-}
 
 #[test]
 fn proper_execute_init() {
@@ -180,7 +146,6 @@ fn proper_mint() {
         }
     );
 }
-
 
 #[test]
 fn proper_ownership_check() {
@@ -350,10 +315,7 @@ fn proper_approve_for_all() {
     let _ = execute_approve_for_all(&mock_contract_context(alice), &mut state, &approve_all_msg);
     assert_eq!(
         state.operator_approvals,
-        SortedVecMap::from([(
-            mock_address(alice),
-            vec![mock_address(bob)]
-        )])
+        SortedVecMap::from([(mock_address(alice), vec![mock_address(bob)])])
     );
 
     let approve_all_msg = ApproveForAllMsg {
@@ -363,14 +325,8 @@ fn proper_approve_for_all() {
     assert_eq!(
         state.operator_approvals,
         SortedVecMap::from([
-            (
-                mock_address(alice),
-                vec![mock_address(bob)]
-            ),
-            (
-                mock_address(bob),
-                vec![mock_address(alice)]
-            )
+            (mock_address(alice), vec![mock_address(bob)]),
+            (mock_address(bob), vec![mock_address(alice)])
         ])
     );
 }
@@ -407,10 +363,7 @@ fn proper_revoke_for_all() {
     let _ = execute_revoke_for_all(&mock_contract_context(alice), &mut state, &revoke_all_msg);
     assert_eq!(
         state.operator_approvals,
-        SortedVecMap::from([(
-            mock_address(alice),
-            vec![mock_address(jack)]
-        )])
+        SortedVecMap::from([(mock_address(alice), vec![mock_address(jack)])])
     );
 
     let revoke_all_msg = RevokeForAllMsg {
@@ -952,7 +905,7 @@ fn proper_burn() {
 
     let _ = execute_burn(&mock_contract_context(alice), &mut state, &burn_msg);
     assert_eq!(state.supply, 0);
-    assert_eq!(state.is_minted(1), false);
+    assert!(!state.is_minted(1));
 }
 
 #[test]
