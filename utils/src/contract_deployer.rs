@@ -76,7 +76,7 @@ pub fn add_contract_deploy_event(
 
     Address {
         address_type: AddressType::PublicContract,
-        identifier: ctx.original_transaction[12..32].try_into().unwrap(),
+        identifier: ctx.original_transaction.bytes[12..32].try_into().unwrap(),
     }
 }
 
