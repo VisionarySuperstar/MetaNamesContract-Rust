@@ -51,9 +51,6 @@ jobs:
       - name: Fetch dependencies
         run: cargo fetch
 
-      - name: Run tests for partisia name system
-        run: cargo test -p partisia-name-system
-
       - name: Run tests
         run: cargo test
 
@@ -61,10 +58,10 @@ jobs:
   wasm-check:
     runs-on: ubuntu-latest
     needs: audit
-    
+
     steps:
-      - uses: actions/checkout@v3 
-    
+      - uses: actions/checkout@v3
+
       - name: Setup Rust
         uses: actions-rs/toolchain@v1
         with:
