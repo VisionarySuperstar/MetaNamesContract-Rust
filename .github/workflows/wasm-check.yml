@@ -9,8 +9,6 @@ jobs:
     needs: audit
 
     steps:
-      - uses: actions/checkout@v3
-
       - name: Setup Rust
         uses: actions-rs/toolchain@v1
         with:
