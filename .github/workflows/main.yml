@@ -6,14 +6,14 @@ on:
 
 jobs:
   audit:
-    uses: ./.github/workflows/actions/audit.yml
+    uses: ./.github/jobs/actions/audit.yml
 
   test:
-    uses: ./.github/workflows/actions/test.yml
+    uses: ./.github/jobs/actions/test.yml
     needs: audit
 
   wasm-check:
-    uses: ./.github/workflows/actions/wasm-check.yml
+    uses: ./.github/jobs/actions/wasm-check.yml
     needs: audit
 
   build-contract:
