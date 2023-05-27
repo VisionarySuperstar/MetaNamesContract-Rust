@@ -59,7 +59,7 @@ fn proper_transfer_action_call() {
     msg.as_interaction(&mut event_group, &dest);
 
     test_event_group
-        .call(dest.clone(), Shortname::from_u32(TRANSFER))
+        .call(dest, Shortname::from_u32(TRANSFER))
         .argument(mock_address(1u8))
         .argument(string_to_bytes("name.meta"))
         .done();
@@ -82,7 +82,7 @@ fn proper_transfer_from_action_call() {
 
     let mut test_event_group = EventGroup::builder();
     test_event_group
-        .call(dest.clone(), Shortname::from_u32(TRANSFER_FROM))
+        .call(dest, Shortname::from_u32(TRANSFER_FROM))
         .argument(mock_address(1u8))
         .argument(mock_address(2u8))
         .argument(string_to_bytes("name.meta"))
@@ -105,7 +105,7 @@ fn proper_approve_action_call() {
 
     let mut test_event_group = EventGroup::builder();
     test_event_group
-        .call(dest.clone(), Shortname::from_u32(APPROVE))
+        .call(dest, Shortname::from_u32(APPROVE))
         .argument(mock_address(1u8))
         .argument(string_to_bytes("name.meta"))
         .done();
@@ -126,7 +126,7 @@ fn proper_set_base_uri_action_call() {
 
     let mut test_event_group = EventGroup::builder();
     test_event_group
-        .call(dest.clone(), Shortname::from_u32(SET_BASE_URI))
+        .call(dest, Shortname::from_u32(SET_BASE_URI))
         .argument("new".to_string())
         .done();
 
@@ -149,7 +149,7 @@ fn proper_mint_action_call() {
 
     let mut test_event_group = EventGroup::builder();
     test_event_group
-        .call(dest.clone(), Shortname::from_u32(MINT))
+        .call(dest, Shortname::from_u32(MINT))
         .argument(string_to_bytes("name.meta"))
         .argument(mock_address(1u8))
         .argument(None::<String>)
@@ -174,7 +174,7 @@ fn proper_record_mint_action_call() {
 
     let mut test_event_group = EventGroup::builder();
     test_event_group
-        .call(dest.clone(), Shortname::from_u32(RECORD_MINT))
+        .call(dest, Shortname::from_u32(RECORD_MINT))
         .argument(string_to_bytes("name.meta"))
         .argument(RecordClass::Wallet {})
         .argument("".to_string())
@@ -198,7 +198,7 @@ fn proper_record_update_action_call() {
 
     let mut test_event_group = EventGroup::builder();
     test_event_group
-        .call(dest.clone(), Shortname::from_u32(RECORD_UPDATE))
+        .call(dest, Shortname::from_u32(RECORD_UPDATE))
         .argument(string_to_bytes("name.meta"))
         .argument(RecordClass::Wallet {})
         .argument("".to_string())
@@ -221,7 +221,7 @@ fn proper_record_delete_action_call() {
 
     let mut test_event_group = EventGroup::builder();
     test_event_group
-        .call(dest.clone(), Shortname::from_u32(RECORD_DELETE))
+        .call(dest, Shortname::from_u32(RECORD_DELETE))
         .argument(string_to_bytes("name.meta"))
         .argument(RecordClass::Wallet {})
         .done();
@@ -243,7 +243,7 @@ fn proper_ownership_check_call() {
 
     let mut test_event_group = EventGroup::builder();
     test_event_group
-        .call(dest.clone(), Shortname::from_u32(CHECKOWNER))
+        .call(dest, Shortname::from_u32(CHECKOWNER))
         .argument(mock_address(1u8))
         .argument(string_to_bytes("name.meta"))
         .done();
@@ -264,7 +264,7 @@ fn proper_approve_for_all_action_call() {
 
     let mut test_event_group = EventGroup::builder();
     test_event_group
-        .call(dest.clone(), Shortname::from_u32(APPROVE_FOR_ALL))
+        .call(dest, Shortname::from_u32(APPROVE_FOR_ALL))
         .argument(mock_address(1u8))
         .done();
 
@@ -285,7 +285,7 @@ fn proper_revoke_action_call() {
 
     let mut test_event_group = EventGroup::builder();
     test_event_group
-        .call(dest.clone(), Shortname::from_u32(REVOKE))
+        .call(dest, Shortname::from_u32(REVOKE))
         .argument(mock_address(1u8))
         .argument(string_to_bytes("name.meta"))
         .done();
@@ -306,7 +306,7 @@ fn proper_revoke_for_all_action_call() {
 
     let mut test_event_group = EventGroup::builder();
     test_event_group
-        .call(dest.clone(), Shortname::from_u32(REVOKE_FOR_ALL))
+        .call(dest, Shortname::from_u32(REVOKE_FOR_ALL))
         .argument(mock_address(1u8))
         .done();
 
@@ -326,7 +326,7 @@ fn proper_burn_action_call() {
 
     let mut test_event_group = EventGroup::builder();
     test_event_group
-        .call(dest.clone(), Shortname::from_u32(BURN))
+        .call(dest, Shortname::from_u32(BURN))
         .argument(string_to_bytes("name.meta"))
         .done();
 
@@ -345,7 +345,7 @@ fn proper_minter_update_action_call() {
 
     let mut test_event_group = EventGroup::builder();
     test_event_group
-        .call(dest.clone(), Shortname::from_u32(UPDATE_MINTER))
+        .call(dest, Shortname::from_u32(UPDATE_MINTER))
         .argument(mock_address(19u8))
         .done();
 
@@ -395,7 +395,7 @@ fn proper_multi_mint_action_call() {
 
     let mut test_event_group = EventGroup::builder();
     test_event_group
-        .call(dest.clone(), Shortname::from_u32(MULTI_MINT))
+        .call(dest, Shortname::from_u32(MULTI_MINT))
         .argument(mints)
         .done();
 
