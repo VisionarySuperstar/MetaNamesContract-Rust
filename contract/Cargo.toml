@@ -1,13 +1,14 @@
 [package]
-name = "mpc20-base"
-version = "1.1.0"
+name = "meta-names-contract"
+version = "0.0.1"
+authors = ["Yeboster"]
 edition = "2021"
 
 [lib]
 crate-type = ["cdylib", "rlib"]
 
 [package.metadata.partisiablockchain]
-cargo-partisia = "0.2.9"
+cargo-partisia = "0.2.16"
 
 [dependencies]
 pbc_contract_common = { git = "https://git@gitlab.com/partisiablockchain/language/contract-sdk.git", tag = "13.1.0" }
@@ -18,11 +19,14 @@ read_write_state_derive = { git = "https://git@gitlab.com/partisiablockchain/lan
 create_type_spec_derive = { git = "https://git@gitlab.com/partisiablockchain/language/contract-sdk.git", tag = "13.1.0" }
 pbc_contract_codegen = { git = "https://git@gitlab.com/partisiablockchain/language/contract-sdk.git", tag = "13.1.0" }
 
-utils = { path = "../utils" }
-rpc-msg-derive = { path = "../rpc-msg-derive" }
+partisia-name-system = { path = "../partisia-name-system" }
+contract-version-base = { path = "../contract-version-base" }
 
 serde_json = "1.0"
-thiserror = "1.0.31"
+
+[dev-dependencies]
+utils = { path = "../utils" }
 
 [features]
-abi = ["pbc_contract_common/abi", "pbc_contract_codegen/abi", "pbc_traits/abi", "create_type_spec_derive/abi"]
+abi = ["pbc_contract_common/abi", "pbc_contract_codegen/abi", "pbc_traits/abi", "create_type_spec_derive/abi", "partisia-name-system/abi", "contract-version-base/abi", "utils/abi"]
+
