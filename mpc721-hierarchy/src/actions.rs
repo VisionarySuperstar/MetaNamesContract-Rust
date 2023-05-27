@@ -1,6 +1,4 @@
-use std::collections::BTreeMap;
-
-use pbc_contract_common::{context::ContractContext, events::EventGroup};
+use pbc_contract_common::{context::ContractContext, events::EventGroup, sorted_vec_map::SortedVecMap};
 
 use crate::{
     msg::{
@@ -31,8 +29,8 @@ pub fn execute_init(
         base_uri: msg.base_uri.clone(),
         minter: msg.minter,
         supply: 0,
-        tokens: BTreeMap::new(),
-        operator_approvals: BTreeMap::new(),
+        tokens: SortedVecMap::new(),
+        operator_approvals: SortedVecMap::new(),
     };
 
     (state, vec![])

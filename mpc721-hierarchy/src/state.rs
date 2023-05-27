@@ -1,7 +1,5 @@
-use std::collections::BTreeMap;
-
 use create_type_spec_derive::CreateTypeSpec;
-use pbc_contract_common::address::Address;
+use pbc_contract_common::{address::Address, sorted_vec_map::SortedVecMap};
 use read_write_rpc_derive::ReadWriteRPC;
 use read_write_state_derive::ReadWriteState;
 
@@ -24,9 +22,9 @@ pub struct MPC721ContractState {
     /// current supply
     pub supply: u128,
     /// token info by token id
-    pub tokens: BTreeMap<u128, TokenInfo>,
+    pub tokens: SortedVecMap<u128, TokenInfo>,
     /// token approvals
-    pub operator_approvals: BTreeMap<Address, BTreeMap<Address, bool>>,
+    pub operator_approvals: SortedVecMap<Address, Vec<Address>>,
 }
 
 /// ## Description
@@ -87,9 +85,8 @@ impl MPC721ContractState {
             );
         }
 
-        self.tokens.entry(token_id).and_modify(|t| {
-            t.parent_id = parent;
-        });
+        let mut token = self.tokens.get_mut(&token_id).unwrap();
+        token.parent_id = parent;
     }
 
     /// ## Description
@@ -120,9 +117,10 @@ impl MPC721ContractState {
             ContractError::Unauthorized
         );
 
-        self.tokens.entry(token_id).and_modify(|t| {
-            t.owner = *to;
-            t.approvals = vec![];
+        self.tokens.get_mut(&token_id).map(|token| {
+            token.owner = *to;
+            token.approvals = vec![];
+            token
         });
     }
 
@@ -160,9 +158,10 @@ impl MPC721ContractState {
             approvals.push(*spender);
         }
 
-        self.tokens
-            .entry(token_id)
-            .and_modify(|t| t.approvals = approvals);
+        self.tokens.get_mut(&token_id).map(|token| {
+            token.approvals = approvals;
+            token
+        });
     }
 
     /// ## Description
@@ -172,12 +171,19 @@ impl MPC721ContractState {
     ///
     /// * **operator** is an object of type [`Address`]
     pub fn add_operator(&mut self, owner: &Address, operator: &Address) {
-        let owner_operators = self
-            .operator_approvals
-            .entry(*owner)
-            .or_insert_with(BTreeMap::new);
-
-        owner_operators.insert(*operator, true);
+        match self.operator_approvals.get_mut(owner) {
+            Some(operators) => {
+                assert!(
+                    !operators.contains(operator),
+                    "{}",
+                    ContractError::AlreadyPresent
+                );
+                operators.push(*operator);
+            }
+            None => {
+                self.operator_approvals.insert(*owner, vec![*operator]);
+            }
+        }
     }
 
     /// ## Description
@@ -192,7 +198,9 @@ impl MPC721ContractState {
             .get_mut(owner)
             .unwrap_or_else(|| panic!("{}", ContractError::NotFound.to_string()));
 
-        owner_operators.remove(operator);
+        if let Some(index) = owner_operators.iter().position(|addr| addr == operator) {
+            owner_operators.remove(index);
+        }
 
         if owner_operators.is_empty() {
             self.operator_approvals.remove(owner);
@@ -270,11 +278,7 @@ impl MPC721ContractState {
     /// * **account** is an object of type [`Address`]
     ///
     /// * **token_id** is an object of type [`u128`]
-    pub fn allowed_to_manage(
-        &self,
-        account: &Address,
-        token_id: u128,
-    ) -> bool {
+    pub fn allowed_to_manage(&self, account: &Address, token_id: u128) -> bool {
         assert!(self.is_minted(token_id), "{}", ContractError::NotFound);
 
         let token = self.tokens.get(&token_id).unwrap();
@@ -284,16 +288,14 @@ impl MPC721ContractState {
     fn allowed_to_approve(
         account: &Address,
         token: &TokenInfo,
-        operator_approvals: &BTreeMap<Address, BTreeMap<Address, bool>>,
+        operator_approvals: &SortedVecMap<Address, Vec<Address>>,
     ) -> bool {
         if token.owner == *account {
             return true;
         }
 
         if let Some(owner_approvals) = operator_approvals.get(&token.owner) {
-            if let Some(approved) = owner_approvals.get(account) {
-                return *approved;
-            }
+            return owner_approvals.contains(account);
         }
 
         false
@@ -302,7 +304,7 @@ impl MPC721ContractState {
     fn allowed_to_transfer(
         account: &Address,
         token: &TokenInfo,
-        operator_approvals: &BTreeMap<Address, BTreeMap<Address, bool>>,
+        operator_approvals: &SortedVecMap<Address, Vec<Address>>,
     ) -> bool {
         if token.owner == *account {
             return true;
@@ -313,12 +315,9 @@ impl MPC721ContractState {
         }
 
         if let Some(owner_approvals) = operator_approvals.get(&token.owner) {
-            if let Some(approved) = owner_approvals.get(account) {
-                return *approved;
-            }
+            return owner_approvals.contains(account);
         }
 
         false
     }
-
 }
