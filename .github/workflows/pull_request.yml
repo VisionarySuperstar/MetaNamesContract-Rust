@@ -5,12 +5,12 @@ on:
 
 jobs:
   audit:
-    uses: ./.github/jobs/actions/audit.yml
+    uses: ./.github/workflows/audit.yml
 
   test:
-    uses: ./.github/jobs/actions/test.yml
+    uses: ./.github/workflows/test.yml
     needs: audit
 
   wasm-check:
-    uses: ./.github/jobs/actions/wasm-check.yml
+    uses: ./.github/workflows/wasm-check.yml
     needs: audit
