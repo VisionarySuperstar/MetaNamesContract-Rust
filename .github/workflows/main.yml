@@ -1,70 +1,29 @@
-name: Rust CI
+name: Main
 
 on:
+  workflow_dispatch:
   push:
-    branches: [main]
-  pull_request:
     branches: [main]
 
 jobs:
   audit:
-    runs-on: ubuntu-latest
-
-    steps:
-      - uses: actions/checkout@v3
-
-      - name: Setup Rust
-        uses: actions-rs/toolchain@v1
-        with:
-          profile: minimal
-          toolchain: stable
-
-      - name: Setup caching dependencies
-        uses: Swatinem/rust-cache@v2
-
-      - name: Install cargo audit
-        run: cargo install cargo-audit
-
-      - name: Fetch dependencies
-        run: cargo fetch
-
-      - name: Run audit
-        run: cargo audit
-
+    uses: ./.github/workflows/audit.yml
 
   test:
-    runs-on: ubuntu-latest
+    uses: ./.github/workflows/test.yml
     needs: audit
+
+  wasm-check:
+    uses: ./.github/workflows/wasm-check.yml
+    needs: audit
+
+  build-contract:
+    runs-on: ubuntu-latest
+    needs: test
 
     steps:
       - uses: actions/checkout@v3
 
-      - name: Setup Rust
-        uses: actions-rs/toolchain@v1
-        with:
-          profile: minimal
-          toolchain: stable
-
-      - name: Setup caching dependencies
-        uses: Swatinem/rust-cache@v2
-
-      - name: Fetch dependencies
-        run: cargo fetch
-
-      - name: Run tests for partisia name system
-        run: cargo test -p partisia-name-system
-
-      - name: Run tests
-        run: cargo test
-
-
-  wasm-check:
-    runs-on: ubuntu-latest
-    needs: audit
-    
-    steps:
-      - uses: actions/checkout@v3 
-    
       - name: Setup Rust
         uses: actions-rs/toolchain@v1
         with:
@@ -78,5 +37,14 @@ jobs:
       - name: Fetch dependencies
         run: cargo fetch --target wasm32-unknown-unknown
 
-      - name: Check build
-        run: cargo check --target wasm32-unknown-unknown
+      - name: Build release contract
+        run: |
+          cargo partisia-contract build --release
+          cd target/wasm32-unknown-unknown/release
+          zip meta_names_contract.zip meta_names_contract.wasm meta_names_contract.abi
+
+      - name: Upload contract artifacts
+        uses: actions/upload-artifact@v2
+        with:
+          name: meta_names_contract
+          path: target/wasm32-unknown-unknown/release/meta_names_contract.zip

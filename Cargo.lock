@@ -181,7 +181,7 @@ dependencies = [
 [[package]]
 name = "create_type_spec_derive"
 version = "0.5.0"
-source = "git+https://git@gitlab.com/partisiablockchain/language/contract-sdk.git?tag=13.1.0#21dd1030a80b25c15c42aeb25e1bd1eb7920989a"
+source = "git+https://git@gitlab.com/partisiablockchain/language/contract-sdk.git?tag=15.1.0#053a86e6149e1de6b82ecea919b339fc271bcfdc"
 dependencies = [
  "derive_commons",
  "proc-macro2",
@@ -228,7 +228,7 @@ dependencies = [
 [[package]]
 name = "derive_commons"
 version = "0.5.0"
-source = "git+https://git@gitlab.com/partisiablockchain/language/contract-sdk.git?tag=13.1.0#21dd1030a80b25c15c42aeb25e1bd1eb7920989a"
+source = "git+https://git@gitlab.com/partisiablockchain/language/contract-sdk.git?tag=15.1.0#053a86e6149e1de6b82ecea919b339fc271bcfdc"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -405,12 +405,14 @@ dependencies = [
 [[package]]
 name = "pbc_contract_codegen"
 version = "0.5.0"
-source = "git+https://git@gitlab.com/partisiablockchain/language/contract-sdk.git?tag=13.1.0#21dd1030a80b25c15c42aeb25e1bd1eb7920989a"
+source = "git+https://git@gitlab.com/partisiablockchain/language/contract-sdk.git?tag=15.1.0#053a86e6149e1de6b82ecea919b339fc271bcfdc"
 dependencies = [
+ "create_type_spec_derive",
  "pbc_contract_common",
  "pbc_external",
  "pbc_lib",
  "pbc_traits",
+ "pbc_zk",
  "proc-macro2",
  "quote",
  "sha2",
@@ -420,7 +422,7 @@ dependencies = [
 [[package]]
 name = "pbc_contract_common"
 version = "0.5.0"
-source = "git+https://git@gitlab.com/partisiablockchain/language/contract-sdk.git?tag=13.1.0#21dd1030a80b25c15c42aeb25e1bd1eb7920989a"
+source = "git+https://git@gitlab.com/partisiablockchain/language/contract-sdk.git?tag=15.1.0#053a86e6149e1de6b82ecea919b339fc271bcfdc"
 dependencies = [
  "create_type_spec_derive",
  "pbc_contract_core",
@@ -434,9 +436,10 @@ dependencies = [
 [[package]]
 name = "pbc_contract_core"
 version = "0.5.0"
-source = "git+https://git@gitlab.com/partisiablockchain/language/contract-sdk.git?tag=13.1.0#21dd1030a80b25c15c42aeb25e1bd1eb7920989a"
+source = "git+https://git@gitlab.com/partisiablockchain/language/contract-sdk.git?tag=15.1.0#053a86e6149e1de6b82ecea919b339fc271bcfdc"
 dependencies = [
  "pbc_traits",
+ "pbc_zk",
  "read_write_rpc_derive",
  "read_write_state_derive",
  "sha2",
@@ -445,19 +448,39 @@ dependencies = [
 [[package]]
 name = "pbc_external"
 version = "0.5.0"
-source = "git+https://git@gitlab.com/partisiablockchain/language/contract-sdk.git?tag=13.1.0#21dd1030a80b25c15c42aeb25e1bd1eb7920989a"
+source = "git+https://git@gitlab.com/partisiablockchain/language/contract-sdk.git?tag=15.1.0#053a86e6149e1de6b82ecea919b339fc271bcfdc"
 
 [[package]]
 name = "pbc_lib"
 version = "0.5.0"
-source = "git+https://git@gitlab.com/partisiablockchain/language/contract-sdk.git?tag=13.1.0#21dd1030a80b25c15c42aeb25e1bd1eb7920989a"
+source = "git+https://git@gitlab.com/partisiablockchain/language/contract-sdk.git?tag=15.1.0#053a86e6149e1de6b82ecea919b339fc271bcfdc"
 
 [[package]]
 name = "pbc_traits"
 version = "0.5.0"
-source = "git+https://git@gitlab.com/partisiablockchain/language/contract-sdk.git?tag=13.1.0#21dd1030a80b25c15c42aeb25e1bd1eb7920989a"
+source = "git+https://git@gitlab.com/partisiablockchain/language/contract-sdk.git?tag=15.1.0#053a86e6149e1de6b82ecea919b339fc271bcfdc"
 dependencies = [
+ "pbc_zk",
  "quote",
+]
+
+[[package]]
+name = "pbc_zk"
+version = "0.5.0"
+source = "git+https://git@gitlab.com/partisiablockchain/language/contract-sdk.git?tag=15.1.0#053a86e6149e1de6b82ecea919b339fc271bcfdc"
+dependencies = [
+ "pbc_zk_macros",
+]
+
+[[package]]
+name = "pbc_zk_macros"
+version = "0.5.0"
+source = "git+https://git@gitlab.com/partisiablockchain/language/contract-sdk.git?tag=15.1.0#053a86e6149e1de6b82ecea919b339fc271bcfdc"
+dependencies = [
+ "derive_commons",
+ "proc-macro2",
+ "quote",
+ "syn 1.0.109",
 ]
 
 [[package]]
@@ -552,7 +575,7 @@ dependencies = [
 [[package]]
 name = "read_write_rpc_derive"
 version = "0.5.0"
-source = "git+https://git@gitlab.com/partisiablockchain/language/contract-sdk.git?tag=13.1.0#21dd1030a80b25c15c42aeb25e1bd1eb7920989a"
+source = "git+https://git@gitlab.com/partisiablockchain/language/contract-sdk.git?tag=15.1.0#053a86e6149e1de6b82ecea919b339fc271bcfdc"
 dependencies = [
  "derive_commons",
  "proc-macro2",
@@ -563,7 +586,7 @@ dependencies = [
 [[package]]
 name = "read_write_state_derive"
 version = "0.5.0"
-source = "git+https://git@gitlab.com/partisiablockchain/language/contract-sdk.git?tag=13.1.0#21dd1030a80b25c15c42aeb25e1bd1eb7920989a"
+source = "git+https://git@gitlab.com/partisiablockchain/language/contract-sdk.git?tag=15.1.0#053a86e6149e1de6b82ecea919b339fc271bcfdc"
 dependencies = [
  "derive_commons",
  "proc-macro2",

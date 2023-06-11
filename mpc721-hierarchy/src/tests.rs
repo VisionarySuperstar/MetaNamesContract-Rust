@@ -1,51 +1,21 @@
-use std::collections::BTreeMap;
+use pbc_contract_common::sorted_vec_map::SortedVecMap;
 
-use pbc_contract_common::{
-    address::{Address, AddressType},
-    context::ContractContext,
-};
+use utils::tests::{mock_address, mock_contract_context};
 
 use crate::{
     actions::{
         execute_approve, execute_approve_for_all, execute_burn, execute_init, execute_mint,
         execute_multi_mint, execute_ownership_check, execute_revoke, execute_revoke_for_all,
         execute_set_base_uri, execute_transfer, execute_transfer_from, execute_update_minter,
-        execute_update_parent
+        execute_update_parent,
     },
     msg::{
         ApproveForAllMsg, ApproveMsg, BurnMsg, CheckOwnerMsg, InitMsg, MintMsg, MultiMintMsg,
         RevokeForAllMsg, RevokeMsg, SetBaseUriMsg, TransferFromMsg, TransferMsg, UpdateMinterMsg,
-        UpdateParentMsg
+        UpdateParentMsg,
     },
     state::{MPC721ContractState, TokenInfo},
 };
-
-fn mock_address(le: u8) -> Address {
-    Address {
-        address_type: AddressType::Account,
-        identifier: [
-            le, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8,
-            0u8, 0u8, 0u8,
-        ],
-    }
-}
-
-fn mock_contract_context(sender: u8) -> ContractContext {
-    ContractContext {
-        contract_address: mock_address(1u8),
-        sender: mock_address(sender),
-        block_time: 100,
-        block_production_time: 100,
-        current_transaction: [
-            0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8,
-            0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8,
-        ],
-        original_transaction: [
-            0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8,
-            0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8,
-        ],
-    }
-}
 
 #[test]
 fn proper_execute_init() {
@@ -68,8 +38,8 @@ fn proper_execute_init() {
             base_uri: Some("ipfs://some.some".to_string()),
             minter: mock_address(1),
             supply: 0,
-            tokens: BTreeMap::new(),
-            operator_approvals: BTreeMap::new(),
+            tokens: SortedVecMap::new(),
+            operator_approvals: SortedVecMap::new(),
         }
     );
 }
@@ -176,7 +146,6 @@ fn proper_mint() {
         }
     );
 }
-
 
 #[test]
 fn proper_ownership_check() {
@@ -346,10 +315,7 @@ fn proper_approve_for_all() {
     let _ = execute_approve_for_all(&mock_contract_context(alice), &mut state, &approve_all_msg);
     assert_eq!(
         state.operator_approvals,
-        BTreeMap::from([(
-            mock_address(alice),
-            BTreeMap::from([(mock_address(bob), true)])
-        )])
+        SortedVecMap::from([(mock_address(alice), vec![mock_address(bob)])])
     );
 
     let approve_all_msg = ApproveForAllMsg {
@@ -358,15 +324,9 @@ fn proper_approve_for_all() {
     let _ = execute_approve_for_all(&mock_contract_context(bob), &mut state, &approve_all_msg);
     assert_eq!(
         state.operator_approvals,
-        BTreeMap::from([
-            (
-                mock_address(alice),
-                BTreeMap::from([(mock_address(bob), true)])
-            ),
-            (
-                mock_address(bob),
-                BTreeMap::from([(mock_address(alice), true)])
-            )
+        SortedVecMap::from([
+            (mock_address(alice), vec![mock_address(bob)]),
+            (mock_address(bob), vec![mock_address(alice)])
         ])
     );
 }
@@ -403,17 +363,14 @@ fn proper_revoke_for_all() {
     let _ = execute_revoke_for_all(&mock_contract_context(alice), &mut state, &revoke_all_msg);
     assert_eq!(
         state.operator_approvals,
-        BTreeMap::from([(
-            mock_address(alice),
-            BTreeMap::from([(mock_address(jack), true)])
-        )])
+        SortedVecMap::from([(mock_address(alice), vec![mock_address(jack)])])
     );
 
     let revoke_all_msg = RevokeForAllMsg {
         operator: mock_address(jack),
     };
     let _ = execute_revoke_for_all(&mock_contract_context(alice), &mut state, &revoke_all_msg);
-    assert_eq!(state.operator_approvals, BTreeMap::new());
+    assert_eq!(state.operator_approvals, SortedVecMap::new());
 }
 
 #[test]
@@ -948,7 +905,7 @@ fn proper_burn() {
 
     let _ = execute_burn(&mock_contract_context(alice), &mut state, &burn_msg);
     assert_eq!(state.supply, 0);
-    assert_eq!(state.is_minted(1), false);
+    assert!(!state.is_minted(1));
 }
 
 #[test]
@@ -988,8 +945,8 @@ fn test_multi_mint() {
         base_uri: Some("ipfs://some.some".to_string()),
         minter: mock_address(1),
         supply: 0,
-        tokens: BTreeMap::new(),
-        operator_approvals: BTreeMap::new(),
+        tokens: SortedVecMap::new(),
+        operator_approvals: SortedVecMap::new(),
     };
     test_state.tokens.insert(
         1,

@@ -111,8 +111,8 @@ mod rpc_msg_tests {
         ) {
             builder
                 .call(*dest, Shortname::from_u32(self.action_shortname()))
-                .argument(self.to.clone())
-                .argument(self.amount.clone())
+                .argument(self.to)
+                .argument(self.amount)
                 .argument(self.memo.clone())
                 .argument(self.amounts.clone())
                 .done();
@@ -148,7 +148,7 @@ mod rpc_msg_tests {
         };
 
         let derive_msg = TestTransferMsgDerive {
-            to: msg.to.clone(),
+            to: msg.to,
             amount: msg.amount,
             memo: msg.memo.clone(),
             amounts: msg.amounts.clone(),
@@ -201,8 +201,8 @@ mod rpc_msg_with_cost_tests {
             builder
                 .call(*dest, Shortname::from_u32(self.action_shortname()))
                 .with_cost(cost)
-                .argument(self.to.clone())
-                .argument(self.amount.clone())
+                .argument(self.to)
+                .argument(self.amount)
                 .argument(self.memo.clone())
                 .argument(self.amounts.clone())
                 .done();
@@ -240,7 +240,7 @@ mod rpc_msg_with_cost_tests {
         };
 
         let derive_msg = TestTransferMsgWithCostDerive {
-            to: msg.to.clone(),
+            to: msg.to,
             amount: msg.amount,
             memo: msg.memo.clone(),
             amounts: msg.amounts.clone(),

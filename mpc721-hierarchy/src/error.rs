@@ -15,4 +15,7 @@ pub enum ContractError {
 
     #[error("Incorrect Owner")]
     IncorrectOwner,
+
+    #[error("Already presesent")]
+    AlreadyPresent,
 }

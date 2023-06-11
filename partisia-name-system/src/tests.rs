@@ -13,29 +13,11 @@ use crate::{
     state::{Record, RecordClass},
 };
 
-use pbc_contract_common::{
-    address::{Address, AddressType, Shortname},
-    context::ContractContext,
-    events::EventGroup,
-};
+use pbc_contract_common::{address::Shortname, context::ContractContext, events::EventGroup};
 
-use utils::events::IntoShortnameRPCEvent;
+use utils::{events::IntoShortnameRPCEvent, tests::{mock_address, string_to_bytes, mock_empty_transaction_hash}};
 
 // TODO: DRY up tests
-
-fn mock_address(le: u8) -> Address {
-    Address {
-        address_type: AddressType::Account,
-        identifier: [
-            le, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8,
-            0u8, 0u8, 0u8,
-        ],
-    }
-}
-
-fn string_to_bytes(s: &str) -> Vec<u8> {
-    s.to_string().into_bytes()
-}
 
 const TRANSFER: u32 = 0x01;
 const TRANSFER_FROM: u32 = 0x03;
@@ -64,7 +46,7 @@ fn proper_transfer_action_call() {
     msg.as_interaction(&mut event_group, &dest);
 
     test_event_group
-        .call(dest.clone(), Shortname::from_u32(TRANSFER))
+        .call(dest, Shortname::from_u32(TRANSFER))
         .argument(mock_address(1u8))
         .argument(string_to_bytes("name"))
         .done();
@@ -87,7 +69,7 @@ fn proper_transfer_from_action_call() {
 
     let mut test_event_group = EventGroup::builder();
     test_event_group
-        .call(dest.clone(), Shortname::from_u32(TRANSFER_FROM))
+        .call(dest, Shortname::from_u32(TRANSFER_FROM))
         .argument(mock_address(1u8))
         .argument(mock_address(2u8))
         .argument(string_to_bytes("name"))
@@ -110,7 +92,7 @@ fn proper_approve_action_call() {
 
     let mut test_event_group = EventGroup::builder();
     test_event_group
-        .call(dest.clone(), Shortname::from_u32(APPROVE))
+        .call(dest, Shortname::from_u32(APPROVE))
         .argument(mock_address(1u8))
         .argument(string_to_bytes("name"))
         .done();
@@ -131,7 +113,7 @@ fn proper_set_base_uri_action_call() {
 
     let mut test_event_group = EventGroup::builder();
     test_event_group
-        .call(dest.clone(), Shortname::from_u32(SET_BASE_URI))
+        .call(dest, Shortname::from_u32(SET_BASE_URI))
         .argument("new".to_string())
         .done();
 
@@ -154,7 +136,7 @@ fn proper_mint_action_call() {
 
     let mut test_event_group = EventGroup::builder();
     test_event_group
-        .call(dest.clone(), Shortname::from_u32(MINT))
+        .call(dest, Shortname::from_u32(MINT))
         .argument(string_to_bytes("name"))
         .argument(mock_address(1u8))
         .argument(Some("uri".to_string()))
@@ -178,7 +160,7 @@ fn proper_ownership_check_call() {
 
     let mut test_event_group = EventGroup::builder();
     test_event_group
-        .call(dest.clone(), Shortname::from_u32(CHECKOWNER))
+        .call(dest, Shortname::from_u32(CHECKOWNER))
         .argument(mock_address(1u8))
         .argument(string_to_bytes("name"))
         .done();
@@ -199,7 +181,7 @@ fn proper_approve_for_all_action_call() {
 
     let mut test_event_group = EventGroup::builder();
     test_event_group
-        .call(dest.clone(), Shortname::from_u32(APPROVE_FOR_ALL))
+        .call(dest, Shortname::from_u32(APPROVE_FOR_ALL))
         .argument(mock_address(1u8))
         .done();
 
@@ -220,7 +202,7 @@ fn proper_revoke_action_call() {
 
     let mut test_event_group = EventGroup::builder();
     test_event_group
-        .call(dest.clone(), Shortname::from_u32(REVOKE))
+        .call(dest, Shortname::from_u32(REVOKE))
         .argument(mock_address(1u8))
         .argument(string_to_bytes("name"))
         .done();
@@ -241,7 +223,7 @@ fn proper_revoke_for_all_action_call() {
 
     let mut test_event_group = EventGroup::builder();
     test_event_group
-        .call(dest.clone(), Shortname::from_u32(REVOKE_FOR_ALL))
+        .call(dest, Shortname::from_u32(REVOKE_FOR_ALL))
         .argument(mock_address(1u8))
         .done();
 
@@ -261,7 +243,7 @@ fn proper_burn_action_call() {
 
     let mut test_event_group = EventGroup::builder();
     test_event_group
-        .call(dest.clone(), Shortname::from_u32(BURN))
+        .call(dest, Shortname::from_u32(BURN))
         .argument(string_to_bytes("name"))
         .done();
 
@@ -280,7 +262,7 @@ fn proper_minter_update_action_call() {
 
     let mut test_event_group = EventGroup::builder();
     test_event_group
-        .call(dest.clone(), Shortname::from_u32(UPDATE_MINTER))
+        .call(dest, Shortname::from_u32(UPDATE_MINTER))
         .argument(mock_address(19u8))
         .done();
 
@@ -330,7 +312,7 @@ fn proper_multi_mint_action_call() {
 
     let mut test_event_group = EventGroup::builder();
     test_event_group
-        .call(dest.clone(), Shortname::from_u32(MULTI_MINT))
+        .call(dest, Shortname::from_u32(MULTI_MINT))
         .argument(mints)
         .done();
 
@@ -345,14 +327,8 @@ fn mock_contract_context(sender: u8) -> ContractContext {
         sender: mock_address(sender),
         block_time: 100,
         block_production_time: 100,
-        current_transaction: [
-            0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8,
-            0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8,
-        ],
-        original_transaction: [
-            0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8,
-            0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8,
-        ],
+        current_transaction: mock_empty_transaction_hash(),
+        original_transaction: mock_empty_transaction_hash(),
     }
 }
 
@@ -373,7 +349,7 @@ fn proper_mint() {
 
     let (mut state, events) = execute_init(&mock_contract_context(2), &msg);
 
-    let ref token_id = string_to_bytes("name");
+    let token_id = string_to_bytes("name");
     let mint_msg = PnsMintMsg {
         token_id: token_id.clone(),
         to: mock_address(alice),
@@ -383,7 +359,7 @@ fn proper_mint() {
 
     let _ = execute_mint(&mock_contract_context(minter), &mut state, &mint_msg);
 
-    let num_token_id = state.token_id(token_id).unwrap();
+    let num_token_id = state.token_id(&token_id).unwrap();
     assert_eq!(num_token_id, 2);
 }
 
@@ -470,7 +446,7 @@ fn mint_fails_when_parent_does_not_exist() {
 
     let (mut state, events) = execute_init(&mock_contract_context(2), &msg);
 
-    let ref token_id = string_to_bytes("name");
+    let token_id = &string_to_bytes("name");
     let mint_msg = PnsMintMsg {
         token_id: token_id.clone(),
         to: mock_address(alice),
@@ -500,7 +476,7 @@ fn mint_fails_when_parent_is_not_owned() {
 
     let (mut state, events) = execute_init(&mock_contract_context(2), &msg);
 
-    let ref token_id = string_to_bytes("name");
+    let token_id = &string_to_bytes("name");
     let mint_msg = PnsMintMsg {
         token_id: token_id.clone(),
         to: mock_address(alice),
@@ -538,7 +514,7 @@ fn when_parent_is_not_owned_no_mint() {
 
     let (state, events) = execute_init(&mock_contract_context(2), &msg);
 
-    let ref token_id = string_to_bytes("name");
+    let token_id = &string_to_bytes("name");
     let mint_msg = PnsMintMsg {
         token_id: token_id.clone(),
         to: mock_address(alice),
@@ -554,7 +530,7 @@ fn when_parent_is_not_owned_no_mint() {
 
     let err = state_mutex.lock().err().unwrap();
 
-    let ref mpc721 = err.get_ref().mpc721;
+    let mpc721 = &err.get_ref().mpc721;
     // The only domain present is the TLD
     assert_eq!(mpc721.tokens.len(), 1);
 
@@ -582,7 +558,7 @@ fn proper_record_mint() {
 
     let (mut state, events) = execute_init(&mock_contract_context(2), &msg);
 
-    let ref token_id = string_to_bytes("name");
+    let token_id = &string_to_bytes("name");
     let mint_msg = PnsMintMsg {
         token_id: token_id.clone(),
         to: mock_address(alice),
@@ -735,7 +711,7 @@ fn proper_record_update() {
 
     let (mut state, events) = execute_init(&mock_contract_context(2), &msg);
 
-    let ref token_id = string_to_bytes("name");
+    let token_id = &string_to_bytes("name");
     let mint_msg = PnsMintMsg {
         token_id: token_id.clone(),
         to: mock_address(alice),
@@ -823,7 +799,7 @@ fn when_record_is_not_owned_record_update_fails() {
 
     let (mut state, events) = execute_init(&mock_contract_context(2), &msg);
 
-    let ref token_id = string_to_bytes("name");
+    let token_id = &string_to_bytes("name");
     let mint_msg = PnsMintMsg {
         token_id: token_id.clone(),
         to: mock_address(alice),
@@ -874,7 +850,7 @@ fn proper_record_delete() {
 
     let (mut state, events) = execute_init(&mock_contract_context(2), &msg);
 
-    let ref token_id = string_to_bytes("name");
+    let token_id = &string_to_bytes("name");
     let mint_msg = PnsMintMsg {
         token_id: token_id.clone(),
         to: mock_address(alice),
@@ -956,7 +932,7 @@ fn when_record_is_not_owned_record_delete_fails() {
 
     let (mut state, events) = execute_init(&mock_contract_context(2), &msg);
 
-    let ref token_id = string_to_bytes("name");
+    let token_id = &string_to_bytes("name");
     let mint_msg = PnsMintMsg {
         token_id: token_id.clone(),
         to: mock_address(alice),
