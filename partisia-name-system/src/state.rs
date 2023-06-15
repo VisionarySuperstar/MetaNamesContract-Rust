@@ -1,7 +1,6 @@
 use contract_version_base::state::ContractVersionBase;
 use create_type_spec_derive::CreateTypeSpec;
-use mpc721_hierarchy::state::{MPC721ContractState, TokenInfo};
-use pbc_contract_common::{address::Address, sorted_vec_map::SortedVecMap};
+use pbc_contract_common::sorted_vec_map::SortedVecMap;
 use read_write_rpc_derive::ReadWriteRPC;
 use read_write_state_derive::ReadWriteState;
 
@@ -11,7 +10,6 @@ use crate::ContractError;
 /// This structure describes Partisia Name System state
 #[derive(ReadWriteState, CreateTypeSpec, Clone, PartialEq, Eq, Debug)]
 pub struct PartisiaNameSystemState {
-    pub mpc721: MPC721ContractState,
     pub version: ContractVersionBase,
     pub domains: SortedVecMap<Vec<u8>, Domain>,
     pub records: SortedVecMap<Vec<u8>, Record>,
@@ -57,15 +55,6 @@ impl PartisiaNameSystemState {
     }
 
     /// ## Description
-    /// Returns token info by domain
-    pub fn token_info(&self, domain: &[u8]) -> Option<&TokenInfo> {
-        match self.domain_info(domain) {
-            Some(domain) => self.mpc721.token_info(domain.token_id),
-            None => None,
-        }
-    }
-
-    /// ## Description
     /// This function returns token id for given domain
     pub fn token_id(&self, domain: &[u8]) -> Option<u128> {
         self.domains.get(&domain.to_vec()).map(|d| d.token_id)
@@ -76,16 +65,6 @@ impl PartisiaNameSystemState {
     pub fn record_info(&self, token_id: &[u8], class: &RecordClass) -> Option<&Record> {
         let qualified_name = Self::fully_qualified_name(token_id, class);
         self.records.get(&qualified_name)
-    }
-
-    /// ## Description
-    /// Returns boolean if account is allowed to manage domain
-    /// ## Params
-    pub fn allowed_to_manage(&self, account: &Address, domain: &[u8]) -> bool {
-        match self.domain_info(domain) {
-            Some(domain) => self.mpc721.allowed_to_manage(account, domain.token_id),
-            None => false,
-        }
     }
 
     /// ## Description
