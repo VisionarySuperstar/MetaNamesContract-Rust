@@ -16,8 +16,6 @@ use utils::{
 
 // TODO: DRY up tests
 
-// TODO: Test parentship
-
 // TODO: Review action calls
 
 const MINT: u32 = 0x09;
@@ -92,6 +90,76 @@ fn proper_mint() {
     let num_token_id = state.get_token_id(&domain).unwrap();
     assert_eq!(num_token_id, 1);
 }
+
+#[test]
+fn proper_mint_with_parent() {
+    let minter = 1u8;
+    let alice = 10u8;
+
+    let msg = PnsInitMsg {
+        owner: None,
+        name: "Meta Names".to_string(),
+        symbol: "META".to_string(),
+        base_uri: Some("ipfs://some.some".to_string()),
+        minter: mock_address(minter),
+    };
+
+    let mut state = execute_init(&mock_contract_context(2), &msg);
+
+    let domain = string_to_bytes("meta");
+    let mint_msg = PnsMintMsg {
+        token_id: 1,
+        domain,
+        to: mock_address(alice),
+        token_uri: Some(String::from("meta")),
+        parent_id: None,
+    };
+
+    let _ = execute_mint(&mock_contract_context(minter), &mut state, &mint_msg);
+
+    let domain = string_to_bytes("name");
+    let mint_msg = PnsMintMsg {
+        token_id: 2,
+        domain: domain.clone(),
+        to: mock_address(alice),
+        token_uri: Some(String::from("name")),
+        parent_id: Some(string_to_bytes("meta")),
+    };
+
+    let _ = execute_mint(&mock_contract_context(minter), &mut state, &mint_msg);
+
+    let domains_length = state.domains.len();
+    assert_eq!(domains_length, 2);
+}
+
+#[test]
+#[should_panic(expected = "Not found")]
+fn when_parent_does_not_exist_mint_fails() {
+    let minter = 1u8;
+    let alice = 10u8;
+
+    let msg = PnsInitMsg {
+        owner: None,
+        name: "Meta Names".to_string(),
+        symbol: "META".to_string(),
+        base_uri: Some("ipfs://some.some".to_string()),
+        minter: mock_address(minter),
+    };
+
+    let mut state = execute_init(&mock_contract_context(2), &msg);
+
+    let domain = string_to_bytes("meta");
+    let mint_msg = PnsMintMsg {
+        token_id: 1,
+        domain,
+        to: mock_address(alice),
+        token_uri: Some(String::from("meta")),
+        parent_id: Some(string_to_bytes("notfound")),
+    };
+
+    let _ = execute_mint(&mock_contract_context(minter), &mut state, &mint_msg);
+}
+
 
 #[test]
 #[should_panic(expected = "Token with specified id is already minted")]
