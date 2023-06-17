@@ -43,6 +43,8 @@ pub fn execute_mint(
         msg.domain.clone(),
         Domain {
             token_id: msg.token_id,
+            records: SortedVecMap::new(),
+            parent_id: None,
         },
     );
 
@@ -60,7 +62,8 @@ pub fn execute_record_mint(
 ) -> Vec<EventGroup> {
     assert!(state.is_minted(&msg.domain), "{}", ContractError::NotFound);
 
-    state.mint_record(&msg.domain, &msg.class, &msg.data);
+    let domain = state.domains.get_mut(&msg.domain).unwrap();
+    domain.mint_record(&msg.class, &msg.data);
 
     vec![]
 }
@@ -76,13 +79,14 @@ pub fn execute_record_update(
 ) -> Vec<EventGroup> {
     assert!(state.is_minted(&msg.domain), "{}", ContractError::NotFound);
 
+    let domain = state.domains.get_mut(&msg.domain).unwrap();
     assert!(
-        state.is_record_minted(&msg.domain, &msg.class),
+        domain.has_record(&msg.class),
         "{}",
         ContractError::NotFound
     );
 
-    state.update_record_data(&msg.domain, &msg.class, &msg.data);
+    domain.update_record_data(&msg.class, &msg.data);
 
     vec![]
 }
@@ -98,13 +102,14 @@ pub fn execute_record_delete(
 ) -> Vec<EventGroup> {
     assert!(state.is_minted(&msg.domain), "{}", ContractError::NotFound);
 
+    let domain = state.domains.get_mut(&msg.domain).unwrap();
     assert!(
-        state.is_record_minted(&msg.domain, &msg.class),
+        domain.has_record(&msg.class),
         "{}",
         ContractError::NotFound
     );
 
-    state.delete_record(&msg.domain, &msg.class);
+    domain.delete_record(&msg.class);
 
     vec![]
 }
