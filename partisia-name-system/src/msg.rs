@@ -21,10 +21,6 @@ pub struct PnsInitMsg {
     pub base_uri: Option<String>,
     /// token minter address
     pub minter: Address,
-    /// optional top level domain
-    pub tld: Option<Vec<u8>>,
-    /// optional top level domain uri
-    pub tld_uri: Option<String>,
 }
 
 /// ## Description
