@@ -22,7 +22,7 @@ create_type_spec_derive = { workspace = true }
 partisia-name-system = { path = "../partisia-name-system" }
 contract-version-base = { path = "../contract-version-base" }
 
-serde_json = "1.0"
+serde_json = { workspace = true }
 
 [dev-dependencies]
 utils = { path = "../utils" }

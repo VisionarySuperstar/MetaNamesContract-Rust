@@ -18,7 +18,7 @@ read_write_rpc_derive = { workspace = true }
 read_write_state_derive = { workspace = true }
 create_type_spec_derive = { workspace = true }
 
-thiserror = "1.0.31"
+thiserror = { workspace = true }
 
 [features]
 abi = ["pbc_contract_common/abi", "pbc_contract_codegen/abi", "pbc_traits/abi", "create_type_spec_derive/abi"]
