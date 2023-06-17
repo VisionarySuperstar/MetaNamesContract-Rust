@@ -17,3 +17,6 @@ pbc_lib = { git = "https://git@gitlab.com/partisiablockchain/language/contract-s
 read_write_rpc_derive = { git = "https://git@gitlab.com/partisiablockchain/language/contract-sdk.git", tag = "15.1.0" }
 read_write_state_derive = { git = "https://git@gitlab.com/partisiablockchain/language/contract-sdk.git", tag = "15.1.0" }
 create_type_spec_derive = { git = "https://git@gitlab.com/partisiablockchain/language/contract-sdk.git", tag = "15.1.0" }
+
+cucumber = "0.19"
+futures = "0.3"

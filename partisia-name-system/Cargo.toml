@@ -26,5 +26,10 @@ rpc-msg-derive = { path = "../rpc-msg-derive" }
 serde_json = "1.0"
 thiserror = "1.0.31"
 
+[dev-dependencies]
+cucumber = { workspace = true }
+futures = { workspace = true }
+
+
 [features]
 abi = ["pbc_contract_common/abi", "pbc_contract_codegen/abi", "pbc_traits/abi", "mpc721-hierarchy/abi", "create_type_spec_derive/abi", "contract-version-base/abi", "utils/abi"]
