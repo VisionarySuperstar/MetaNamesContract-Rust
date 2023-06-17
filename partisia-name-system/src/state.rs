@@ -52,14 +52,14 @@ impl Domain {
 
     /// ## Description
     /// Existence of record given class
-    pub fn has_record(&self, class: &RecordClass) -> bool {
+    pub fn is_record_minted(&self, class: &RecordClass) -> bool {
         self.records.contains_key(class)
     }
 
     /// ## Description
     /// Mints record for token
     pub fn mint_record(&mut self, class: &RecordClass, data: &str) {
-        assert!(!self.has_record(class), "{}", ContractError::RecordMinted);
+        assert!(!self.is_record_minted(class), "{}", ContractError::RecordMinted);
 
         let record = Record {
             data: data.to_string(),
@@ -70,7 +70,7 @@ impl Domain {
     /// ## Description
     /// Update data of a record
     pub fn update_record_data(&mut self, class: &RecordClass, data: &str) {
-        assert!(self.has_record(class), "{}", ContractError::RecordNotMinted);
+        assert!(self.is_record_minted(class), "{}", ContractError::RecordNotMinted);
 
         self.records.get_mut(&class).map(|record| {
             record.data = data.to_string();
@@ -81,7 +81,7 @@ impl Domain {
     /// ## Description
     /// Remove a record
     pub fn delete_record(&mut self, class: &RecordClass) {
-        assert!(self.has_record(class), "{}", ContractError::NotMinted);
+        assert!(self.is_record_minted(class), "{}", ContractError::NotMinted);
 
         if self.records.contains_key(&class) {
             self.records.remove_entry(&class);
@@ -94,13 +94,13 @@ impl Domain {
 impl PartisiaNameSystemState {
     /// ## Description
     /// Returns info given domain
-    pub fn domain_info(&self, domain: &[u8]) -> Option<&Domain> {
+    pub fn get_domain(&self, domain: &[u8]) -> Option<&Domain> {
         self.domains.get(&domain.to_vec())
     }
 
     /// ## Description
     /// Returns parent info by domain
-    pub fn parent_info(&self, domain: &[u8]) -> Option<&Domain> {
+    pub fn get_parent(&self, domain: &[u8]) -> Option<&Domain> {
         self.domains
             .get(&domain.to_vec())
             .and_then(|d| d.parent_id.as_ref())
@@ -115,7 +115,7 @@ impl PartisiaNameSystemState {
 
     /// ## Description
     /// This function returns token id for given domain
-    pub fn token_id(&self, domain: &[u8]) -> Option<u128> {
+    pub fn get_token_id(&self, domain: &[u8]) -> Option<u128> {
         self.domains.get(&domain.to_vec()).map(|d| d.token_id)
     }
 }
