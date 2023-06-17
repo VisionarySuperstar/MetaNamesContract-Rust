@@ -3,7 +3,7 @@
 members = [
   "contract",
   "contract-version-base",
-  "mpc721-hierarchy",
+  "mpc721-base",
   "partisia-name-system",
   "rpc-msg-derive",
   "utils",
