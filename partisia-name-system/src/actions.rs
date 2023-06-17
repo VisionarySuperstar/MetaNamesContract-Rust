@@ -37,14 +37,16 @@ pub fn execute_mint(
 ) -> Vec<EventGroup> {
     assert!(!state.is_minted(&msg.domain), "{}", ContractError::Minted);
 
-    // TODO: Handle parentship
+    if let Some(parent_id) = msg.parent_id.clone() {
+        assert!(state.is_minted(&parent_id), "{}", ContractError::NotFound);
+    }
 
     state.domains.insert(
         msg.domain.clone(),
         Domain {
             token_id: msg.token_id,
             records: SortedVecMap::new(),
-            parent_id: None,
+            parent_id: msg.parent_id.clone(),
         },
     );
 
@@ -80,11 +82,7 @@ pub fn execute_record_update(
     assert!(state.is_minted(&msg.domain), "{}", ContractError::NotFound);
 
     let domain = state.domains.get_mut(&msg.domain).unwrap();
-    assert!(
-        domain.has_record(&msg.class),
-        "{}",
-        ContractError::NotFound
-    );
+    assert!(domain.has_record(&msg.class), "{}", ContractError::NotFound);
 
     domain.update_record_data(&msg.class, &msg.data);
 
@@ -103,11 +101,7 @@ pub fn execute_record_delete(
     assert!(state.is_minted(&msg.domain), "{}", ContractError::NotFound);
 
     let domain = state.domains.get_mut(&msg.domain).unwrap();
-    assert!(
-        domain.has_record(&msg.class),
-        "{}",
-        ContractError::NotFound
-    );
+    assert!(domain.has_record(&msg.class), "{}", ContractError::NotFound);
 
     domain.delete_record(&msg.class);
 
