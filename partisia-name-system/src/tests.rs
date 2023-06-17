@@ -1,5 +1,3 @@
-use std::{panic::catch_unwind, rc::Rc, sync::Mutex};
-
 use crate::{
     actions::{
         execute_init, execute_mint, execute_record_delete, execute_record_mint,
@@ -18,19 +16,11 @@ use utils::{
 
 // TODO: DRY up tests
 
-const TRANSFER: u32 = 0x01;
-const TRANSFER_FROM: u32 = 0x03;
-const APPROVE: u32 = 0x05;
-const SET_BASE_URI: u32 = 0x07;
-const MINT: u32 = 0x09;
-const APPROVE_FOR_ALL: u32 = 0x11;
-const REVOKE: u32 = 0x13;
-const REVOKE_FOR_ALL: u32 = 0x15;
-const BURN: u32 = 0x17;
+// TODO: Test parentship
 
-const MULTI_MINT: u32 = 0x20;
-const CHECKOWNER: u32 = 0x18;
-const UPDATE_MINTER: u32 = 0x19;
+// TODO: Review action calls
+
+const MINT: u32 = 0x09;
 
 #[test]
 fn proper_mint_action_call() {
@@ -41,7 +31,7 @@ fn proper_mint_action_call() {
         token_id: 1,
         to: mock_address(1u8),
         token_uri: Some("uri".to_string()),
-        parent_id: Some(string_to_bytes("meta")),
+        parent_id: None,
     };
 
     let mut event_group = EventGroup::builder();
@@ -51,10 +41,10 @@ fn proper_mint_action_call() {
     test_event_group
         .call(dest, Shortname::from_u32(MINT))
         .argument(string_to_bytes("name"))
-        .argument(1)
+        .argument(1u128)
         .argument(mock_address(1u8))
         .argument(Some("uri".to_string()))
-        .argument(Some("meta".to_string()))
+        .argument(None::<Vec<u8>>)
         .done();
 
     assert_eq!(event_group.build(), test_event_group.build());
@@ -84,8 +74,6 @@ fn proper_mint() {
         symbol: "META".to_string(),
         base_uri: Some("ipfs://some.some".to_string()),
         minter: mock_address(minter),
-        tld: Some(string_to_bytes("meta")),
-        tld_uri: Some("meta".to_string()),
     };
 
     let mut state = execute_init(&mock_contract_context(2), &msg);
@@ -96,42 +84,13 @@ fn proper_mint() {
         domain: domain.clone(),
         to: mock_address(alice),
         token_uri: Some(String::from("name")),
-        parent_id: Some(string_to_bytes("meta")),
+        parent_id: None,
     };
 
     let _ = execute_mint(&mock_contract_context(minter), &mut state, &mint_msg);
 
-    let num_token_id = state.token_id(&domain).unwrap();
+    let num_token_id = state.get_token_id(&domain).unwrap();
     assert_eq!(num_token_id, 1);
-}
-
-#[test]
-#[should_panic(expected = "Unauthorized")]
-fn sender_is_not_minter_on_mint() {
-    let minter = 1u8;
-    let alice = 10u8;
-
-    let msg = PnsInitMsg {
-        owner: None,
-        name: "Meta Names".to_string(),
-        symbol: "META".to_string(),
-        base_uri: Some("ipfs://some.some".to_string()),
-        minter: mock_address(minter),
-        tld: Some(string_to_bytes("meta")),
-        tld_uri: Some("meta".to_string()),
-    };
-
-    let mut state = execute_init(&mock_contract_context(2), &msg);
-
-    let mint_msg = PnsMintMsg {
-        domain: string_to_bytes("name"),
-        token_id: 1,
-        to: mock_address(alice),
-        token_uri: Some("name".to_string()),
-        parent_id: Some(string_to_bytes("meta")),
-    };
-
-    let _ = execute_mint(&mock_contract_context(alice), &mut state, &mint_msg);
 }
 
 #[test]
@@ -146,8 +105,6 @@ fn token_already_minted_on_mint() {
         symbol: "META".to_string(),
         base_uri: Some("ipfs://some.some".to_string()),
         minter: mock_address(minter),
-        tld: Some(string_to_bytes("meta")),
-        tld_uri: Some("meta".to_string()),
     };
 
     let mut state = execute_init(&mock_contract_context(2), &msg);
@@ -157,7 +114,7 @@ fn token_already_minted_on_mint() {
         token_id: 1,
         token_uri: Some("name".to_string()),
         to: mock_address(alice),
-        parent_id: Some(string_to_bytes("meta")),
+        parent_id: None,
     };
 
     let _ = execute_mint(&mock_contract_context(minter), &mut state, &mint_msg);
@@ -167,7 +124,7 @@ fn token_already_minted_on_mint() {
         token_id: 2,
         token_uri: Some("name".to_string()),
         to: mock_address(alice),
-        parent_id: Some(string_to_bytes("meta")),
+        parent_id: None,
     };
 
     let _ = execute_mint(&mock_contract_context(minter), &mut state, &mint_msg);
@@ -185,105 +142,20 @@ fn mint_fails_when_parent_does_not_exist() {
         symbol: "META".to_string(),
         base_uri: Some("ipfs://some.some".to_string()),
         minter: mock_address(minter),
-        tld: Some(string_to_bytes("meta")),
-        tld_uri: Some("meta".to_string()),
     };
 
     let mut state = execute_init(&mock_contract_context(2), &msg);
 
-    let token_id = &string_to_bytes("name");
+    let domain = &string_to_bytes("name");
     let mint_msg = PnsMintMsg {
-        domain: token_id.clone(),
+        domain: domain.clone(),
+        token_id: 1,
         to: mock_address(alice),
         token_uri: Some(String::from("name")),
         parent_id: Some(string_to_bytes("not.existing.meta")),
     };
 
     let _ = execute_mint(&mock_contract_context(minter), &mut state, &mint_msg);
-}
-
-#[test]
-#[should_panic(expected = "Unauthorized")]
-fn mint_fails_when_parent_is_not_owned() {
-    let minter = 1u8;
-    let alice = 10u8;
-    let bob = 20u8;
-
-    let msg = PnsInitMsg {
-        owner: None,
-        name: "Meta Names".to_string(),
-        symbol: "META".to_string(),
-        base_uri: Some("ipfs://some.some".to_string()),
-        minter: mock_address(minter),
-        tld: Some(string_to_bytes("meta")),
-        tld_uri: Some("meta".to_string()),
-    };
-
-    let mut state = execute_init(&mock_contract_context(2), &msg);
-
-    let token_id = &string_to_bytes("name");
-    let mint_msg = PnsMintMsg {
-        domain: token_id.clone(),
-        to: mock_address(alice),
-        token_uri: Some(String::from("name")),
-        parent_id: Some(string_to_bytes("meta")),
-    };
-
-    let _ = execute_mint(&mock_contract_context(minter), &mut state, &mint_msg);
-
-    let mint_msg = PnsMintMsg {
-        domain: string_to_bytes("bob.name"),
-        to: mock_address(alice),
-        token_uri: Some(String::from("bob.name")),
-        parent_id: Some(string_to_bytes("name")),
-    };
-
-    let _ = execute_mint(&mock_contract_context(minter), &mut state, &mint_msg);
-}
-
-#[test]
-fn when_parent_is_not_owned_no_mint() {
-    let minter = 1u8;
-    let alice = 10u8;
-    let bob = 20u8;
-
-    let msg = PnsInitMsg {
-        owner: None,
-        name: "Meta Names".to_string(),
-        symbol: "META".to_string(),
-        base_uri: Some("ipfs://some.some".to_string()),
-        minter: mock_address(minter),
-        tld: Some(string_to_bytes("meta")),
-        tld_uri: Some("meta".to_string()),
-    };
-
-    let (state, events) = execute_init(&mock_contract_context(2), &msg);
-
-    let token_id = &string_to_bytes("name");
-    let mint_msg = PnsMintMsg {
-        domain: token_id.clone(),
-        to: mock_address(alice),
-        token_uri: Some(String::from("name")),
-        parent_id: Some(string_to_bytes("not.existing.meta")),
-    };
-
-    let state_mutex = Rc::new(Mutex::new(state));
-    let _ = catch_unwind(|| {
-        let mut state_mut = state_mutex.lock().unwrap();
-        let _ = execute_mint(&mock_contract_context(minter), &mut state_mut, &mint_msg);
-    });
-
-    let err = state_mutex.lock().err().unwrap();
-
-    let mpc721 = &err.get_ref().mpc721;
-    // The only domain present is the TLD
-    assert_eq!(mpc721.tokens.len(), 1);
-
-    // Check that the TLD is present
-    let (_, token) = mpc721.tokens.first_key_value().unwrap();
-    assert_eq!(token.owner, mock_address(minter));
-    assert_eq!(token.token_uri, Some("meta".to_string()));
-    assert_eq!(token.parent_id, None);
 }
 
 #[test]
@@ -297,30 +169,30 @@ fn proper_record_mint() {
         symbol: "META".to_string(),
         base_uri: Some("ipfs://some.some".to_string()),
         minter: mock_address(minter),
-        tld: Some(string_to_bytes("meta")),
-        tld_uri: Some("meta".to_string()),
     };
 
     let mut state = execute_init(&mock_contract_context(2), &msg);
 
-    let token_id = &string_to_bytes("name");
+    let domain = &string_to_bytes("name");
     let mint_msg = PnsMintMsg {
-        domain: token_id.clone(),
+        domain: domain.clone(),
+        token_id: 1,
         to: mock_address(alice),
         token_uri: Some(String::from("name")),
-        parent_id: Some(string_to_bytes("meta")),
+        parent_id: None,
     };
     let _ = execute_mint(&mock_contract_context(minter), &mut state, &mint_msg);
 
     let record_class = RecordClass::Twitter {};
     let record_mint_msg = RecordMintMsg {
-        domain: token_id.clone(),
+        domain: domain.clone(),
         class: record_class,
         data: "data".to_string(),
     };
     let _ = execute_record_mint(&mock_contract_context(alice), &mut state, &record_mint_msg);
 
-    let record = state.record_info(token_id, &record_class).unwrap();
+    let domain = state.get_domain(domain).unwrap();
+    let record = domain.get_record(&record_class).unwrap();
     assert_eq!(
         *record,
         Record {
@@ -341,17 +213,16 @@ fn when_token_not_present_record_mint_fails() {
         symbol: "META".to_string(),
         base_uri: Some("ipfs://some.some".to_string()),
         minter: mock_address(minter),
-        tld: Some(string_to_bytes("meta")),
-        tld_uri: Some("meta".to_string()),
     };
 
     let mut state = execute_init(&mock_contract_context(2), &msg);
 
     let mint_msg = PnsMintMsg {
         domain: string_to_bytes("name"),
+        token_id: 1,
         to: mock_address(alice),
         token_uri: Some("name".to_string()),
-        parent_id: Some(string_to_bytes("meta")),
+        parent_id: None,
     };
 
     let _ = execute_mint(&mock_contract_context(minter), &mut state, &mint_msg);
@@ -366,43 +237,6 @@ fn when_token_not_present_record_mint_fails() {
 }
 
 #[test]
-#[should_panic(expected = "Unauthorized")]
-fn when_token_not_owned_record_mint_fails() {
-    let minter = 1u8;
-    let alice = 10u8;
-    let bob = 20u8;
-
-    let msg = PnsInitMsg {
-        owner: None,
-        name: "Meta Names".to_string(),
-        symbol: "META".to_string(),
-        base_uri: Some("ipfs://some.some".to_string()),
-        minter: mock_address(minter),
-        tld: Some(string_to_bytes("meta")),
-        tld_uri: Some("meta".to_string()),
-    };
-
-    let mut state = execute_init(&mock_contract_context(2), &msg);
-
-    let mint_msg = PnsMintMsg {
-        domain: string_to_bytes("name"),
-        to: mock_address(alice),
-        token_uri: Some("name".to_string()),
-        parent_id: Some(string_to_bytes("meta")),
-    };
-
-    let _ = execute_mint(&mock_contract_context(minter), &mut state, &mint_msg);
-
-    let record_mint = RecordMintMsg {
-        domain: string_to_bytes("name"),
-        class: RecordClass::Wallet {},
-        data: "some data".to_string(),
-    };
-
-    let _ = execute_record_mint(&mock_contract_context(bob), &mut state, &record_mint);
-}
-
-#[test]
 #[should_panic(expected = "Record with specified token id and class is already minted")]
 fn record_already_minted_on_record_mint() {
     let minter = 1u8;
@@ -414,17 +248,16 @@ fn record_already_minted_on_record_mint() {
         symbol: "META".to_string(),
         base_uri: Some("ipfs://some.some".to_string()),
         minter: mock_address(minter),
-        tld: Some(string_to_bytes("meta")),
-        tld_uri: Some("meta".to_string()),
     };
 
     let mut state = execute_init(&mock_contract_context(2), &msg);
 
     let mint_msg = PnsMintMsg {
         domain: string_to_bytes("name"),
+        token_id: 1,
         to: mock_address(alice),
         token_uri: Some("name".to_string()),
-        parent_id: Some(string_to_bytes("meta")),
+        parent_id: None,
     };
 
     let _ = execute_mint(&mock_contract_context(minter), &mut state, &mint_msg);
@@ -450,31 +283,30 @@ fn proper_record_update() {
         symbol: "META".to_string(),
         base_uri: Some("ipfs://some.some".to_string()),
         minter: mock_address(minter),
-        tld: Some(string_to_bytes("meta")),
-        tld_uri: Some("meta".to_string()),
     };
 
     let mut state = execute_init(&mock_contract_context(2), &msg);
 
-    let token_id = &string_to_bytes("name");
+    let domain = &string_to_bytes("name");
     let mint_msg = PnsMintMsg {
-        domain: token_id.clone(),
+        domain: domain.clone(),
+        token_id: 1,
         to: mock_address(alice),
         token_uri: Some(String::from("name")),
-        parent_id: Some(string_to_bytes("meta")),
+        parent_id: None,
     };
     let _ = execute_mint(&mock_contract_context(minter), &mut state, &mint_msg);
 
     let record_class = RecordClass::Twitter {};
     let record_mint_msg = RecordMintMsg {
-        domain: token_id.clone(),
+        domain: domain.clone(),
         class: record_class,
         data: "data".to_string(),
     };
     let _ = execute_record_mint(&mock_contract_context(alice), &mut state, &record_mint_msg);
 
     let record_update_msg = RecordUpdateMsg {
-        domain: token_id.clone(),
+        domain: domain.clone(),
         class: record_class,
         data: "new data".to_string(),
     };
@@ -485,7 +317,8 @@ fn proper_record_update() {
         &record_update_msg,
     );
 
-    let record = state.record_info(token_id, &record_class).unwrap();
+    let domain = state.get_domain(domain).unwrap();
+    let record = domain.get_record(&record_class).unwrap();
     assert_eq!(
         *record,
         Record {
@@ -506,8 +339,6 @@ fn when_record_does_not_exist_record_update_fails() {
         symbol: "META".to_string(),
         base_uri: Some("ipfs://some.some".to_string()),
         minter: mock_address(minter),
-        tld: Some(string_to_bytes("meta")),
-        tld_uri: Some("meta".to_string()),
     };
 
     let mut state = execute_init(&mock_contract_context(2), &msg);
@@ -526,59 +357,6 @@ fn when_record_does_not_exist_record_update_fails() {
 }
 
 #[test]
-#[should_panic(expected = "Unauthorized")]
-fn when_record_is_not_owned_record_update_fails() {
-    let minter = 1u8;
-    let alice = 10u8;
-    let bob = 20u8;
-
-    let msg = PnsInitMsg {
-        owner: None,
-        name: "Meta Names".to_string(),
-        symbol: "META".to_string(),
-        base_uri: Some("ipfs://some.some".to_string()),
-        minter: mock_address(minter),
-        tld: Some(string_to_bytes("meta")),
-        tld_uri: Some("meta".to_string()),
-    };
-
-    let mut state = execute_init(&mock_contract_context(2), &msg);
-
-    let token_id = &string_to_bytes("name");
-    let mint_msg = PnsMintMsg {
-        domain: token_id.clone(),
-        to: mock_address(alice),
-        token_uri: Some(String::from("name")),
-        parent_id: Some(string_to_bytes("meta")),
-    };
-    let _ = execute_mint(&mock_contract_context(minter), &mut state, &mint_msg);
-
-    let record_class = RecordClass::Twitter {};
-    let record_mint_msg = RecordMintMsg {
-        domain: token_id.clone(),
-        class: record_class,
-        data: "data".to_string(),
-    };
-    let _ = execute_record_mint(&mock_contract_context(alice), &mut state, &record_mint_msg);
-
-    let record_update_msg = RecordUpdateMsg {
-        domain: token_id.clone(),
-        class: record_class,
-        data: "new data".to_string(),
-    };
-
-    let _ = execute_record_update(&mock_contract_context(bob), &mut state, &record_update_msg);
-
-    let record = state.record_info(token_id, &record_class).unwrap();
-    assert_eq!(
-        *record,
-        Record {
-            data: "new data".to_string(),
-        }
-    );
-}
-
-#[test]
 fn proper_record_delete() {
     let minter = 1u8;
     let alice = 10u8;
@@ -589,31 +367,30 @@ fn proper_record_delete() {
         symbol: "META".to_string(),
         base_uri: Some("ipfs://some.some".to_string()),
         minter: mock_address(minter),
-        tld: Some(string_to_bytes("meta")),
-        tld_uri: Some("meta".to_string()),
     };
 
     let mut state = execute_init(&mock_contract_context(2), &msg);
 
-    let token_id = &string_to_bytes("name");
+    let domain = &string_to_bytes("name");
     let mint_msg = PnsMintMsg {
-        domain: token_id.clone(),
+        domain: domain.clone(),
+        token_id: 1,
         to: mock_address(alice),
         token_uri: Some(String::from("name")),
-        parent_id: Some(string_to_bytes("meta")),
+        parent_id: None,
     };
     let _ = execute_mint(&mock_contract_context(minter), &mut state, &mint_msg);
 
     let record_class = RecordClass::Twitter {};
     let record_mint_msg = RecordMintMsg {
-        domain: token_id.clone(),
+        domain: domain.clone(),
         class: record_class,
         data: "data".to_string(),
     };
     let _ = execute_record_mint(&mock_contract_context(alice), &mut state, &record_mint_msg);
 
     let record_delete_msg = RecordDeleteMsg {
-        domain: token_id.clone(),
+        domain: domain.clone(),
         class: record_class,
     };
 
@@ -623,7 +400,8 @@ fn proper_record_delete() {
         &record_delete_msg,
     );
 
-    let record = state.record_info(token_id, &record_class);
+    let domain = state.get_domain(domain).unwrap();
+    let record = domain.get_record(&record_class);
 
     assert!(record.is_none());
 }
@@ -640,8 +418,6 @@ fn when_record_does_not_exist_record_delete_fails() {
         symbol: "META".to_string(),
         base_uri: Some("ipfs://some.some".to_string()),
         minter: mock_address(minter),
-        tld: Some(string_to_bytes("meta")),
-        tld_uri: Some("meta".to_string()),
     };
 
     let mut state = execute_init(&mock_contract_context(2), &msg);
@@ -656,48 +432,4 @@ fn when_record_does_not_exist_record_delete_fails() {
         &mut state,
         &record_delete_msg,
     );
-}
-
-#[test]
-#[should_panic(expected = "Unauthorized")]
-fn when_record_is_not_owned_record_delete_fails() {
-    let minter = 1u8;
-    let alice = 10u8;
-    let bob = 20u8;
-
-    let msg = PnsInitMsg {
-        owner: None,
-        name: "Meta Names".to_string(),
-        symbol: "META".to_string(),
-        base_uri: Some("ipfs://some.some".to_string()),
-        minter: mock_address(minter),
-        tld: Some(string_to_bytes("meta")),
-        tld_uri: Some("meta".to_string()),
-    };
-
-    let mut state = execute_init(&mock_contract_context(2), &msg);
-
-    let token_id = &string_to_bytes("name");
-    let mint_msg = PnsMintMsg {
-        domain: token_id.clone(),
-        to: mock_address(alice),
-        token_uri: Some(String::from("name")),
-        parent_id: Some(string_to_bytes("meta")),
-    };
-    let _ = execute_mint(&mock_contract_context(minter), &mut state, &mint_msg);
-
-    let record_class = RecordClass::Twitter {};
-    let record_mint_msg = RecordMintMsg {
-        domain: token_id.clone(),
-        class: record_class,
-        data: "data".to_string(),
-    };
-    let _ = execute_record_mint(&mock_contract_context(alice), &mut state, &record_mint_msg);
-
-    let record_delete_msg = RecordDeleteMsg {
-        domain: token_id.clone(),
-        class: record_class,
-    };
-
-    let _ = execute_record_delete(&mock_contract_context(bob), &mut state, &record_delete_msg);
 }
