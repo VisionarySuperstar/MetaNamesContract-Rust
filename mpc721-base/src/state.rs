@@ -5,319 +5,154 @@ use read_write_state_derive::ReadWriteState;
 
 use crate::ContractError;
 
+pub const URL_LENGTH: usize = 128;
+
 /// ## Description
 /// This structure describes main mpc721 contract state.
 #[derive(ReadWriteState, CreateTypeSpec, Clone, PartialEq, Eq, Debug)]
 pub struct MPC721ContractState {
-    /// optional owner address
-    pub owner: Option<Address>,
-    /// token name
     pub name: String,
-    /// token symbol
     pub symbol: String,
-    /// optional base uri
-    pub base_uri: Option<String>,
-    /// minter address
-    pub minter: Address,
-    /// current supply
+    pub contract_owner: Address,
+    pub owners: SortedVecMap<u128, Address>,
+    pub token_approvals: SortedVecMap<u128, Address>,
+    pub operator_approvals: Vec<OperatorApproval>,
     pub supply: u128,
-    /// token info by token id
-    pub tokens: SortedVecMap<u128, TokenInfo>,
-    /// token approvals
-    pub operator_approvals: SortedVecMap<Address, Vec<Address>>,
+    pub uri_template: String,
+    pub token_uri_details: SortedVecMap<u128, [u8; URL_LENGTH]>,
 }
 
-/// ## Description
-/// This structure describes minted mpc721 token information
 #[derive(ReadWriteRPC, ReadWriteState, CreateTypeSpec, Clone, PartialEq, Eq, Debug)]
-pub struct TokenInfo {
-    /// token owner
-    pub owner: Address,
-    /// token approvals
-    pub approvals: Vec<Address>,
-    /// optional token uri
-    pub token_uri: Option<String>,
-    /// parent token id
-    pub parent_id: Option<u128>,
+pub struct OperatorApproval {
+    owner: Address,
+    operator: Address,
 }
 
 impl MPC721ContractState {
-    /// ## Description
-    /// Sets new base uri
-    /// ## Params
-    /// * **base_uri** is an object of type [`str`]
-    pub fn set_base_uri(&mut self, base_uri: &str) {
-        self.base_uri = Some(base_uri.to_string())
-    }
-
-    /// ## Description
-    /// Mints new token id to specified address
-    /// ## Params
-    /// * **token_id** is a field of type [`u128`]
+    /// Find the owner of an NFT.
+    /// Throws if no such token exists.
     ///
-    /// * **to** is an object of type [`Address`]
+    /// ### Parameters:
     ///
-    /// * **token_uri** is an object of type [`Option<String>`]
-    pub fn mint(&mut self, token_id: u128, to: &Address, token_uri: &Option<String>) {
-        let token = TokenInfo {
-            owner: *to,
-            approvals: vec![],
-            token_uri: token_uri.clone(),
-            parent_id: None,
-        };
-
-        self.tokens.insert(token_id, token);
-    }
-
-    /// ## Description
-    /// Set a parent to the specified token
-    /// ## Params
-    /// * **token_id** is a field of type [`u128`]
+    /// * `token_id`: [`u128`] The identifier for an NFT.
     ///
-    /// * **parent** is an object of type [`Option<u128>`]
-    pub fn update_parent(&mut self, token_id: u128, parent: Option<u128>) {
-        let token = self.tokens.get(&token_id).unwrap();
-        if let Some(parent_id) = parent {
-            assert!(
-                self.tokens.contains_key(&parent_id),
-                "{}",
-                ContractError::NotFound
-            );
-        }
-
-        let mut token = self.tokens.get_mut(&token_id).unwrap();
-        token.parent_id = parent;
-    }
-
-    /// ## Description
-    /// Increases total supply
-    pub fn increase_supply(&mut self) {
-        self.supply = self.supply.checked_add(1).unwrap()
-    }
-
-    /// ## Description
-    /// Decreases total supply
-    pub fn decrease_supply(&mut self) {
-        self.supply = self.supply.checked_sub(1).unwrap()
-    }
-
-    /// ## Description
-    /// Transfers specified token id to the new owner
-    /// ## Params
-    /// * **from** is an object of type [`Address`]
+    /// ### Returns:
     ///
-    /// * **to** is an object of type [`Address`]
-    ///
-    /// * **token_id** is an object of type [`u128`]
-    pub fn transfer(&mut self, from: &Address, to: &Address, token_id: u128) {
-        let token = self.tokens.get(&token_id).unwrap();
-        assert!(
-            Self::allowed_to_transfer(from, token, &self.operator_approvals),
-            "{}",
-            ContractError::Unauthorized
-        );
-
-        self.tokens.get_mut(&token_id).map(|token| {
-            token.owner = *to;
-            token.approvals = vec![];
-            token
-        });
-    }
-
-    /// ## Description
-    /// Updates token approvals
-    /// ## Params
-    /// * **from** is an object of type [`Address`]
-    ///
-    /// * **spender** is an object of type [`Address`]
-    ///
-    /// * **token_id** is an object of type [`u128`]
-    ///
-    /// * **approved** is an object of type [`bool`]
-    pub fn update_approvals(
-        &mut self,
-        from: &Address,
-        spender: &Address,
-        token_id: u128,
-        approved: bool,
-    ) {
-        let token = self.tokens.get(&token_id).unwrap().to_owned();
-        assert!(
-            Self::allowed_to_approve(from, &token, &self.operator_approvals),
-            "{}",
-            ContractError::Unauthorized,
-        );
-
-        let mut approvals = token
-            .approvals
-            .into_iter()
-            .filter(|account| account != spender)
-            .collect::<Vec<Address>>();
-
-        if approved {
-            approvals.push(*spender);
-        }
-
-        self.tokens.get_mut(&token_id).map(|token| {
-            token.approvals = approvals;
-            token
-        });
-    }
-
-    /// ## Description
-    /// Adds operator approval
-    /// ## Params
-    /// * **owner** is an object of type [`Address`]
-    ///
-    /// * **operator** is an object of type [`Address`]
-    pub fn add_operator(&mut self, owner: &Address, operator: &Address) {
-        match self.operator_approvals.get_mut(owner) {
-            Some(operators) => {
-                assert!(
-                    !operators.contains(operator),
-                    "{}",
-                    ContractError::AlreadyPresent
-                );
-                operators.push(*operator);
-            }
-            None => {
-                self.operator_approvals.insert(*owner, vec![*operator]);
-            }
-        }
-    }
-
-    /// ## Description
-    /// Removes operator approval
-    /// ## Params
-    /// * **owner** is an object of type [`Address`]
-    ///
-    /// * **operator** is an object of type [`Address`]
-    pub fn remove_operator(&mut self, owner: &Address, operator: &Address) {
-        let owner_operators = self
-            .operator_approvals
-            .get_mut(owner)
-            .unwrap_or_else(|| panic!("{}", ContractError::NotFound.to_string()));
-
-        if let Some(index) = owner_operators.iter().position(|addr| addr == operator) {
-            owner_operators.remove(index);
-        }
-
-        if owner_operators.is_empty() {
-            self.operator_approvals.remove(owner);
-        }
-    }
-
-    /// ## Description
-    /// Removes information about token
-    /// ## Params
-    /// * **owner** is an object of type [`Address`]
-    ///
-    /// * **token_id** is an object of type [`u128`]
-    pub fn remove_token(&mut self, owner: &Address, token_id: u128) {
-        let token = self.tokens.get(&token_id).unwrap();
-        assert!(
-            Self::allowed_to_transfer(owner, token, &self.operator_approvals),
-            "{}",
-            ContractError::Unauthorized
-        );
-
-        self.tokens.remove(&token_id);
-    }
-
-    /// ## Description
-    /// Says is token id minted or not
-    /// ## Params
-    /// * **token_id** is an object of type [`u128`]
-    pub fn is_minted(&self, token_id: u128) -> bool {
-        self.tokens.contains_key(&token_id)
-    }
-
-    /// ## Description
-    /// Checks that address is owner or not
-    /// ## Params
-    /// * **address** is an object of type [`Address`]
-    pub fn is_owner(&self, address: &Address) -> bool {
-        if let Some(owner) = self.owner {
-            owner.eq(address)
-        } else {
-            false
-        }
-    }
-
-    /// ## Description
-    /// Returns token info by token id
-    /// ## Params
-    /// * **token_id** is an object of type [`u128`]
-    pub fn token_info(&self, token_id: u128) -> Option<&TokenInfo> {
-        self.tokens.get(&token_id)
-    }
-
-    /// ## Description
-    /// Returns address token balance
-    /// ## Params
-    /// * **owner** is an object of type [`Address`]
-    pub fn balance_of(&self, owner: &Address) -> u128 {
-        self.tokens
-            .values()
-            .into_iter()
-            .filter(|ti| ti.owner == *owner)
-            .count() as u128
-    }
-
-    /// ## Description
-    /// Returns owner of specified token id
-    /// ## Params
-    /// * **token_id** is an object of type [`u128`]
+    /// An [`Address`] for the owner of the NFT.
     pub fn owner_of(&self, token_id: u128) -> Address {
-        self.tokens.get(&token_id).unwrap().owner
+        let owner_opt = self.owners.get(&token_id);
+        match owner_opt {
+            None => panic!("ERC721: owner query for nonexistent token"),
+            Some(owner) => *owner,
+        }
     }
 
-    /// ## Description
-    /// Return boolean if account is allowed to manage specified token id
-    /// ## Params
-    /// * **account** is an object of type [`Address`]
+    /// Get the approved address for a single NFT.
     ///
-    /// * **token_id** is an object of type [`u128`]
-    pub fn allowed_to_manage(&self, account: &Address, token_id: u128) -> bool {
-        assert!(self.is_minted(token_id), "{}", ContractError::NotFound);
-
-        let token = self.tokens.get(&token_id).unwrap();
-        Self::allowed_to_approve(account, token, &self.operator_approvals)
+    /// ### Parameters:
+    ///
+    /// * `token_id`: [`u128`] The NFT to find the approved address for.
+    ///
+    /// ### Returns:
+    ///
+    /// An [`Option<Address>`] The approved address for this NFT, or none if there is none.
+    pub fn get_approved(&self, token_id: u128) -> Option<Address> {
+        self.token_approvals.get(&token_id).copied()
     }
 
-    fn allowed_to_approve(
-        account: &Address,
-        token: &TokenInfo,
-        operator_approvals: &SortedVecMap<Address, Vec<Address>>,
-    ) -> bool {
-        if token.owner == *account {
-            return true;
-        }
-
-        if let Some(owner_approvals) = operator_approvals.get(&token.owner) {
-            return owner_approvals.contains(account);
-        }
-
-        false
+    /// Query if an address is an authorized operator for another address.
+    ///
+    /// ### Parameters:
+    ///
+    /// * `owner`: [`Address`] The address that owns the NFTs.
+    ///
+    /// * `operator`: [`Address`] The address that acts on behalf of the owner.
+    ///
+    /// ### Returns:
+    ///
+    /// A [`bool`] True if `_operator` is an approved operator for `_owner`, false otherwise.
+    pub fn is_approved_for_all(&self, owner: Address, operator: Address) -> bool {
+        self.operator_approvals
+            .iter()
+            .any(|approval| approval.owner == owner && approval.operator == operator)
     }
 
-    fn allowed_to_transfer(
-        account: &Address,
-        token: &TokenInfo,
-        operator_approvals: &SortedVecMap<Address, Vec<Address>>,
-    ) -> bool {
-        if token.owner == *account {
-            return true;
-        }
+    /// Helper function to check whether a tokenId exists.
+    ///
+    /// Tokens start existing when they are minted (`mint`),
+    /// and stop existing when they are burned (`burn`).
+    ///
+    /// ### Parameters:
+    ///
+    /// * `token_id`: [`u128`] The tokenId that is checked.
+    ///
+    /// ### Returns:
+    ///
+    /// A [`bool`] True if `token_id` is in use, false otherwise.
+    pub fn exists(&self, token_id: u128) -> bool {
+        let owner = self.owners.get(&token_id);
+        owner.is_some()
+    }
 
-        if token.approvals.iter().any(|spender| spender == account) {
-            return true;
-        }
+    /// Helper function to check whether a spender is owner or approved for a given token.
+    /// Throws if token_id does not exist.
+    ///
+    /// ### Parameters:
+    ///
+    /// * `spender`: [`Address`] The address to check ownership for.
+    ///
+    /// * `token_id`: [`u128`] The tokenId which is checked.
+    ///
+    /// ### Returns:
+    ///
+    /// A [`bool`] True if `token_id` is owned or approved for `spender`, false otherwise.
+    pub fn is_approved_or_owner(&self, spender: Address, token_id: u128) -> bool {
+        let owner = self.owner_of(token_id);
+        spender == owner
+            || self.is_approved_for_all(owner, spender)
+            || self.get_approved(token_id) == Some(spender)
+    }
 
-        if let Some(owner_approvals) = operator_approvals.get(&token.owner) {
-            return owner_approvals.contains(account);
-        }
+    /// Increase the supply of the token by 1
+    pub fn increase_supply(&mut self) {
+        self.supply += 1;
+    }
 
-        false
+    /// Mutates the state by approving `to` to operate on `token_id`.
+    /// None indicates there is no approved address.
+    ///
+    /// ### Parameters:
+    ///
+    /// * `approved`: [`Option<Address>`], The new approved NFT controller.
+    ///
+    /// * `token_id`: [`u128`], The NFT to approve.
+    pub fn _approve(&mut self, approved: Option<Address>, token_id: u128) {
+        if let Some(appr) = approved {
+            self.token_approvals.insert(token_id, appr);
+        } else {
+            self.token_approvals.remove(&token_id);
+        }
+    }
+
+    /// Mutates the state by transferring `token_id` from `from` to `to`.
+    /// As opposed to {transfer_from}, this imposes no restrictions on `ctx.sender`.
+    ///
+    /// Throws if `from` is not the owner of `token_id`.
+    ///
+    /// ### Parameters:
+    ///
+    /// * `from`: [`Address`], The current owner of the NFT
+    ///
+    /// * `to`: [`Address`], The new owner
+    ///
+    /// * `token_id`: [`u128`], The NFT to transfer
+    pub fn _transfer(&mut self, from: Address, to: Address, token_id: u128) {
+        if self.owner_of(token_id) != from {
+            panic!("ERC721: transfer from incorrect owner")
+        } else {
+            // clear approvals from the previous owner
+            self._approve(None, token_id);
+            self.owners.insert(token_id, to);
+        }
     }
 }

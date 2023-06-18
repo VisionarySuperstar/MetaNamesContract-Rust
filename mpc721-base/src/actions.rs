@@ -1,12 +1,16 @@
-use pbc_contract_common::{context::ContractContext, events::EventGroup, sorted_vec_map::SortedVecMap};
+use std::vec;
+
+use pbc_contract_common::{
+    context::ContractContext, events::EventGroup, sorted_vec_map::SortedVecMap,
+};
 
 use crate::{
     msg::{
         ApproveForAllMsg, ApproveMsg, BurnMsg, CheckOwnerMsg, InitMsg, MintMsg, MultiMintMsg,
         RevokeForAllMsg, RevokeMsg, SetBaseUriMsg, TransferFromMsg, TransferMsg, UpdateMinterMsg,
-        UpdateParentMsg
+        UpdateParentMsg,
     },
-    state::MPC721ContractState,
+    state::{MPC721ContractState, URL_LENGTH},
     ContractError,
 };
 
@@ -18,47 +22,18 @@ use crate::{
 /// * **_ctx** is an object of type [`ContractContext`]
 ///
 /// * **msg** is an object of type [`InitMsg`]
-pub fn execute_init(
-    _ctx: &ContractContext,
-    msg: &InitMsg,
-) -> (MPC721ContractState, Vec<EventGroup>) {
-    let state = MPC721ContractState {
-        owner: msg.owner,
+pub fn execute_init(_ctx: &ContractContext, msg: &InitMsg) -> MPC721ContractState {
+    MPC721ContractState {
         name: msg.name.clone(),
         symbol: msg.symbol.clone(),
-        base_uri: msg.base_uri.clone(),
-        minter: msg.minter,
+        contract_owner: ctx.sender,
         supply: 0,
-        tokens: SortedVecMap::new(),
-        operator_approvals: SortedVecMap::new(),
-    };
-
-    (state, vec![])
-}
-
-/// ## Description
-/// Set base uri for the tokens.
-/// Returns [`(MPC721ContractState, Vec<EventGroup>)`] if operation was successful,
-/// otherwise panics with error message defined in [`ContractError`]
-/// ## Params
-/// * **ctx** is an object of type [`ContractContext`]
-///
-/// * **state** is an object of type [`MPC721ContractState`]
-///
-/// * **msg** is an object of type [`SetBaseUriMsg`]
-pub fn execute_set_base_uri(
-    ctx: &ContractContext,
-    state: &mut MPC721ContractState,
-    msg: &SetBaseUriMsg,
-) -> Vec<EventGroup> {
-    assert!(
-        state.is_owner(&ctx.sender),
-        "{}",
-        ContractError::Unauthorized
-    );
-
-    state.set_base_uri(&msg.new_base_uri);
-    vec![]
+        operator_approvals: vec![],
+        owners: SortedVecMap::new(),
+        token_approvals: SortedVecMap::new(),
+        uri_template: msg.uri_template.clone(),
+        token_uri_details: SortedVecMap::new(),
+    }
 }
 
 /// ## Description
@@ -77,14 +52,26 @@ pub fn execute_mint(
     msg: &MintMsg,
 ) -> Vec<EventGroup> {
     assert!(
-        state.minter == ctx.sender,
+        ctx.sender == state.contract_owner,
         "{}",
         ContractError::Unauthorized
     );
+    assert!(!state.exists(msg.token_id), "{}", ContractError::Minted);
 
-    assert!(!state.is_minted(msg.token_id), "{}", ContractError::Minted);
+    let mut new_state = state;
+    new_state.owners.insert(msg.token_id, ctx.sender);
+    if let Some(token_uri) = msg.token_uri {
+        let formatted_uri = format!("{}{}", state.uri_template, token_uri).into_bytes();
+        assert!(
+            formatted_uri.len() <= URL_LENGTH,
+            "{}",
+            ContractError::UriTooLong
+        );
 
-    state.mint(msg.token_id, &msg.to, &msg.token_uri);
+        let array: [u8; 128] = formatted_uri.try_into().unwrap();
+        new_state.token_uri_details.insert(msg.token_id, array);
+    }
+
     state.increase_supply();
 
     vec![]
@@ -108,7 +95,6 @@ pub fn execute_update_parent(
 
     vec![]
 }
-
 
 /// ## Description
 /// Updates the minter address checking that the sender is the contract owner address

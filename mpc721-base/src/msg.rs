@@ -9,16 +9,9 @@ use utils::events::IntoShortnameRPCEvent;
 /// This structure describes fields for mpc721 initialize msg
 #[derive(ReadWriteRPC, CreateTypeSpec, Clone, PartialEq, Eq, Debug)]
 pub struct InitMsg {
-    /// optional owner address
-    pub owner: Option<Address>,
-    /// token name
     pub name: String,
-    /// token symbol
     pub symbol: String,
-    /// optional base uri
-    pub base_uri: Option<String>,
-    /// token minter address
-    pub minter: Address,
+    pub uri_template: String,
 }
 
 

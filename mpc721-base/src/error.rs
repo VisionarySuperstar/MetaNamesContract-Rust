@@ -18,4 +18,7 @@ pub enum ContractError {
 
     #[error("Already presesent")]
     AlreadyPresent,
+
+    #[error("URI is too long")]
+    UriTooLong,
 }
