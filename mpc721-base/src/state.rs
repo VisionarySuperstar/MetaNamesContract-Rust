@@ -13,7 +13,6 @@ pub const URL_LENGTH: usize = 128;
 pub struct MPC721ContractState {
     pub name: String,
     pub symbol: String,
-    pub contract_owner: Address,
     pub owners: SortedVecMap<u128, Address>,
     pub token_approvals: SortedVecMap<u128, Address>,
     pub operator_approvals: Vec<OperatorApproval>,

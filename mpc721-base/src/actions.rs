@@ -22,11 +22,10 @@ use crate::{
 /// * **_ctx** is an object of type [`ContractContext`]
 ///
 /// * **msg** is an object of type [`InitMsg`]
-pub fn execute_init(_ctx: &ContractContext, msg: &InitMsg) -> MPC721ContractState {
+pub fn execute_init(ctx: &ContractContext, msg: &InitMsg) -> MPC721ContractState {
     MPC721ContractState {
         name: msg.name.clone(),
         symbol: msg.symbol.clone(),
-        contract_owner: ctx.sender,
         supply: 0,
         operator_approvals: vec![],
         owners: SortedVecMap::new(),
@@ -51,11 +50,6 @@ pub fn execute_mint(
     state: &mut MPC721ContractState,
     msg: &MintMsg,
 ) -> Vec<EventGroup> {
-    assert!(
-        ctx.sender == state.contract_owner,
-        "{}",
-        ContractError::Unauthorized
-    );
     assert!(!state.exists(msg.token_id), "{}", ContractError::Minted);
 
     let mut new_state = state;
@@ -77,48 +71,6 @@ pub fn execute_mint(
     vec![]
 }
 
-pub fn execute_update_parent(
-    ctx: &ContractContext,
-    state: &mut MPC721ContractState,
-    msg: &UpdateParentMsg,
-) -> Vec<EventGroup> {
-    assert!(
-        state.minter == ctx.sender,
-        "{}",
-        ContractError::Unauthorized
-    );
-
-    let token = state.token_info(msg.token_id);
-    assert!(token.is_some(), "{}", ContractError::NotFound);
-
-    state.update_parent(msg.token_id, msg.parent_id);
-
-    vec![]
-}
-
-/// ## Description
-/// Updates the minter address checking that the sender is the contract owner address
-/// ## Params
-/// * **ctx** is an object of type [`ContractContext`]
-///
-/// * **state** is an object of type [`MPC721ContractState`]
-///
-/// * **msg** is an object of type [`UpdateMinterMsg`]
-pub fn execute_update_minter(
-    ctx: &ContractContext,
-    state: &mut MPC721ContractState,
-    msg: UpdateMinterMsg,
-) -> Vec<EventGroup> {
-    assert!(
-        state.owner.is_some() && state.owner.unwrap() == ctx.sender,
-        "{}",
-        ContractError::Unauthorized
-    );
-
-    state.minter = msg.new_minter;
-
-    vec![]
-}
 
 /// ## Description
 /// Transfer token to another account.
