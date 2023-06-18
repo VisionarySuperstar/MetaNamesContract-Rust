@@ -10,7 +10,7 @@ use crate::{
         RevokeForAllMsg, RevokeMsg, SetBaseUriMsg, TransferFromMsg, TransferMsg, UpdateMinterMsg,
         UpdateParentMsg,
     },
-    state::{MPC721ContractState, URL_LENGTH},
+    state::{MPC721ContractState, URL_LENGTH, OperatorApproval},
     ContractError,
 };
 
@@ -71,25 +71,85 @@ pub fn execute_mint(
     vec![]
 }
 
-
-/// ## Description
-/// Transfer token to another account.
-/// Returns [`(MPC721ContractState, Vec<EventGroup>)`] if operation was successful,
-/// otherwise panics with error message defined in [`ContractError`]
-/// ## Params
-/// * **ctx** is an object of type [`ContractContext`]
+/// Change or reaffirm the approved address for an NFT.
+/// None indicates there is no approved address.
+/// Throws unless `ctx.sender` is the current NFT owner, or an authorized
+/// operator of the current owner.
 ///
-/// * **state** is an object of type [`MPC721ContractState`]
+/// ### Parameters:
 ///
-/// * **msg** is an object of type [`TransferMsg`]
-pub fn execute_transfer(
-    ctx: &ContractContext,
-    state: &mut MPC721ContractState,
-    msg: &TransferMsg,
+/// * `ctx`: [`ContractContext`], the context for the action call.
+///
+/// * `state`: [`NFTContractState`], the current state of the contract.
+///
+/// * `approved`: [`Option<Address>`], The new approved NFT controller.
+///
+/// * `token_id`: [`u128`], The NFT to approve.
+///
+/// ### Returns
+///
+/// The new state object of type [`NFTContractState`] with an updated ledger.
+pub fn execute_approve(
+    ctx: ContractContext,
+    mut state: MPC721ContractState,
+    msg: ApproveMsg,
 ) -> Vec<EventGroup> {
-    assert!(state.is_minted(msg.token_id), "{}", ContractError::NotFound);
+    let owner = state.owner_of(msg.token_id);
+    assert!(
+        ctx.sender == owner || state.is_approved_for_all(owner, ctx.sender),
+        "{}",
+        ContractError::Unauthorized
+    );
+    state._approve(msg.approved, msg.token_id);
 
-    state.transfer(&ctx.sender, &msg.to, msg.token_id);
+    vec![]
+}
+
+/// Enable or disable approval for a third party ("operator") to manage all of
+/// `ctx.sender`'s assets.
+/// Throws if `operator` == `ctx.sender`.
+///
+/// ### Parameters:
+///
+/// * `context`: [`ContractContext`], the context for the action call.
+///
+/// * `state`: [`NFTContractState`], the current state of the contract.
+///
+/// * `operator`: [`Address`], Address to add to the set of authorized operators.
+///
+/// * `approved`: [`bool`], True if the operator is approved, false to revoke approval.
+///
+/// ### Returns
+///
+/// The new state object of type [`NFTContractState`] with an updated ledger.
+pub fn execute_set_approval_for_all(
+    ctx: ContractContext,
+    mut state: MPC721ContractState,
+    msg: ApproveForAllMsg,
+) -> Vec<EventGroup> {
+    assert!(
+        msg.operator != ctx.sender,
+        "{}",
+        ContractError::Unauthorized
+    );
+
+    if msg.approved {
+        let already_present = state
+            .operator_approvals
+            .into_iter()
+            .any(|approval| approval.owner == ctx.sender && approval.operator == msg.operator);
+        if !already_present {
+            state.operator_approvals.push(OperatorApproval {
+                owner: ctx.sender,
+                operator: msg.operator,
+            });
+        }
+    } else {
+        state.operator_approvals.retain(|approval| {
+            !(approval.owner == ctx.sender && approval.operator == msg.operator)
+        });
+    }
+
     vec![]
 }
 

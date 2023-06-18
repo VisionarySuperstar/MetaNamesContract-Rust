@@ -23,8 +23,8 @@ pub struct MPC721ContractState {
 
 #[derive(ReadWriteRPC, ReadWriteState, CreateTypeSpec, Clone, PartialEq, Eq, Debug)]
 pub struct OperatorApproval {
-    owner: Address,
-    operator: Address,
+    pub owner: Address,
+    pub operator: Address,
 }
 
 impl MPC721ContractState {

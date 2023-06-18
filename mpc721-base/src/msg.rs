@@ -45,8 +45,7 @@ pub struct TransferFromMsg {
 #[derive(ReadWriteRPC, CreateTypeSpec, IntoShortnameRPCEvent, Clone, PartialEq, Eq, Debug)]
 #[rpc_msg(action = 0x05)]
 pub struct ApproveMsg {
-    /// operator address to approve
-    pub spender: Address,
+    pub approved: Option<Address>,
     /// token id
     pub token_id: u128,
 }
@@ -80,6 +79,7 @@ pub struct MintMsg {
 pub struct ApproveForAllMsg {
     /// operator address to approve
     pub operator: Address,
+    pub approved: bool,
 }
 
 /// ## Description
