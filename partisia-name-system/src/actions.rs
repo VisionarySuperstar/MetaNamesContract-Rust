@@ -6,7 +6,7 @@ use pbc_contract_common::{
 };
 
 use crate::{
-    msg::{PnsInitMsg, PnsMintMsg, RecordDeleteMsg, RecordMintMsg, RecordUpdateMsg},
+    msg::{PnsMintMsg, RecordDeleteMsg, RecordMintMsg, RecordUpdateMsg},
     state::{Domain, PartisiaNameSystemState},
     ContractError,
 };
@@ -18,7 +18,7 @@ const CONTRACT_VERSION: &str = env!("CARGO_PKG_VERSION");
 /// Inits contract state.
 /// Returns [`(PartisiaNameSystemState, Vec<EventGroup>)`] if operation was successful,
 /// otherwise panics with error message defined in [`ContractError`]
-pub fn execute_init(ctx: &ContractContext, msg: &PnsInitMsg) -> PartisiaNameSystemState {
+pub fn execute_init(ctx: &ContractContext) -> PartisiaNameSystemState {
     PartisiaNameSystemState {
         domains: SortedVecMap::new(),
         records: SortedVecMap::new(),

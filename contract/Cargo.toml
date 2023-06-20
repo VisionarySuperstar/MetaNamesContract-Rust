@@ -20,13 +20,15 @@ read_write_state_derive = { workspace = true }
 create_type_spec_derive = { workspace = true }
 
 partisia-name-system = { path = "../partisia-name-system" }
+mpc721-base = { path = "../mpc721-base" }
 contract-version-base = { path = "../contract-version-base" }
 
 serde_json = { workspace = true }
+thiserror = { workspace = true }
 
 [dev-dependencies]
 utils = { path = "../utils" }
 
 [features]
-abi = ["pbc_contract_common/abi", "pbc_contract_codegen/abi", "pbc_traits/abi", "create_type_spec_derive/abi", "partisia-name-system/abi", "contract-version-base/abi", "utils/abi"]
+abi = ["pbc_contract_common/abi", "pbc_contract_codegen/abi", "pbc_traits/abi", "create_type_spec_derive/abi", "partisia-name-system/abi", "mpc721-base/abi", "contract-version-base/abi", "utils/abi"]
 
