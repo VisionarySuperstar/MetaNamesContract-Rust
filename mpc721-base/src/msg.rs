@@ -8,7 +8,7 @@ use utils::events::IntoShortnameRPCEvent;
 /// ## Description
 /// This structure describes fields for mpc721 initialize msg
 #[derive(ReadWriteRPC, CreateTypeSpec, Clone, PartialEq, Eq, Debug)]
-pub struct InitMsg {
+pub struct NFTInitMsg {
     pub name: String,
     pub symbol: String,
     pub uri_template: String,

@@ -10,7 +10,7 @@ use crate::{
         execute_update_parent,
     },
     msg::{
-        ApproveForAllMsg, ApproveMsg, BurnMsg, CheckOwnerMsg, InitMsg, MintMsg, MultiMintMsg,
+        ApproveForAllMsg, ApproveMsg, BurnMsg, CheckOwnerMsg, NFTInitMsg, MintMsg, MultiMintMsg,
         RevokeForAllMsg, RevokeMsg, SetBaseUriMsg, TransferFromMsg, TransferMsg, UpdateMinterMsg,
         UpdateParentMsg,
     },
@@ -19,7 +19,7 @@ use crate::{
 
 #[test]
 fn proper_execute_init() {
-    let msg = InitMsg {
+    let msg = NFTInitMsg {
         owner: None,
         name: "Cool Token".to_string(),
         symbol: "CTC".to_string(),
@@ -48,7 +48,7 @@ fn proper_execute_init() {
 fn proper_set_base_uri() {
     let owner = 1u8;
 
-    let msg = InitMsg {
+    let msg = NFTInitMsg {
         owner: Some(mock_address(owner)),
         name: "Cool Token".to_string(),
         symbol: "CTC".to_string(),
@@ -71,7 +71,7 @@ fn proper_set_base_uri() {
 fn owner_is_not_set_on_set_base_uri() {
     let owner = 1u8;
 
-    let msg = InitMsg {
+    let msg = NFTInitMsg {
         owner: None,
         name: "Cool Token".to_string(),
         symbol: "CTC".to_string(),
@@ -94,7 +94,7 @@ fn sender_is_not_owner_on_set_base_uri() {
     let owner = 1u8;
     let alice = 10u8;
 
-    let msg = InitMsg {
+    let msg = NFTInitMsg {
         owner: Some(mock_address(owner)),
         name: "Cool Token".to_string(),
         symbol: "CTC".to_string(),
@@ -116,7 +116,7 @@ fn proper_mint() {
     let minter = 1u8;
     let alice = 10u8;
 
-    let msg = InitMsg {
+    let msg = NFTInitMsg {
         owner: None,
         name: "Cool Token".to_string(),
         symbol: "CTC".to_string(),
@@ -152,7 +152,7 @@ fn proper_ownership_check() {
     let minter = 1u8;
     let alice = 10u8;
 
-    let msg = InitMsg {
+    let msg = NFTInitMsg {
         owner: None,
         name: "Cool Token".to_string(),
         symbol: "CTC".to_string(),
@@ -181,7 +181,7 @@ fn proper_ownership_check_fail() {
     let minter = 1u8;
     let alice = 10u8;
     let bob = 11u8;
-    let msg = InitMsg {
+    let msg = NFTInitMsg {
         owner: None,
         name: "Cool Token".to_string(),
         symbol: "CTC".to_string(),
@@ -211,7 +211,7 @@ fn proper_ownership_check_fail_not_found() {
     let minter = 1u8;
     let alice = 10u8;
     let bob = 11u8;
-    let msg = InitMsg {
+    let msg = NFTInitMsg {
         owner: None,
         name: "Cool Token".to_string(),
         symbol: "CTC".to_string(),
@@ -241,7 +241,7 @@ fn sender_is_not_minter_on_mint() {
     let minter = 1u8;
     let alice = 10u8;
 
-    let msg = InitMsg {
+    let msg = NFTInitMsg {
         owner: None,
         name: "Cool Token".to_string(),
         symbol: "CTC".to_string(),
@@ -266,7 +266,7 @@ fn token_already_minted_on_mint() {
     let minter = 1u8;
     let alice = 10u8;
 
-    let msg = InitMsg {
+    let msg = NFTInitMsg {
         owner: None,
         name: "Cool Token".to_string(),
         symbol: "CTC".to_string(),
@@ -299,7 +299,7 @@ fn proper_approve_for_all() {
     let alice = 10u8;
     let bob = 11u8;
 
-    let msg = InitMsg {
+    let msg = NFTInitMsg {
         owner: Some(mock_address(owner)),
         name: "Cool Token".to_string(),
         symbol: "CTC".to_string(),
@@ -338,7 +338,7 @@ fn proper_revoke_for_all() {
     let bob = 11u8;
     let jack = 12u8;
 
-    let msg = InitMsg {
+    let msg = NFTInitMsg {
         owner: Some(mock_address(owner)),
         name: "Cool Token".to_string(),
         symbol: "CTC".to_string(),
@@ -380,7 +380,7 @@ fn revoke_not_existing_operator() {
     let alice = 10u8;
     let bob = 11u8;
 
-    let msg = InitMsg {
+    let msg = NFTInitMsg {
         owner: Some(mock_address(owner)),
         name: "Cool Token".to_string(),
         symbol: "CTC".to_string(),
@@ -402,7 +402,7 @@ fn proper_token_owner_approve() {
     let alice = 10u8;
     let bob = 11u8;
 
-    let msg = InitMsg {
+    let msg = NFTInitMsg {
         owner: None,
         name: "Cool Token".to_string(),
         symbol: "CTC".to_string(),
@@ -444,7 +444,7 @@ fn proper_token_operator_approve() {
     let bob = 11u8;
     let jack = 12u8;
 
-    let msg = InitMsg {
+    let msg = NFTInitMsg {
         owner: None,
         name: "Cool Token".to_string(),
         symbol: "CTC".to_string(),
@@ -492,7 +492,7 @@ fn approve_not_minted_token() {
     let bob = 11u8;
     let jack = 12u8;
 
-    let msg = InitMsg {
+    let msg = NFTInitMsg {
         owner: None,
         name: "Cool Token".to_string(),
         symbol: "CTC".to_string(),
@@ -517,7 +517,7 @@ fn not_owner_or_operator_approve() {
     let alice = 10u8;
     let bob = 11u8;
 
-    let msg = InitMsg {
+    let msg = NFTInitMsg {
         owner: None,
         name: "Cool Token".to_string(),
         symbol: "CTC".to_string(),
@@ -549,7 +549,7 @@ fn proper_revoke() {
     let alice = 10u8;
     let bob = 11u8;
 
-    let msg = InitMsg {
+    let msg = NFTInitMsg {
         owner: None,
         name: "Cool Token".to_string(),
         symbol: "CTC".to_string(),
@@ -598,7 +598,7 @@ fn revoke_not_minted_token() {
     let alice = 10u8;
     let bob = 11u8;
 
-    let msg = InitMsg {
+    let msg = NFTInitMsg {
         owner: None,
         name: "Cool Token".to_string(),
         symbol: "CTC".to_string(),
@@ -622,7 +622,7 @@ fn proper_owner_transfer() {
     let alice = 10u8;
     let bob = 11u8;
 
-    let msg = InitMsg {
+    let msg = NFTInitMsg {
         owner: None,
         name: "Cool Token".to_string(),
         symbol: "CTC".to_string(),
@@ -663,7 +663,7 @@ fn proper_approved_transfer() {
     let alice = 10u8;
     let bob = 11u8;
 
-    let msg = InitMsg {
+    let msg = NFTInitMsg {
         owner: None,
         name: "Cool Token".to_string(),
         symbol: "CTC".to_string(),
@@ -711,7 +711,7 @@ fn proper_operator_transfer() {
     let alice = 10u8;
     let bob = 11u8;
 
-    let msg = InitMsg {
+    let msg = NFTInitMsg {
         owner: None,
         name: "Cool Token".to_string(),
         symbol: "CTC".to_string(),
@@ -758,7 +758,7 @@ fn transfer_not_minted_token() {
     let alice = 10u8;
     let bob = 11u8;
 
-    let msg = InitMsg {
+    let msg = NFTInitMsg {
         owner: None,
         name: "Cool Token".to_string(),
         symbol: "CTC".to_string(),
@@ -784,7 +784,7 @@ fn transfer_not_owner_or_approved_token() {
     let bob = 11u8;
     let jack = 12u8;
 
-    let msg = InitMsg {
+    let msg = NFTInitMsg {
         owner: None,
         name: "Cool Token".to_string(),
         symbol: "CTC".to_string(),
@@ -816,7 +816,7 @@ fn proper_transfer_from() {
     let alice = 10u8;
     let bob = 11u8;
 
-    let msg = InitMsg {
+    let msg = NFTInitMsg {
         owner: None,
         name: "Cool Token".to_string(),
         symbol: "CTC".to_string(),
@@ -859,7 +859,7 @@ fn transfer_from_not_minted_token() {
     let alice = 10u8;
     let bob = 11u8;
 
-    let msg = InitMsg {
+    let msg = NFTInitMsg {
         owner: None,
         name: "Cool Token".to_string(),
         symbol: "CTC".to_string(),
@@ -883,7 +883,7 @@ fn proper_burn() {
     let minter = 1u8;
     let alice = 10u8;
 
-    let msg = InitMsg {
+    let msg = NFTInitMsg {
         owner: None,
         name: "Cool Token".to_string(),
         symbol: "CTC".to_string(),
@@ -914,7 +914,7 @@ fn burn_not_minted_token() {
     let minter = 1u8;
     let alice = 10u8;
 
-    let msg = InitMsg {
+    let msg = NFTInitMsg {
         owner: None,
         name: "Cool Token".to_string(),
         symbol: "CTC".to_string(),
@@ -929,7 +929,7 @@ fn burn_not_minted_token() {
 }
 #[test]
 fn test_multi_mint() {
-    let msg = InitMsg {
+    let msg = NFTInitMsg {
         owner: None,
         name: "Cool Token".to_string(),
         symbol: "CTC".to_string(),
@@ -1051,7 +1051,7 @@ fn can_update_minter() {
     let new_minter = 6u8;
     let alice = 10u8;
 
-    let msg = InitMsg {
+    let msg = NFTInitMsg {
         owner: Some(mock_address(alice)),
         name: "Cool Token".to_string(),
         symbol: "CTC".to_string(),
@@ -1077,7 +1077,7 @@ fn update_minter_fails_not_owner() {
     let new_minter = 6u8;
     let alice = 10u8;
 
-    let msg = InitMsg {
+    let msg = NFTInitMsg {
         owner: Some(mock_address(alice)),
         name: "Cool Token".to_string(),
         symbol: "CTC".to_string(),
@@ -1102,7 +1102,7 @@ fn update_minter_fails_no_owner() {
     let new_minter = 6u8;
     let alice = 10u8;
 
-    let msg = InitMsg {
+    let msg = NFTInitMsg {
         owner: None,
         name: "Cool Token".to_string(),
         symbol: "CTC".to_string(),
@@ -1126,7 +1126,7 @@ fn proper_update_parent() {
     let minter = 1u8;
     let alice = 10u8;
 
-    let msg = InitMsg {
+    let msg = NFTInitMsg {
         owner: None,
         name: "Cool Token".to_string(),
         symbol: "CTC".to_string(),
@@ -1181,7 +1181,7 @@ fn proper_update_parent_fail_check_minter() {
     let minter = 1u8;
     let alice = 10u8;
 
-    let msg = InitMsg {
+    let msg = NFTInitMsg {
         owner: None,
         name: "Cool Token".to_string(),
         symbol: "CTC".to_string(),
@@ -1218,7 +1218,7 @@ fn proper_update_parent_fail_not_found() {
     let minter = 1u8;
     let alice = 10u8;
 
-    let msg = InitMsg {
+    let msg = NFTInitMsg {
         owner: None,
         name: "Cool Token".to_string(),
         symbol: "CTC".to_string(),
@@ -1254,7 +1254,7 @@ fn proper_update_parent_fail_parent_not_found() {
     let minter = 1u8;
     let alice = 10u8;
 
-    let msg = InitMsg {
+    let msg = NFTInitMsg {
         owner: None,
         name: "Cool Token".to_string(),
         symbol: "CTC".to_string(),

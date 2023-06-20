@@ -5,7 +5,7 @@ use pbc_contract_common::{
 };
 
 use crate::{
-    msg::{ApproveForAllMsg, ApproveMsg, BurnMsg, InitMsg, MintMsg, TransferFromMsg},
+    msg::{ApproveForAllMsg, ApproveMsg, BurnMsg, NFTInitMsg, MintMsg, TransferFromMsg},
     state::{MPC721ContractState, OperatorApproval, URL_LENGTH},
     ContractError,
 };
@@ -14,7 +14,7 @@ use crate::{
 /// Inits contract state.
 /// Returns [`(MPC721ContractState, Vec<EventGroup>)`] if operation was successful,
 /// otherwise panics with error message defined in [`ContractError`]
-pub fn execute_init(ctx: &ContractContext, msg: &InitMsg) -> MPC721ContractState {
+pub fn execute_init(ctx: &ContractContext, msg: &NFTInitMsg) -> MPC721ContractState {
     MPC721ContractState {
         name: msg.name.clone(),
         symbol: msg.symbol.clone(),
