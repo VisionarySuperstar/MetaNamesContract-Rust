@@ -40,10 +40,9 @@ impl MPC721ContractState {
     /// An [`Address`] for the owner of the NFT.
     pub fn owner_of(&self, token_id: u128) -> Address {
         let owner_opt = self.owners.get(&token_id);
-        match owner_opt {
-            None => panic!("ERC721: owner query for nonexistent token"),
-            Some(owner) => *owner,
-        }
+        assert!(owner_opt.is_some(), "{}", ContractError::NotFound);
+
+        *owner_opt.unwrap()
     }
 
     /// Get the approved address for a single NFT.
@@ -151,12 +150,14 @@ impl MPC721ContractState {
     ///
     /// * `token_id`: [`u128`], The NFT to transfer
     pub fn _transfer(&mut self, from: Address, to: Address, token_id: u128) {
-        if self.owner_of(token_id) != from {
-            panic!("ERC721: transfer from incorrect owner")
-        } else {
-            // clear approvals from the previous owner
-            self._approve(None, token_id);
-            self.owners.insert(token_id, to);
-        }
+        assert!(
+            self.owner_of(token_id) == from,
+            "{}",
+            ContractError::IncorrectOwner
+        );
+
+        // clear approvals from the previous owner
+        self._approve(None, token_id);
+        self.owners.insert(token_id, to);
     }
 }
