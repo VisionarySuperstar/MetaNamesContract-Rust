@@ -19,7 +19,6 @@ read_write_state_derive = { workspace = true }
 create_type_spec_derive = { workspace = true }
 
 utils = { path = "../utils" }
-mpc721-hierarchy = { path = "../mpc721-hierarchy" }
 contract-version-base = { path = "../contract-version-base"}
 rpc-msg-derive = { path = "../rpc-msg-derive" }
 
@@ -32,4 +31,4 @@ futures = { workspace = true }
 
 
 [features]
-abi = ["pbc_contract_common/abi", "pbc_contract_codegen/abi", "pbc_traits/abi", "mpc721-hierarchy/abi", "create_type_spec_derive/abi", "contract-version-base/abi", "utils/abi"]
+abi = ["pbc_contract_common/abi", "pbc_contract_codegen/abi", "pbc_traits/abi", "create_type_spec_derive/abi", "contract-version-base/abi", "utils/abi"]
