@@ -121,6 +121,11 @@ impl MPC721ContractState {
         self.supply -= 1;
     }
 
+    /// Get the next token id
+    pub fn get_next_token_id(&self) -> u128 {
+        self.supply
+    }
+
     /// Mutates the state by approving `to` to operate on `token_id`.
     /// None indicates there is no approved address.
     ///
