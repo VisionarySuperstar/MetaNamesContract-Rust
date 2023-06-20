@@ -5,7 +5,7 @@ use pbc_contract_common::{
 };
 
 use crate::{
-    msg::{ApproveForAllMsg, ApproveMsg, BurnMsg, NFTInitMsg, MintMsg, TransferFromMsg},
+    msg::{ApproveForAllMsg, ApproveMsg, BurnMsg, MintMsg, NFTInitMsg, TransferFromMsg},
     state::{MPC721ContractState, OperatorApproval, URL_LENGTH},
     ContractError,
 };
@@ -61,9 +61,9 @@ pub fn execute_mint(
 /// Throws unless `ctx.sender` is the current NFT owner, or an authorized
 /// operator of the current owner.
 pub fn execute_approve(
-    ctx: ContractContext,
-    mut state: MPC721ContractState,
-    msg: ApproveMsg,
+    ctx: &ContractContext,
+    state: &mut MPC721ContractState,
+    msg: &ApproveMsg,
 ) -> Vec<EventGroup> {
     let owner = state.owner_of(msg.token_id);
     assert!(
@@ -80,9 +80,9 @@ pub fn execute_approve(
 /// `ctx.sender`'s assets.
 /// Throws if `operator` == `ctx.sender`.
 pub fn execute_set_approval_for_all(
-    ctx: ContractContext,
-    mut state: MPC721ContractState,
-    msg: ApproveForAllMsg,
+    ctx: &ContractContext,
+    state: &mut MPC721ContractState,
+    msg: &ApproveForAllMsg,
 ) -> Vec<EventGroup> {
     assert!(
         msg.operator != ctx.sender,
@@ -119,9 +119,9 @@ pub fn execute_set_approval_for_all(
 /// operator, or the approved address for this NFT. Throws if `from` is
 /// not the current owner. Throws if `token_id` is not a valid NFT.
 pub fn execute_transfer_from(
-    ctx: ContractContext,
-    mut state: MPC721ContractState,
-    msg: TransferFromMsg,
+    ctx: &ContractContext,
+    state: &mut MPC721ContractState,
+    msg: &TransferFromMsg,
 ) -> Vec<EventGroup> {
     assert!(
         state.is_approved_or_owner(ctx.sender, msg.token_id),
@@ -137,7 +137,11 @@ pub fn execute_transfer_from(
 /// Destroys `token_id`.
 /// The approval is cleared when the token is burned.
 /// Requires that the `token_id` exists and `ctx.sender` is approved or owner of the token.
-pub fn burn(ctx: ContractContext, mut state: MPC721ContractState, msg: BurnMsg) -> Vec<EventGroup> {
+pub fn burn(
+    ctx: &ContractContext,
+    state: &mut MPC721ContractState,
+    msg: &BurnMsg,
+) -> Vec<EventGroup> {
     let token_id = msg.token_id;
     assert!(
         state.is_approved_or_owner(ctx.sender, token_id),
