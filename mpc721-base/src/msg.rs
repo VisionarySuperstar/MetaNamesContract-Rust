@@ -15,7 +15,6 @@ pub struct InitMsg {
 }
 
 
-
 /// ## Description
 /// This structure describes fields for mpc721 transfer msg
 #[derive(ReadWriteRPC, CreateTypeSpec, IntoShortnameRPCEvent, Clone, PartialEq, Eq, Debug)]

@@ -5,12 +5,8 @@ use pbc_contract_common::{
 };
 
 use crate::{
-    msg::{
-        ApproveForAllMsg, ApproveMsg, BurnMsg, CheckOwnerMsg, InitMsg, MintMsg, MultiMintMsg,
-        RevokeForAllMsg, RevokeMsg, SetBaseUriMsg, TransferFromMsg, TransferMsg, UpdateMinterMsg,
-        UpdateParentMsg,
-    },
-    state::{MPC721ContractState, URL_LENGTH, OperatorApproval},
+    msg::{ApproveForAllMsg, ApproveMsg, BurnMsg, InitMsg, MintMsg, TransferFromMsg},
+    state::{MPC721ContractState, OperatorApproval, URL_LENGTH},
     ContractError,
 };
 
@@ -18,10 +14,6 @@ use crate::{
 /// Inits contract state.
 /// Returns [`(MPC721ContractState, Vec<EventGroup>)`] if operation was successful,
 /// otherwise panics with error message defined in [`ContractError`]
-/// ## Params
-/// * **_ctx** is an object of type [`ContractContext`]
-///
-/// * **msg** is an object of type [`InitMsg`]
 pub fn execute_init(ctx: &ContractContext, msg: &InitMsg) -> MPC721ContractState {
     MPC721ContractState {
         name: msg.name.clone(),
@@ -39,12 +31,6 @@ pub fn execute_init(ctx: &ContractContext, msg: &InitMsg) -> MPC721ContractState
 /// Mint a new token. Can only be executed by minter account.
 /// Returns [`(MPC721ContractState, Vec<EventGroup>)`] if operation was successful,
 /// otherwise panics with error message defined in [`ContractError`]
-/// ## Params
-/// * **ctx** is an object of type [`ContractContext`]
-///
-/// * **state** is an object of type [`MPC721ContractState`]
-///
-/// * **msg** is an object of type [`MintMsg`]
 pub fn execute_mint(
     ctx: &ContractContext,
     state: &mut MPC721ContractState,
@@ -52,9 +38,8 @@ pub fn execute_mint(
 ) -> Vec<EventGroup> {
     assert!(!state.exists(msg.token_id), "{}", ContractError::Minted);
 
-    let mut new_state = state;
-    new_state.owners.insert(msg.token_id, ctx.sender);
-    if let Some(token_uri) = msg.token_uri {
+    state.owners.insert(msg.token_id, ctx.sender);
+    if let Some(token_uri) = msg.token_uri.clone() {
         let formatted_uri = format!("{}{}", state.uri_template, token_uri).into_bytes();
         assert!(
             formatted_uri.len() <= URL_LENGTH,
@@ -63,7 +48,7 @@ pub fn execute_mint(
         );
 
         let array: [u8; 128] = formatted_uri.try_into().unwrap();
-        new_state.token_uri_details.insert(msg.token_id, array);
+        state.token_uri_details.insert(msg.token_id, array);
     }
 
     state.increase_supply();
@@ -75,20 +60,6 @@ pub fn execute_mint(
 /// None indicates there is no approved address.
 /// Throws unless `ctx.sender` is the current NFT owner, or an authorized
 /// operator of the current owner.
-///
-/// ### Parameters:
-///
-/// * `ctx`: [`ContractContext`], the context for the action call.
-///
-/// * `state`: [`NFTContractState`], the current state of the contract.
-///
-/// * `approved`: [`Option<Address>`], The new approved NFT controller.
-///
-/// * `token_id`: [`u128`], The NFT to approve.
-///
-/// ### Returns
-///
-/// The new state object of type [`NFTContractState`] with an updated ledger.
 pub fn execute_approve(
     ctx: ContractContext,
     mut state: MPC721ContractState,
@@ -108,20 +79,6 @@ pub fn execute_approve(
 /// Enable or disable approval for a third party ("operator") to manage all of
 /// `ctx.sender`'s assets.
 /// Throws if `operator` == `ctx.sender`.
-///
-/// ### Parameters:
-///
-/// * `context`: [`ContractContext`], the context for the action call.
-///
-/// * `state`: [`NFTContractState`], the current state of the contract.
-///
-/// * `operator`: [`Address`], Address to add to the set of authorized operators.
-///
-/// * `approved`: [`bool`], True if the operator is approved, false to revoke approval.
-///
-/// ### Returns
-///
-/// The new state object of type [`NFTContractState`] with an updated ledger.
 pub fn execute_set_approval_for_all(
     ctx: ContractContext,
     mut state: MPC721ContractState,
@@ -136,6 +93,7 @@ pub fn execute_set_approval_for_all(
     if msg.approved {
         let already_present = state
             .operator_approvals
+            .clone()
             .into_iter()
             .any(|approval| approval.owner == ctx.sender && approval.operator == msg.operator);
         if !already_present {
@@ -153,175 +111,47 @@ pub fn execute_set_approval_for_all(
     vec![]
 }
 
-/// ## Description
-/// Only with approval extension. Transfer token from owner to spender.
-/// Returns [`(MPC721ContractState, Vec<EventGroup>)`] if operation was successful,
-/// otherwise panics with error message defined in [`ContractError`]
-/// ## Params
-/// * **ctx** is an object of type [`ContractContext`]
+/// Transfer ownership of an NFT -- THE CALLER IS RESPONSIBLE
+/// TO CONFIRM THAT `to` IS CAPABLE OF RECEIVING NFTS OR ELSE
+/// THEY MAY BE PERMANENTLY LOST
 ///
-/// * **state** is an object of type [`MPC721ContractState`]
-///
-/// * **msg** is an object of type [`TransferFromMsg`]
+/// Throws unless `ctx.sender` is the current owner, an authorized
+/// operator, or the approved address for this NFT. Throws if `from` is
+/// not the current owner. Throws if `token_id` is not a valid NFT.
 pub fn execute_transfer_from(
-    ctx: &ContractContext,
-    state: &mut MPC721ContractState,
-    msg: &TransferFromMsg,
+    ctx: ContractContext,
+    mut state: MPC721ContractState,
+    msg: TransferFromMsg,
 ) -> Vec<EventGroup> {
-    assert!(state.is_minted(msg.token_id), "{}", ContractError::NotFound);
+    assert!(
+        state.is_approved_or_owner(ctx.sender, msg.token_id),
+        "{}",
+        ContractError::Unauthorized
+    );
 
-    state.transfer(&msg.from, &msg.to, msg.token_id);
+    state._transfer(msg.from, msg.to, msg.token_id);
+
     vec![]
 }
 
-/// ## Description
-/// Allows spender to transfer token from the owner account.
-/// Returns [`(MPC721ContractState, Vec<EventGroup>)`] if operation was successful,
-/// otherwise panics with error message defined in [`ContractError`]
-/// ## Params
-/// * **ctx** is an object of type [`ContractContext`]
-///
-/// * **state** is an object of type [`MPC721ContractState`]
-///
-/// * **msg** is an object of type [`ApproveMsg`]
-pub fn execute_approve(
-    ctx: &ContractContext,
-    state: &mut MPC721ContractState,
-    msg: &ApproveMsg,
-) -> Vec<EventGroup> {
-    assert!(state.is_minted(msg.token_id), "{}", ContractError::NotFound);
+/// Destroys `token_id`.
+/// The approval is cleared when the token is burned.
+/// Requires that the `token_id` exists and `ctx.sender` is approved or owner of the token.
+pub fn burn(ctx: ContractContext, mut state: MPC721ContractState, msg: BurnMsg) -> Vec<EventGroup> {
+    let token_id = msg.token_id;
+    assert!(
+        state.is_approved_or_owner(ctx.sender, token_id),
+        "{}",
+        ContractError::Unauthorized
+    );
 
-    state.update_approvals(&ctx.sender, &msg.spender, msg.token_id, true);
-    vec![]
-}
+    let owner = state.owner_of(token_id);
+    // Clear approvals
+    state._approve(None, token_id);
 
-/// ## Description
-/// Allows operator to transfer any owner tokens from his account.
-/// Returns [`(MPC721ContractState, Vec<EventGroup>)`] if operation was successful,
-/// otherwise panics with error message defined in [`ContractError`]
-/// ## Params
-/// * **ctx** is an object of type [`ContractContext`]
-///
-/// * **state** is an object of type [`MPC721ContractState`]
-///
-/// * **msg** is an object of type [`ApproveForAllMsg`]
-pub fn execute_approve_for_all(
-    ctx: &ContractContext,
-    state: &mut MPC721ContractState,
-    msg: &ApproveForAllMsg,
-) -> Vec<EventGroup> {
-    state.add_operator(&ctx.sender, &msg.operator);
-    vec![]
-}
-
-/// ## Description
-/// Remove approval.
-/// Returns [`(MPC721ContractState, Vec<EventGroup>)`] if operation was successful,
-/// otherwise panics with error message defined in [`ContractError`]
-/// ## Params
-/// * **ctx** is an object of type [`ContractContext`]
-///
-/// * **state** is an object of type [`MPC721ContractState`]
-///
-/// * **msg** is an object of type [`RevokeMsg`]
-pub fn execute_revoke(
-    ctx: &ContractContext,
-    state: &mut MPC721ContractState,
-    msg: &RevokeMsg,
-) -> Vec<EventGroup> {
-    assert!(state.is_minted(msg.token_id), "{}", ContractError::NotFound);
-
-    state.update_approvals(&ctx.sender, &msg.spender, msg.token_id, false);
-    vec![]
-}
-
-/// ## Description
-/// Remove operator.
-/// Returns [`(MPC721ContractState, Vec<EventGroup>)`] if operation was successful,
-/// otherwise panics with error message defined in [`ContractError`]
-/// ## Params
-/// * **ctx** is an object of type [`ContractContext`]
-///
-/// * **state** is an object of type [`MPC721ContractState`]
-///
-/// * **msg** is an object of type [`RevokeForAllMsg`]
-pub fn execute_revoke_for_all(
-    ctx: &ContractContext,
-    state: &mut MPC721ContractState,
-    msg: &RevokeForAllMsg,
-) -> Vec<EventGroup> {
-    state.remove_operator(&ctx.sender, &msg.operator);
-    vec![]
-}
-
-/// ## Description
-/// Destroy your token forever.
-/// Returns [`(MPC721ContractState, Vec<EventGroup>)`] if operation was successful,
-/// otherwise panics with error message defined in [`ContractError`]
-/// ## Params
-/// * **ctx** is an object of type [`ContractContext`]
-///
-/// * **state** is an object of type [`MPC721ContractState`]
-///
-/// * **msg** is an object of type [`BurnMsg`]
-pub fn execute_burn(
-    ctx: &ContractContext,
-    state: &mut MPC721ContractState,
-    msg: &BurnMsg,
-) -> Vec<EventGroup> {
-    assert!(state.is_minted(msg.token_id), "{}", ContractError::NotFound);
-
-    state.remove_token(&ctx.sender, msg.token_id);
+    state.owners.remove(&token_id);
+    state.token_uri_details.remove(&token_id);
     state.decrease_supply();
-
-    vec![]
-}
-
-/// ## Description
-/// Check if a user owns a particular token. Will revert otherwise
-/// Returns [`(MPC721ContractState, Vec<EventGroup>)`] if operation was successful,
-/// otherwise panics with error message defined in [`ContractError`]
-/// ## Params
-/// * **ctx** is an object of type [`ContractContext`]
-///
-/// * **state** is an object of type [`MPC721ContractState`]
-///
-/// * **msg** is an object of type [`CheckOwnerMsg`]
-pub fn execute_ownership_check(
-    ctx: &ContractContext,
-    state: &mut MPC721ContractState,
-    msg: &CheckOwnerMsg,
-) -> Vec<EventGroup> {
-    let token_info = state.token_info(msg.token_id);
-    match token_info {
-        Some(token_info) => assert!(
-            token_info.owner == msg.owner,
-            "{}",
-            ContractError::IncorrectOwner
-        ),
-        None => panic!("{}", ContractError::NotFound),
-    };
-    vec![]
-}
-
-/// ## Description
-/// Mint Multiple NFTs in a single function call
-/// Returns [` Vec<EventGroup>)`] if operation was successful,
-/// otherwise panics with error message defined in [`ContractError`]
-/// ## Params
-/// * **ctx** is an object of type [`ContractContext`]
-///
-/// * **state** is an object of type [`MPC721ContractState`]
-///
-/// * **msg** is an object of type [`MultiMintMsg`]
-pub fn execute_multi_mint(
-    ctx: &ContractContext,
-    state: &mut MPC721ContractState,
-    msg: &MultiMintMsg,
-) -> Vec<EventGroup> {
-    for mint in msg.mints.iter() {
-        execute_mint(ctx, state, mint);
-    }
 
     vec![]
 }

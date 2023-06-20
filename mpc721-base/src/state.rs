@@ -117,6 +117,11 @@ impl MPC721ContractState {
         self.supply += 1;
     }
 
+    /// Decrease the supply of the token by 1
+    pub fn decrease_supply(&mut self) {
+        self.supply -= 1;
+    }
+
     /// Mutates the state by approving `to` to operate on `token_id`.
     /// None indicates there is no approved address.
     ///
