@@ -105,7 +105,7 @@ pub fn mint(
         &nft_msg::MintMsg {
             to,
             token_id,
-            token_uri: None, // TODO
+            token_uri: token_uri.clone(),
         },
     );
 
@@ -167,7 +167,7 @@ pub fn update_record(
             domain,
             class,
             data,
-        }
+        },
     );
 
     (state, events)
