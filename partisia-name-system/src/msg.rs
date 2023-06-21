@@ -26,7 +26,7 @@ pub struct PnsInitMsg {
 /// ## Description
 /// This structure describes fields for PNS mint msg
 #[derive(ReadWriteRPC, CreateTypeSpec, IntoShortnameRPCEvent, Clone, PartialEq, Eq, Debug)]
-#[rpc_msg(action = 0x09)]
+#[rpc_msg(action = 0x20)]
 pub struct PnsMintMsg {
     pub domain: Vec<u8>,
     /// NFT token id
@@ -43,7 +43,7 @@ pub struct PnsMintMsg {
 /// This structure describes fields for PNS Record Mint Msg
 #[derive(ReadWriteRPC, CreateTypeSpec, IntoShortnameRPCEvent, Clone, PartialEq, Eq, Debug)]
 #[rpc_msg(action = 0x21)]
-pub struct RecordMintMsg {
+pub struct PnsRecordMintMsg {
     pub domain: Vec<u8>,
     /// Class type
     pub class: RecordClass,
@@ -55,7 +55,7 @@ pub struct RecordMintMsg {
 /// This structure describes fields for the record update msg
 #[derive(ReadWriteRPC, CreateTypeSpec, IntoShortnameRPCEvent, Clone, PartialEq, Eq, Debug)]
 #[rpc_msg(action = 0x22)]
-pub struct RecordUpdateMsg {
+pub struct PnsRecordUpdateMsg {
     pub domain: Vec<u8>,
     /// Class type
     pub class: RecordClass,
@@ -67,7 +67,7 @@ pub struct RecordUpdateMsg {
 /// This structure describes fields for the Record Delete Msg
 #[derive(ReadWriteRPC, CreateTypeSpec, IntoShortnameRPCEvent, Clone, PartialEq, Eq, Debug)]
 #[rpc_msg(action = 0x23)]
-pub struct RecordDeleteMsg {
+pub struct PnsRecordDeleteMsg {
     pub domain: Vec<u8>,
     /// Class type
     pub class: RecordClass,

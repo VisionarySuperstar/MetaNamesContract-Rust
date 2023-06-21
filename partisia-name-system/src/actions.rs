@@ -6,7 +6,7 @@ use pbc_contract_common::{
 };
 
 use crate::{
-    msg::{PnsMintMsg, RecordDeleteMsg, RecordMintMsg, RecordUpdateMsg},
+    msg::{PnsMintMsg, PnsRecordDeleteMsg, PnsRecordMintMsg, PnsRecordUpdateMsg},
     state::{Domain, PartisiaNameSystemState},
     ContractError,
 };
@@ -60,7 +60,7 @@ pub fn execute_mint(
 pub fn execute_record_mint(
     ctx: &ContractContext,
     state: &mut PartisiaNameSystemState,
-    msg: &RecordMintMsg,
+    msg: &PnsRecordMintMsg,
 ) -> Vec<EventGroup> {
     assert!(state.is_minted(&msg.domain), "{}", ContractError::NotFound);
 
@@ -77,7 +77,7 @@ pub fn execute_record_mint(
 pub fn execute_record_update(
     ctx: &ContractContext,
     state: &mut PartisiaNameSystemState,
-    msg: &RecordUpdateMsg,
+    msg: &PnsRecordUpdateMsg,
 ) -> Vec<EventGroup> {
     assert!(state.is_minted(&msg.domain), "{}", ContractError::NotFound);
 
@@ -96,7 +96,7 @@ pub fn execute_record_update(
 pub fn execute_record_delete(
     ctx: &ContractContext,
     state: &mut PartisiaNameSystemState,
-    msg: &RecordDeleteMsg,
+    msg: &PnsRecordDeleteMsg,
 ) -> Vec<EventGroup> {
     assert!(state.is_minted(&msg.domain), "{}", ContractError::NotFound);
 

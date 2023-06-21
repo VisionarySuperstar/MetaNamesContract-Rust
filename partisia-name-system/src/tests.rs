@@ -3,7 +3,7 @@ use crate::{
         execute_init, execute_mint, execute_record_delete, execute_record_mint,
         execute_record_update,
     },
-    msg::{PnsMintMsg, RecordDeleteMsg, RecordMintMsg, RecordUpdateMsg},
+    msg::{PnsMintMsg, PnsRecordDeleteMsg, PnsRecordMintMsg, PnsRecordUpdateMsg},
     state::{Record, RecordClass},
 };
 
@@ -203,7 +203,7 @@ fn proper_record_mint() {
     let _ = execute_mint(&mock_contract_context(minter), &mut state, &mint_msg);
 
     let record_class = RecordClass::Twitter {};
-    let record_mint_msg = RecordMintMsg {
+    let record_mint_msg = PnsRecordMintMsg {
         domain: domain.clone(),
         class: record_class,
         data: "data".to_string(),
@@ -238,7 +238,7 @@ fn when_token_not_present_record_mint_fails() {
 
     let _ = execute_mint(&mock_contract_context(minter), &mut state, &mint_msg);
 
-    let record_mint = RecordMintMsg {
+    let record_mint = PnsRecordMintMsg {
         domain: string_to_bytes("not-existing.meta"),
         class: RecordClass::Wallet {},
         data: "some data".to_string(),
@@ -265,7 +265,7 @@ fn record_already_minted_on_record_mint() {
 
     let _ = execute_mint(&mock_contract_context(minter), &mut state, &mint_msg);
 
-    let record_mint = RecordMintMsg {
+    let record_mint = PnsRecordMintMsg {
         domain: string_to_bytes("name"),
         class: RecordClass::Wallet {},
         data: "some data".to_string(),
@@ -293,14 +293,14 @@ fn proper_record_update() {
     let _ = execute_mint(&mock_contract_context(minter), &mut state, &mint_msg);
 
     let record_class = RecordClass::Twitter {};
-    let record_mint_msg = RecordMintMsg {
+    let record_mint_msg = PnsRecordMintMsg {
         domain: domain.clone(),
         class: record_class,
         data: "data".to_string(),
     };
     let _ = execute_record_mint(&mock_contract_context(alice), &mut state, &record_mint_msg);
 
-    let record_update_msg = RecordUpdateMsg {
+    let record_update_msg = PnsRecordUpdateMsg {
         domain: domain.clone(),
         class: record_class,
         data: "new data".to_string(),
@@ -330,7 +330,7 @@ fn when_record_does_not_exist_record_update_fails() {
 
     let mut state = execute_init(&mock_contract_context(2));
 
-    let record_update_msg = RecordUpdateMsg {
+    let record_update_msg = PnsRecordUpdateMsg {
         domain: string_to_bytes("name"),
         class: RecordClass::Twitter {},
         data: "new data".to_string(),
@@ -361,14 +361,14 @@ fn proper_record_delete() {
     let _ = execute_mint(&mock_contract_context(minter), &mut state, &mint_msg);
 
     let record_class = RecordClass::Twitter {};
-    let record_mint_msg = RecordMintMsg {
+    let record_mint_msg = PnsRecordMintMsg {
         domain: domain.clone(),
         class: record_class,
         data: "data".to_string(),
     };
     let _ = execute_record_mint(&mock_contract_context(alice), &mut state, &record_mint_msg);
 
-    let record_delete_msg = RecordDeleteMsg {
+    let record_delete_msg = PnsRecordDeleteMsg {
         domain: domain.clone(),
         class: record_class,
     };
@@ -393,7 +393,7 @@ fn when_record_does_not_exist_record_delete_fails() {
 
     let mut state = execute_init(&mock_contract_context(2));
 
-    let record_delete_msg = RecordDeleteMsg {
+    let record_delete_msg = PnsRecordDeleteMsg {
         domain: string_to_bytes("name"),
         class: RecordClass::Twitter {},
     };
