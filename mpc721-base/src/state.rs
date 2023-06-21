@@ -163,6 +163,20 @@ impl MPC721ContractState {
 
         // clear approvals from the previous owner
         self._approve(None, token_id);
+
+        // Get all approvals indexes from the previous owner
+        // And remove old operator approvals
+        let old_approvals_indexes: Vec<usize> = self
+            .operator_approvals
+            .iter()
+            .enumerate()
+            .filter(|(_, approval)| approval.owner == from)
+            .map(|(index, _)| index)
+            .collect();
+        for index in old_approvals_indexes {
+            self.operator_approvals.swap_remove(index);
+        }
+
         self.owners.insert(token_id, to);
     }
 }
