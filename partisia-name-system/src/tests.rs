@@ -3,7 +3,7 @@ use crate::{
         execute_init, execute_mint, execute_record_delete, execute_record_mint,
         execute_record_update,
     },
-    msg::{PnsInitMsg, PnsMintMsg, RecordDeleteMsg, RecordMintMsg, RecordUpdateMsg},
+    msg::{PnsMintMsg, RecordDeleteMsg, RecordMintMsg, RecordUpdateMsg},
     state::{Record, RecordClass},
 };
 
@@ -66,15 +66,7 @@ fn proper_mint() {
     let minter = 1u8;
     let alice = 10u8;
 
-    let msg = PnsInitMsg {
-        owner: None,
-        name: "Meta Names".to_string(),
-        symbol: "META".to_string(),
-        base_uri: Some("ipfs://some.some".to_string()),
-        minter: mock_address(minter),
-    };
-
-    let mut state = execute_init(&mock_contract_context(2), &msg);
+    let mut state = execute_init(&mock_contract_context(2));
 
     let domain = string_to_bytes("name");
     let mint_msg = PnsMintMsg {
@@ -96,15 +88,7 @@ fn proper_mint_with_parent() {
     let minter = 1u8;
     let alice = 10u8;
 
-    let msg = PnsInitMsg {
-        owner: None,
-        name: "Meta Names".to_string(),
-        symbol: "META".to_string(),
-        base_uri: Some("ipfs://some.some".to_string()),
-        minter: mock_address(minter),
-    };
-
-    let mut state = execute_init(&mock_contract_context(2), &msg);
+    let mut state = execute_init(&mock_contract_context(2));
 
     let domain = string_to_bytes("meta");
     let mint_msg = PnsMintMsg {
@@ -120,7 +104,7 @@ fn proper_mint_with_parent() {
     let domain = string_to_bytes("name");
     let mint_msg = PnsMintMsg {
         token_id: 2,
-        domain: domain.clone(),
+        domain,
         to: mock_address(alice),
         token_uri: Some(String::from("name")),
         parent_id: Some(string_to_bytes("meta")),
@@ -138,15 +122,7 @@ fn when_parent_does_not_exist_mint_fails() {
     let minter = 1u8;
     let alice = 10u8;
 
-    let msg = PnsInitMsg {
-        owner: None,
-        name: "Meta Names".to_string(),
-        symbol: "META".to_string(),
-        base_uri: Some("ipfs://some.some".to_string()),
-        minter: mock_address(minter),
-    };
-
-    let mut state = execute_init(&mock_contract_context(2), &msg);
+    let mut state = execute_init(&mock_contract_context(2));
 
     let domain = string_to_bytes("meta");
     let mint_msg = PnsMintMsg {
@@ -160,22 +136,13 @@ fn when_parent_does_not_exist_mint_fails() {
     let _ = execute_mint(&mock_contract_context(minter), &mut state, &mint_msg);
 }
 
-
 #[test]
 #[should_panic(expected = "Token with specified id is already minted")]
 fn token_already_minted_on_mint() {
     let minter = 1u8;
     let alice = 10u8;
 
-    let msg = PnsInitMsg {
-        owner: None,
-        name: "Meta Names".to_string(),
-        symbol: "META".to_string(),
-        base_uri: Some("ipfs://some.some".to_string()),
-        minter: mock_address(minter),
-    };
-
-    let mut state = execute_init(&mock_contract_context(2), &msg);
+    let mut state = execute_init(&mock_contract_context(2));
 
     let mint_msg = PnsMintMsg {
         domain: string_to_bytes("name"),
@@ -204,15 +171,7 @@ fn mint_fails_when_parent_does_not_exist() {
     let minter = 1u8;
     let alice = 10u8;
 
-    let msg = PnsInitMsg {
-        owner: None,
-        name: "Meta Names".to_string(),
-        symbol: "META".to_string(),
-        base_uri: Some("ipfs://some.some".to_string()),
-        minter: mock_address(minter),
-    };
-
-    let mut state = execute_init(&mock_contract_context(2), &msg);
+    let mut state = execute_init(&mock_contract_context(2));
 
     let domain = &string_to_bytes("name");
     let mint_msg = PnsMintMsg {
@@ -231,15 +190,7 @@ fn proper_record_mint() {
     let minter = 1u8;
     let alice = 10u8;
 
-    let msg = PnsInitMsg {
-        owner: None,
-        name: "Meta Names".to_string(),
-        symbol: "META".to_string(),
-        base_uri: Some("ipfs://some.some".to_string()),
-        minter: mock_address(minter),
-    };
-
-    let mut state = execute_init(&mock_contract_context(2), &msg);
+    let mut state = execute_init(&mock_contract_context(2));
 
     let domain = &string_to_bytes("name");
     let mint_msg = PnsMintMsg {
@@ -275,15 +226,7 @@ fn when_token_not_present_record_mint_fails() {
     let minter = 1u8;
     let alice = 10u8;
 
-    let msg = PnsInitMsg {
-        owner: None,
-        name: "Meta Names".to_string(),
-        symbol: "META".to_string(),
-        base_uri: Some("ipfs://some.some".to_string()),
-        minter: mock_address(minter),
-    };
-
-    let mut state = execute_init(&mock_contract_context(2), &msg);
+    let mut state = execute_init(&mock_contract_context(2));
 
     let mint_msg = PnsMintMsg {
         domain: string_to_bytes("name"),
@@ -310,15 +253,7 @@ fn record_already_minted_on_record_mint() {
     let minter = 1u8;
     let alice = 10u8;
 
-    let msg = PnsInitMsg {
-        owner: None,
-        name: "Meta Names".to_string(),
-        symbol: "META".to_string(),
-        base_uri: Some("ipfs://some.some".to_string()),
-        minter: mock_address(minter),
-    };
-
-    let mut state = execute_init(&mock_contract_context(2), &msg);
+    let mut state = execute_init(&mock_contract_context(2));
 
     let mint_msg = PnsMintMsg {
         domain: string_to_bytes("name"),
@@ -345,15 +280,7 @@ fn proper_record_update() {
     let minter = 1u8;
     let alice = 10u8;
 
-    let msg = PnsInitMsg {
-        owner: None,
-        name: "Meta Names".to_string(),
-        symbol: "META".to_string(),
-        base_uri: Some("ipfs://some.some".to_string()),
-        minter: mock_address(minter),
-    };
-
-    let mut state = execute_init(&mock_contract_context(2), &msg);
+    let mut state = execute_init(&mock_contract_context(2));
 
     let domain = &string_to_bytes("name");
     let mint_msg = PnsMintMsg {
@@ -401,15 +328,7 @@ fn when_record_does_not_exist_record_update_fails() {
     let minter = 1u8;
     let alice = 10u8;
 
-    let msg = PnsInitMsg {
-        owner: None,
-        name: "Meta Names".to_string(),
-        symbol: "META".to_string(),
-        base_uri: Some("ipfs://some.some".to_string()),
-        minter: mock_address(minter),
-    };
-
-    let mut state = execute_init(&mock_contract_context(2), &msg);
+    let mut state = execute_init(&mock_contract_context(2));
 
     let record_update_msg = RecordUpdateMsg {
         domain: string_to_bytes("name"),
@@ -429,15 +348,7 @@ fn proper_record_delete() {
     let minter = 1u8;
     let alice = 10u8;
 
-    let msg = PnsInitMsg {
-        owner: None,
-        name: "Meta Names".to_string(),
-        symbol: "META".to_string(),
-        base_uri: Some("ipfs://some.some".to_string()),
-        minter: mock_address(minter),
-    };
-
-    let mut state = execute_init(&mock_contract_context(2), &msg);
+    let mut state = execute_init(&mock_contract_context(2));
 
     let domain = &string_to_bytes("name");
     let mint_msg = PnsMintMsg {
@@ -480,15 +391,7 @@ fn when_record_does_not_exist_record_delete_fails() {
     let minter = 1u8;
     let alice = 10u8;
 
-    let msg = PnsInitMsg {
-        owner: None,
-        name: "Meta Names".to_string(),
-        symbol: "META".to_string(),
-        base_uri: Some("ipfs://some.some".to_string()),
-        minter: mock_address(minter),
-    };
-
-    let mut state = execute_init(&mock_contract_context(2), &msg);
+    let mut state = execute_init(&mock_contract_context(2));
 
     let record_delete_msg = RecordDeleteMsg {
         domain: string_to_bytes("name"),
