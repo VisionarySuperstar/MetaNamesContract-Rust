@@ -1,6 +1,6 @@
 # MPC721-Base Contract
 
-A fork of the base implementation of MPC721 contract to permit a hierarchy between tokens.
+The base implementation of MPC721 contract.
 
 # Actions
 

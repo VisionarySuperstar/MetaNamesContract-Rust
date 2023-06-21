@@ -328,7 +328,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "mpc721-hierarchy"
+name = "mpc721-base"
 version = "1.1.0"
 dependencies = [
  "create_type_spec_derive",
@@ -371,7 +371,7 @@ version = "0.0.1"
 dependencies = [
  "contract-version-base",
  "create_type_spec_derive",
- "mpc721-hierarchy",
+ "mpc721-base",
  "pbc_contract_codegen",
  "pbc_contract_common",
  "pbc_lib",

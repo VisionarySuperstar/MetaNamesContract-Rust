@@ -2,8 +2,6 @@
 
 Crate which allows contracts to implement a domain name system.
 
-It uses a fork of MPC 721 to permit hierarchy.
-
 ## Actions
 TODO: Update
 
