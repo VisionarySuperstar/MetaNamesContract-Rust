@@ -18,7 +18,7 @@ use utils::{
 
 // TODO: Review action calls
 
-const MINT: u32 = 0x09;
+const MINT: u32 = 0x20;
 
 #[test]
 fn proper_mint_action_call() {

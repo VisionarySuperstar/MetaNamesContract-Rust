@@ -907,6 +907,7 @@ dependencies = [
  "pbc_traits",
  "read_write_rpc_derive",
  "read_write_state_derive",
+ "rpc-msg-derive",
  "serde_json",
  "thiserror",
  "utils",

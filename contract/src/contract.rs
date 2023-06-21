@@ -97,6 +97,8 @@ pub fn mint(
 ) -> (ContractState, Vec<EventGroup>) {
     assert!(!state.pns.is_minted(&domain), "{}", ContractError::Minted);
 
+    // TODO: Manage parentship
+
     let mut state = state;
     let token_id = state.nft.get_next_token_id();
     let nft_events = nft_actions::execute_mint(
@@ -141,7 +143,7 @@ pub fn mint_record(
     let events = pns_actions::execute_record_mint(
         &ctx,
         &mut state.pns,
-        &pns_msg::RecordMintMsg {
+        &pns_msg::PnsRecordMintMsg {
             domain,
             class,
             data,
@@ -163,7 +165,7 @@ pub fn update_record(
     let events = pns_actions::execute_record_update(
         &ctx,
         &mut state.pns,
-        &pns_msg::RecordUpdateMsg {
+        &pns_msg::PnsRecordUpdateMsg {
             domain,
             class,
             data,
@@ -184,7 +186,7 @@ pub fn delete_record(
     let events = pns_actions::execute_record_delete(
         &ctx,
         &mut state.pns,
-        &pns_msg::RecordDeleteMsg { domain, class },
+        &pns_msg::PnsRecordDeleteMsg { domain, class },
     );
 
     (state, events)
