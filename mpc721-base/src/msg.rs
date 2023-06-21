@@ -14,18 +14,6 @@ pub struct NFTInitMsg {
     pub uri_template: String,
 }
 
-
-/// ## Description
-/// This structure describes fields for mpc721 transfer msg
-#[derive(ReadWriteRPC, CreateTypeSpec, IntoShortnameRPCEvent, Clone, PartialEq, Eq, Debug)]
-#[rpc_msg(action = 0x01)]
-pub struct TransferMsg {
-    /// receiver address
-    pub to: Address,
-    /// token id
-    pub token_id: u128,
-}
-
 /// ## Description
 /// This structure describes fields for mpc721 transfer from msg
 #[derive(ReadWriteRPC, CreateTypeSpec, IntoShortnameRPCEvent, Clone, PartialEq, Eq, Debug)]
@@ -50,12 +38,13 @@ pub struct ApproveMsg {
 }
 
 /// ## Description
-/// This structure describes fields for mpc721 set base uri msg
+/// This structure describes fields for mpc721 approve for all msg
 #[derive(ReadWriteRPC, CreateTypeSpec, IntoShortnameRPCEvent, Clone, PartialEq, Eq, Debug)]
 #[rpc_msg(action = 0x07)]
-pub struct SetBaseUriMsg {
-    /// new base uri
-    pub new_base_uri: String,
+pub struct ApproveForAllMsg {
+    /// operator address to approve
+    pub operator: Address,
+    pub approved: bool,
 }
 
 /// ## Description
@@ -72,78 +61,10 @@ pub struct MintMsg {
 }
 
 /// ## Description
-/// This structure describes fields for mpc721 approve for all msg
-#[derive(ReadWriteRPC, CreateTypeSpec, IntoShortnameRPCEvent, Clone, PartialEq, Eq, Debug)]
-#[rpc_msg(action = 0x11)]
-pub struct ApproveForAllMsg {
-    /// operator address to approve
-    pub operator: Address,
-    pub approved: bool,
-}
-
-/// ## Description
-/// This structure describes fields for mpc721 revoke msg
-#[derive(ReadWriteRPC, CreateTypeSpec, IntoShortnameRPCEvent, Clone, PartialEq, Eq, Debug)]
-#[rpc_msg(action = 0x13)]
-pub struct RevokeMsg {
-    /// operator address to revoke
-    pub spender: Address,
-    /// token id
-    pub token_id: u128,
-}
-
-/// ## Description
-/// This structure describes fields for mpc721 revoke for all msg
-#[derive(ReadWriteRPC, CreateTypeSpec, IntoShortnameRPCEvent, Clone, PartialEq, Eq, Debug)]
-#[rpc_msg(action = 0x15)]
-pub struct RevokeForAllMsg {
-    /// operator address to revoke
-    pub operator: Address,
-}
-
-/// ## Description
 /// This structure describes fields for mpc721 burn msg
 #[derive(ReadWriteRPC, CreateTypeSpec, IntoShortnameRPCEvent, Clone, PartialEq, Eq, Debug)]
 #[rpc_msg(action = 0x17)]
 pub struct BurnMsg {
     /// token id to burn
     pub token_id: u128,
-}
-
-/// ## Description
-/// This structure describes fields for mpc721 check owner msg
-#[derive(ReadWriteRPC, CreateTypeSpec, IntoShortnameRPCEvent, Clone, PartialEq, Eq, Debug)]
-#[rpc_msg(action = 0x18)]
-pub struct CheckOwnerMsg {
-    /// receiver address
-    pub owner: Address,
-    /// token id
-    pub token_id: u128,
-}
-/// ## Description
-/// This structure describes fields for the Update Minter Msg
-#[derive(ReadWriteRPC, CreateTypeSpec, IntoShortnameRPCEvent, Clone, PartialEq, Eq, Debug)]
-#[rpc_msg(action = 0x19)]
-pub struct UpdateMinterMsg {
-    /// operator address to approve
-    pub new_minter: Address,
-}
-/// ## Description
-/// This structure describes fields for the Multi Mint Msg
-#[derive(ReadWriteRPC, CreateTypeSpec, IntoShortnameRPCEvent, Clone, PartialEq, Eq, Debug)]
-#[rpc_msg(action = 0x20)]
-pub struct MultiMintMsg {
-    /// array of MintMsgs to mint multiple nfts
-    pub mints: Vec<MintMsg>,
-}
-
-/// ## Description
-/// This structure describes fields for mpc721 extension update parent msg
-#[derive(ReadWriteRPC, CreateTypeSpec, IntoShortnameRPCEvent, Clone, PartialEq, Eq, Debug)]
-#[rpc_msg(action = 0x21)]
-pub struct UpdateParentMsg {
-    /// token id
-    pub token_id: u128,
-    /// optional parent id
-    pub parent_id: Option<u128>,
 }
