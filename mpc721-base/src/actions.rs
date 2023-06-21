@@ -111,6 +111,8 @@ pub fn execute_set_approval_for_all(
     vec![]
 }
 
+// TODO: Add transfer action
+
 /// Transfer ownership of an NFT -- THE CALLER IS RESPONSIBLE
 /// TO CONFIRM THAT `to` IS CAPABLE OF RECEIVING NFTS OR ELSE
 /// THEY MAY BE PERMANENTLY LOST
@@ -137,7 +139,7 @@ pub fn execute_transfer_from(
 /// Destroys `token_id`.
 /// The approval is cleared when the token is burned.
 /// Requires that the `token_id` exists and `ctx.sender` is approved or owner of the token.
-pub fn burn(
+pub fn execute_burn(
     ctx: &ContractContext,
     state: &mut MPC721ContractState,
     msg: &BurnMsg,
