@@ -38,7 +38,7 @@ pub fn execute_mint(
 ) -> Vec<EventGroup> {
     assert!(!state.exists(msg.token_id), "{}", ContractError::Minted);
 
-    state.owners.insert(msg.token_id, ctx.sender);
+    state.owners.insert(msg.token_id, msg.to);
     if let Some(token_uri) = msg.token_uri.clone() {
         let formatted_uri = format!("{}{}", state.uri_template, token_uri).into_bytes();
         assert!(
@@ -47,8 +47,9 @@ pub fn execute_mint(
             ContractError::UriTooLong
         );
 
-        let array: [u8; 128] = formatted_uri.try_into().unwrap();
-        state.token_uri_details.insert(msg.token_id, array);
+        let mut uri_details: [u8; 128] = [0; URL_LENGTH];
+        uri_details[..formatted_uri.len()].copy_from_slice(&formatted_uri);
+        state.token_uri_details.insert(msg.token_id, uri_details);
     }
 
     state.increase_supply();
