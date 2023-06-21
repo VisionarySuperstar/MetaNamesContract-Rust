@@ -21,7 +21,7 @@ jobs:
         uses: Swatinem/rust-cache@v2
 
       - name: Fetch dependencies
-        run: cargo fetch
+        run: cargo fetch --target wasm32-unknown-unknown
 
       - name: Run tests
         run: cargo test
