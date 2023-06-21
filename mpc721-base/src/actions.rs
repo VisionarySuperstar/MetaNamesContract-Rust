@@ -5,7 +5,7 @@ use pbc_contract_common::{
 };
 
 use crate::{
-    msg::{ApproveForAllMsg, ApproveMsg, BurnMsg, MintMsg, NFTInitMsg, TransferFromMsg},
+    msg::{NFTApproveForAllMsg, NFTApproveMsg, NFTBurnMsg, NFTMintMsg, NFTInitMsg, NFTTransferFromMsg},
     state::{MPC721ContractState, OperatorApproval, URL_LENGTH},
     ContractError,
 };
@@ -34,7 +34,7 @@ pub fn execute_init(ctx: &ContractContext, msg: &NFTInitMsg) -> MPC721ContractSt
 pub fn execute_mint(
     ctx: &ContractContext,
     state: &mut MPC721ContractState,
-    msg: &MintMsg,
+    msg: &NFTMintMsg,
 ) -> Vec<EventGroup> {
     assert!(!state.exists(msg.token_id), "{}", ContractError::Minted);
 
@@ -63,7 +63,7 @@ pub fn execute_mint(
 pub fn execute_approve(
     ctx: &ContractContext,
     state: &mut MPC721ContractState,
-    msg: &ApproveMsg,
+    msg: &NFTApproveMsg,
 ) -> Vec<EventGroup> {
     let owner = state.owner_of(msg.token_id);
     assert!(
@@ -82,7 +82,7 @@ pub fn execute_approve(
 pub fn execute_set_approval_for_all(
     ctx: &ContractContext,
     state: &mut MPC721ContractState,
-    msg: &ApproveForAllMsg,
+    msg: &NFTApproveForAllMsg,
 ) -> Vec<EventGroup> {
     assert!(
         msg.operator != ctx.sender,
@@ -123,7 +123,7 @@ pub fn execute_set_approval_for_all(
 pub fn execute_transfer_from(
     ctx: &ContractContext,
     state: &mut MPC721ContractState,
-    msg: &TransferFromMsg,
+    msg: &NFTTransferFromMsg,
 ) -> Vec<EventGroup> {
     assert!(
         state.is_approved_or_owner(ctx.sender, msg.token_id),
@@ -142,7 +142,7 @@ pub fn execute_transfer_from(
 pub fn execute_burn(
     ctx: &ContractContext,
     state: &mut MPC721ContractState,
-    msg: &BurnMsg,
+    msg: &NFTBurnMsg,
 ) -> Vec<EventGroup> {
     let token_id = msg.token_id;
     assert!(

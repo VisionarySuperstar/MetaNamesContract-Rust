@@ -18,7 +18,7 @@ pub struct NFTInitMsg {
 /// This structure describes fields for mpc721 transfer from msg
 #[derive(ReadWriteRPC, CreateTypeSpec, IntoShortnameRPCEvent, Clone, PartialEq, Eq, Debug)]
 #[rpc_msg(action = 0x03)]
-pub struct TransferFromMsg {
+pub struct NFTTransferFromMsg {
     /// owner address
     pub from: Address,
     /// receiver address
@@ -31,7 +31,7 @@ pub struct TransferFromMsg {
 /// This structure describes fields for mpc721 approve msg
 #[derive(ReadWriteRPC, CreateTypeSpec, IntoShortnameRPCEvent, Clone, PartialEq, Eq, Debug)]
 #[rpc_msg(action = 0x05)]
-pub struct ApproveMsg {
+pub struct NFTApproveMsg {
     pub approved: Option<Address>,
     /// token id
     pub token_id: u128,
@@ -41,7 +41,7 @@ pub struct ApproveMsg {
 /// This structure describes fields for mpc721 approve for all msg
 #[derive(ReadWriteRPC, CreateTypeSpec, IntoShortnameRPCEvent, Clone, PartialEq, Eq, Debug)]
 #[rpc_msg(action = 0x07)]
-pub struct ApproveForAllMsg {
+pub struct NFTApproveForAllMsg {
     /// operator address to approve
     pub operator: Address,
     pub approved: bool,
@@ -51,7 +51,7 @@ pub struct ApproveForAllMsg {
 /// This structure describes fields for mpc721 mint msg
 #[derive(ReadWriteRPC, CreateTypeSpec, IntoShortnameRPCEvent, Clone, PartialEq, Eq, Debug)]
 #[rpc_msg(action = 0x09)]
-pub struct MintMsg {
+pub struct NFTMintMsg {
     /// newly minted token id
     pub token_id: u128,
     /// receiver address
@@ -64,7 +64,7 @@ pub struct MintMsg {
 /// This structure describes fields for mpc721 burn msg
 #[derive(ReadWriteRPC, CreateTypeSpec, IntoShortnameRPCEvent, Clone, PartialEq, Eq, Debug)]
 #[rpc_msg(action = 0x17)]
-pub struct BurnMsg {
+pub struct NFTBurnMsg {
     /// token id to burn
     pub token_id: u128,
 }

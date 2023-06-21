@@ -46,7 +46,7 @@ pub fn transfer_from(
     let events = nft_actions::execute_transfer_from(
         &ctx,
         &mut state.nft,
-        &nft_msg::TransferFromMsg { from, to, token_id },
+        &nft_msg::NFTTransferFromMsg { from, to, token_id },
     );
 
     (state, events)
@@ -63,7 +63,7 @@ pub fn approve(
     let events = nft_actions::execute_approve(
         &ctx,
         &mut state.nft,
-        &nft_msg::ApproveMsg { approved, token_id },
+        &nft_msg::NFTApproveMsg { approved, token_id },
     );
 
     (state, events)
@@ -80,7 +80,7 @@ pub fn set_approval_for_all(
     let events = nft_actions::execute_set_approval_for_all(
         &ctx,
         &mut state.nft,
-        &nft_msg::ApproveForAllMsg { operator, approved },
+        &nft_msg::NFTApproveForAllMsg { operator, approved },
     );
 
     (state, events)
@@ -102,7 +102,7 @@ pub fn mint(
     let nft_events = nft_actions::execute_mint(
         &ctx,
         &mut state.nft,
-        &nft_msg::MintMsg {
+        &nft_msg::NFTMintMsg {
             to,
             token_id,
             token_uri: token_uri.clone(),

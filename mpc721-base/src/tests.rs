@@ -11,8 +11,8 @@ use crate::{
         execute_transfer_from,
     },
     msg::{
-        ApproveForAllMsg, ApproveMsg, BurnMsg, CheckOwnerMsg, MintMsg, MultiMintMsg, NFTInitMsg,
-        RevokeForAllMsg, RevokeMsg, SetBaseUriMsg, TransferFromMsg, TransferMsg, UpdateMinterMsg,
+        NFTApproveForAllMsg, NFTApproveMsg, NFTBurnMsg, CheckOwnerMsg, NFTMintMsg, MultiMintMsg, NFTInitMsg,
+        RevokeForAllMsg, RevokeMsg, SetBaseUriMsg, NFTTransferFromMsg, TransferMsg, UpdateMinterMsg,
         UpdateParentMsg,
     },
     state::MPC721ContractState,
@@ -55,7 +55,7 @@ fn proper_mint() {
 
     let mut state = execute_init(&mock_contract_context(2), &msg);
 
-    let mint_msg = MintMsg {
+    let mint_msg = NFTMintMsg {
         token_id: 1,
         to: mock_address(alice),
         token_uri: Some("token".to_string()),
@@ -94,7 +94,7 @@ fn token_already_minted_on_mint() {
 
     let mut state = execute_init(&mock_contract_context(2), &msg);
 
-    let mint_msg = MintMsg {
+    let mint_msg = NFTMintMsg {
         token_id: 1,
         to: mock_address(alice),
         token_uri: None,
@@ -102,7 +102,7 @@ fn token_already_minted_on_mint() {
 
     let _ = execute_mint(&mock_contract_context(minter), &mut state, &mint_msg);
 
-    let mint_msg = MintMsg {
+    let mint_msg = NFTMintMsg {
         token_id: 1,
         to: mock_address(alice),
         token_uri: None,
@@ -125,7 +125,7 @@ fn proper_set_approve_for_all() {
 
     let mut state = execute_init(&mock_contract_context(2), &msg);
 
-    let approve_all_msg = ApproveForAllMsg {
+    let approve_all_msg = NFTApproveForAllMsg {
         operator: mock_address(bob),
         approved: true,
     };
@@ -139,7 +139,7 @@ fn proper_set_approve_for_all() {
         }]
     );
 
-    let approve_all_msg = ApproveForAllMsg {
+    let approve_all_msg = NFTApproveForAllMsg {
         operator: mock_address(alice),
         approved: true,
     };
@@ -174,7 +174,7 @@ fn proper_token_operator_approve() {
 
     let mut state = execute_init(&mock_contract_context(2), &msg);
 
-    let mint_msg = MintMsg {
+    let mint_msg = NFTMintMsg {
         token_id: 1,
         to: mock_address(alice),
         token_uri: None,
@@ -189,7 +189,7 @@ fn proper_token_operator_approve() {
         }),
     );
 
-    let approve_msg = ApproveMsg {
+    let approve_msg = NFTApproveMsg {
         approved: Some(mock_address(jack)),
         token_id: 1,
     };
@@ -220,7 +220,7 @@ fn approve_not_minted_token() {
 
     let mut state = execute_init(&mock_contract_context(2), &msg);
 
-    let approve_msg = ApproveMsg {
+    let approve_msg = NFTApproveMsg {
         approved: Some(mock_address(jack)),
         token_id: 1,
     };
@@ -243,7 +243,7 @@ fn not_owner_or_operator_approve() {
 
     let mut state = execute_init(&mock_contract_context(2), &msg);
 
-    let mint_msg = MintMsg {
+    let mint_msg = NFTMintMsg {
         token_id: 1,
         to: mock_address(alice),
         token_uri: None,
@@ -251,7 +251,7 @@ fn not_owner_or_operator_approve() {
 
     let _ = execute_mint(&mock_contract_context(minter), &mut state, &mint_msg);
 
-    let approve_msg = ApproveMsg {
+    let approve_msg = NFTApproveMsg {
         approved: Some(mock_address(bob)),
         token_id: 1,
     };
@@ -275,7 +275,7 @@ fn proper_owner_transfer() {
 
     let mut state = execute_init(&mock_contract_context(2), &msg);
 
-    let mint_msg = MintMsg {
+    let mint_msg = NFTMintMsg {
         token_id: 1,
         to: mock_address(alice),
         token_uri: None,
@@ -283,7 +283,7 @@ fn proper_owner_transfer() {
 
     let _ = execute_mint(&mock_contract_context(minter), &mut state, &mint_msg);
 
-    let transfer_msg = TransferFromMsg {
+    let transfer_msg = NFTTransferFromMsg {
         from: mock_address(alice),
         to: mock_address(bob),
         token_id: 1,
@@ -313,7 +313,7 @@ fn proper_approved_transfer() {
 
     let mut state = execute_init(&mock_contract_context(2), &msg);
 
-    let mint_msg = MintMsg {
+    let mint_msg = NFTMintMsg {
         token_id: 1,
         to: mock_address(alice),
         token_uri: None,
@@ -321,14 +321,14 @@ fn proper_approved_transfer() {
 
     let _ = execute_mint(&mock_contract_context(minter), &mut state, &mint_msg);
 
-    let approve_msg = ApproveMsg {
+    let approve_msg = NFTApproveMsg {
         approved: Some(mock_address(bob)),
         token_id: 1,
     };
 
     let _ = execute_approve(&mock_contract_context(alice), &mut state, &approve_msg);
 
-    let transfer_msg = TransferFromMsg {
+    let transfer_msg = NFTTransferFromMsg {
         from: mock_address(alice),
         to: mock_address(bob),
         token_id: 1,
@@ -359,7 +359,7 @@ fn proper_operator_transfer() {
 
     let mut state = execute_init(&mock_contract_context(2), &msg);
 
-    let mint_msg = MintMsg {
+    let mint_msg = NFTMintMsg {
         token_id: 1,
         to: mock_address(alice),
         token_uri: None,
@@ -367,14 +367,14 @@ fn proper_operator_transfer() {
 
     let _ = execute_mint(&mock_contract_context(minter), &mut state, &mint_msg);
 
-    let approve_all_msg = ApproveForAllMsg {
+    let approve_all_msg = NFTApproveForAllMsg {
         operator: mock_address(bob),
         approved: true,
     };
     let _ =
         execute_set_approval_for_all(&mock_contract_context(alice), &mut state, &approve_all_msg);
 
-    let transfer_msg = TransferFromMsg {
+    let transfer_msg = NFTTransferFromMsg {
         from: mock_address(alice),
         to: mock_address(bob),
         token_id: 1,
@@ -407,7 +407,7 @@ fn transfer_not_minted_token() {
 
     let mut state = execute_init(&mock_contract_context(2), &msg);
 
-    let transfer_msg = TransferFromMsg {
+    let transfer_msg = NFTTransferFromMsg {
         from: mock_address(alice),
         to: mock_address(bob),
         token_id: 1,
@@ -432,7 +432,7 @@ fn transfer_not_owner_or_approved_token() {
 
     let mut state = execute_init(&mock_contract_context(2), &msg);
 
-    let mint_msg = MintMsg {
+    let mint_msg = NFTMintMsg {
         token_id: 1,
         to: mock_address(alice),
         token_uri: None,
@@ -440,7 +440,7 @@ fn transfer_not_owner_or_approved_token() {
 
     let _ = execute_mint(&mock_contract_context(minter), &mut state, &mint_msg);
 
-    let transfer_msg = TransferFromMsg {
+    let transfer_msg = NFTTransferFromMsg {
         from: mock_address(alice),
         to: mock_address(jack),
         token_id: 1,
@@ -463,7 +463,7 @@ fn proper_transfer_from() {
 
     let mut state = execute_init(&mock_contract_context(2), &msg);
 
-    let mint_msg = MintMsg {
+    let mint_msg = NFTMintMsg {
         token_id: 1,
         to: mock_address(alice),
         token_uri: None,
@@ -471,7 +471,7 @@ fn proper_transfer_from() {
 
     let _ = execute_mint(&mock_contract_context(minter), &mut state, &mint_msg);
 
-    let transfer_msg = TransferFromMsg {
+    let transfer_msg = NFTTransferFromMsg {
         from: mock_address(alice),
         to: mock_address(bob),
         token_id: 1,
@@ -504,7 +504,7 @@ fn transfer_from_not_minted_token() {
 
     let mut state = execute_init(&mock_contract_context(2), &msg);
 
-    let transfer_msg = TransferFromMsg {
+    let transfer_msg = NFTTransferFromMsg {
         from: mock_address(alice),
         to: mock_address(bob),
         token_id: 1,
@@ -526,7 +526,7 @@ fn proper_burn() {
 
     let mut state = execute_init(&mock_contract_context(2), &msg);
 
-    let mint_msg = MintMsg {
+    let mint_msg = NFTMintMsg {
         token_id: 1,
         to: mock_address(alice),
         token_uri: None,
@@ -534,7 +534,7 @@ fn proper_burn() {
 
     let _ = execute_mint(&mock_contract_context(minter), &mut state, &mint_msg);
 
-    let burn_msg = BurnMsg { token_id: 1 };
+    let burn_msg = NFTBurnMsg { token_id: 1 };
 
     let _ = execute_burn(&mock_contract_context(alice), &mut state, &burn_msg);
     assert_eq!(state.supply, 0);
@@ -555,6 +555,6 @@ fn burn_not_minted_token() {
 
     let mut state = execute_init(&mock_contract_context(2), &msg);
 
-    let burn_msg = BurnMsg { token_id: 1 };
+    let burn_msg = NFTBurnMsg { token_id: 1 };
     let _ = execute_burn(&mock_contract_context(alice), &mut state, &burn_msg);
 }
