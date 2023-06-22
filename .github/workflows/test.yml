@@ -20,9 +20,6 @@ jobs:
       - name: Setup caching dependencies
         uses: Swatinem/rust-cache@v2
 
-      - name: Install partisia-contract
-        run: cargo install cargo-partisia-contract
-
       - name: Fetch dependencies
         run: cargo fetch --target wasm32-unknown-unknown
 
