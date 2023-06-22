@@ -24,4 +24,4 @@ jobs:
         run: cargo fetch --target wasm32-unknown-unknown
 
       - name: Check build
-        run: cargo check --target wasm32-unknown-unknown
+        run: cargo check --all-features --target wasm32-unknown-unknown
