@@ -1,4 +1,5 @@
 [workspace]
+resolver = "2"
 
 members = [
   "contract",
@@ -8,6 +9,10 @@ members = [
   "rpc-msg-derive",
   "utils",
 ]
+
+[workspace.metadata.partisiablockchain]
+cargo-partisia = "1.33.0"
+contract-integrationtest = "3.103.0"
 
 [workspace.dependencies]
 pbc_contract_common = { git = "https://git@gitlab.com/partisiablockchain/language/contract-sdk.git", tag = "15.1.0" }
