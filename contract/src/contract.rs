@@ -1,5 +1,3 @@
-use std::vec;
-
 use crate::{msg::InitMsg, state::ContractState};
 
 use contract_version_base::state::ContractVersionBase;

@@ -1,5 +1,3 @@
-use std::vec;
-
 use contract_version_base::state::ContractVersionBase;
 use pbc_contract_common::{
     context::ContractContext, events::EventGroup, sorted_vec_map::SortedVecMap,
