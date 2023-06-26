@@ -3,8 +3,8 @@ use pbc_contract_common::{
     context::ContractContext,
     events::EventGroupBuilder,
 };
-use pbc_traits::WriteRPC;
 use pbc_traits::ReadRPC;
+use pbc_traits::WriteRPC;
 
 use crate::contract_deployer::init_msg_signature;
 

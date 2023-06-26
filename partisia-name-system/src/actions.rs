@@ -80,7 +80,11 @@ pub fn execute_record_update(
     assert!(state.is_minted(&msg.domain), "{}", ContractError::NotFound);
 
     let domain = state.domains.get_mut(&msg.domain).unwrap();
-    assert!(domain.is_record_minted(&msg.class), "{}", ContractError::NotFound);
+    assert!(
+        domain.is_record_minted(&msg.class),
+        "{}",
+        ContractError::NotFound
+    );
 
     domain.update_record_data(&msg.class, &msg.data);
 
@@ -99,7 +103,11 @@ pub fn execute_record_delete(
     assert!(state.is_minted(&msg.domain), "{}", ContractError::NotFound);
 
     let domain = state.domains.get_mut(&msg.domain).unwrap();
-    assert!(domain.is_record_minted(&msg.class), "{}", ContractError::NotFound);
+    assert!(
+        domain.is_record_minted(&msg.class),
+        "{}",
+        ContractError::NotFound
+    );
 
     domain.delete_record(&msg.class);
 

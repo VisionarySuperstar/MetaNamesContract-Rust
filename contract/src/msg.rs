@@ -29,4 +29,3 @@ pub struct MintMsg {
     /// optional parent
     pub parent_id: Option<Vec<u8>>,
 }
-

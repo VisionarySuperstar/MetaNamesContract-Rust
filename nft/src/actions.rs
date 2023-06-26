@@ -3,7 +3,9 @@ use pbc_contract_common::{
 };
 
 use crate::{
-    msg::{NFTApproveForAllMsg, NFTApproveMsg, NFTBurnMsg, NFTMintMsg, NFTInitMsg, NFTTransferFromMsg},
+    msg::{
+        NFTApproveForAllMsg, NFTApproveMsg, NFTBurnMsg, NFTInitMsg, NFTMintMsg, NFTTransferFromMsg,
+    },
     state::{MPC721ContractState, OperatorApproval, URL_LENGTH},
     ContractError,
 };

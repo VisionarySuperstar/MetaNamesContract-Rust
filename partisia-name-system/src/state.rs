@@ -59,7 +59,11 @@ impl Domain {
     /// ## Description
     /// Mints record for token
     pub fn mint_record(&mut self, class: &RecordClass, data: &str) {
-        assert!(!self.is_record_minted(class), "{}", ContractError::RecordMinted);
+        assert!(
+            !self.is_record_minted(class),
+            "{}",
+            ContractError::RecordMinted
+        );
 
         let record = Record {
             data: data.to_string(),
@@ -70,7 +74,11 @@ impl Domain {
     /// ## Description
     /// Update data of a record
     pub fn update_record_data(&mut self, class: &RecordClass, data: &str) {
-        assert!(self.is_record_minted(class), "{}", ContractError::RecordNotMinted);
+        assert!(
+            self.is_record_minted(class),
+            "{}",
+            ContractError::RecordNotMinted
+        );
 
         self.records.get_mut(&class).map(|record| {
             record.data = data.to_string();

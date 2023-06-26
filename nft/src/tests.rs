@@ -182,9 +182,7 @@ fn proper_token_operator_approve() {
     let _ = execute_approve(&mock_contract_context(alice), &mut state, &approve_msg);
     assert_eq!(
         state.token_approvals,
-        SortedVecMap::from([
-            (1,mock_address(jack))
-        ]),
+        SortedVecMap::from([(1, mock_address(jack))]),
     );
 }
 
@@ -272,12 +270,7 @@ fn proper_owner_transfer_from() {
     };
 
     let _ = execute_transfer_from(&mock_contract_context(alice), &mut state, &transfer_msg);
-    assert_eq!(
-        state.owners,
-        SortedVecMap::from([
-            (1,mock_address(bob))
-        ]),
-    );
+    assert_eq!(state.owners, SortedVecMap::from([(1, mock_address(bob))]),);
 }
 
 #[test]
@@ -316,12 +309,7 @@ fn proper_approved_transfer_from() {
     };
 
     let _ = execute_transfer_from(&mock_contract_context(bob), &mut state, &transfer_msg);
-    assert_eq!(
-        state.owners,
-        SortedVecMap::from([
-            (1, mock_address(bob))
-        ]),
-    );
+    assert_eq!(state.owners, SortedVecMap::from([(1, mock_address(bob))]),);
     assert_eq!(state.token_approvals, SortedVecMap::new(),);
 }
 
@@ -361,16 +349,15 @@ fn proper_operator_transfer_from() {
     };
 
     let _ = execute_transfer_from(&mock_contract_context(bob), &mut state, &transfer_msg);
-    assert_eq!(
-        state.owners,
-        SortedVecMap::from([
-            (1, mock_address(bob))
-        ]),
-    );
+    assert_eq!(state.owners, SortedVecMap::from([(1, mock_address(bob))]),);
     assert_eq!(state.token_approvals, SortedVecMap::new(),);
-    assert_eq!(state.operator_approvals, vec![
-        OperatorApproval { owner: mock_address(alice), operator: mock_address(bob)}
-    ]);
+    assert_eq!(
+        state.operator_approvals,
+        vec![OperatorApproval {
+            owner: mock_address(alice),
+            operator: mock_address(bob)
+        }]
+    );
 }
 
 #[test]
