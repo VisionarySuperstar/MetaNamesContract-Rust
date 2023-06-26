@@ -80,7 +80,7 @@ impl Domain {
             ContractError::RecordNotMinted
         );
 
-        self.records.get_mut(&class).map(|record| {
+        self.records.get_mut(class).map(|record| {
             record.data = data.to_string();
             record
         });
@@ -91,8 +91,8 @@ impl Domain {
     pub fn delete_record(&mut self, class: &RecordClass) {
         assert!(self.is_record_minted(class), "{}", ContractError::NotMinted);
 
-        if self.records.contains_key(&class) {
-            self.records.remove_entry(&class);
+        if self.records.contains_key(class) {
+            self.records.remove_entry(class);
         } else {
             panic!("{}", ContractError::NotFound);
         }
