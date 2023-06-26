@@ -20,16 +20,11 @@ jobs:
   build-contract:
     runs-on: ubuntu-latest
     needs: test
+    container:
+      image: registry.gitlab.com/partisia/dockerimages/rustmaven:1.67
 
     steps:
       - uses: actions/checkout@v3
-
-      - name: Setup Rust
-        uses: actions-rs/toolchain@v1
-        with:
-          profile: minimal
-          toolchain: 1.69.0
-          target: wasm32-unknown-unknown
 
       - name: Setup caching dependencies
         uses: Swatinem/rust-cache@v2
