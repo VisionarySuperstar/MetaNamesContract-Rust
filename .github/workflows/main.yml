@@ -26,6 +26,9 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
+      - name: Set default rust version
+        run: rustup default 1.67
+
       - name: Setup caching dependencies
         uses: Swatinem/rust-cache@v2
 
