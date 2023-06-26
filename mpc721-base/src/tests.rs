@@ -368,7 +368,9 @@ fn proper_operator_transfer_from() {
         ]),
     );
     assert_eq!(state.token_approvals, SortedVecMap::new(),);
-    assert_eq!(state.operator_approvals, vec![]);
+    assert_eq!(state.operator_approvals, vec![
+        OperatorApproval { owner: mock_address(alice), operator: mock_address(bob)}
+    ]);
 }
 
 #[test]

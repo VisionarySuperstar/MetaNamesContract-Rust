@@ -1,11 +1,10 @@
 use create_type_spec_derive::CreateTypeSpec;
 use pbc_contract_common::{address::Address, sorted_vec_map::SortedVecMap};
-use read_write_rpc_derive::ReadWriteRPC;
 use read_write_state_derive::ReadWriteState;
 
 use crate::ContractError;
 
-pub const URL_LENGTH: usize = 128;
+pub const URL_LENGTH: usize = 64;
 
 /// ## Description
 /// This structure describes main mpc721 contract state.
@@ -21,7 +20,7 @@ pub struct MPC721ContractState {
     pub token_uri_details: SortedVecMap<u128, [u8; URL_LENGTH]>,
 }
 
-#[derive(ReadWriteRPC, ReadWriteState, CreateTypeSpec, Clone, PartialEq, Eq, Debug)]
+#[derive(ReadWriteState, CreateTypeSpec, Clone, PartialEq, Eq, Debug)]
 pub struct OperatorApproval {
     pub owner: Address,
     pub operator: Address,
@@ -30,11 +29,6 @@ pub struct OperatorApproval {
 impl MPC721ContractState {
     /// Find the owner of an NFT.
     /// Throws if no such token exists.
-    ///
-    /// ### Parameters:
-    ///
-    /// * `token_id`: [`u128`] The identifier for an NFT.
-    ///
     /// ### Returns:
     ///
     /// An [`Address`] for the owner of the NFT.
@@ -163,19 +157,6 @@ impl MPC721ContractState {
 
         // clear approvals from the previous owner
         self._approve(None, token_id);
-
-        // Get all approvals indexes from the previous owner
-        // And remove old operator approvals
-        let old_approvals_indexes: Vec<usize> = self
-            .operator_approvals
-            .iter()
-            .enumerate()
-            .filter(|(_, approval)| approval.owner == from)
-            .map(|(index, _)| index)
-            .collect();
-        for index in old_approvals_indexes {
-            self.operator_approvals.swap_remove(index);
-        }
 
         self.owners.insert(token_id, to);
     }

@@ -45,7 +45,7 @@ pub fn execute_mint(
             ContractError::UriTooLong
         );
 
-        let mut uri_details: [u8; 128] = [0; URL_LENGTH];
+        let mut uri_details: [u8; URL_LENGTH] = [0; URL_LENGTH];
         uri_details[..formatted_uri.len()].copy_from_slice(&formatted_uri);
         state.token_uri_details.insert(msg.token_id, uri_details);
     }
