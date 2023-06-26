@@ -29,6 +29,9 @@ jobs:
       - name: Set default rust version
         run: rustup default 1.67
 
+      - name: Add wasm target
+        run: rustup target add wasm32-unknown-unknown
+
       - name: Setup caching dependencies
         uses: Swatinem/rust-cache@v2
 
