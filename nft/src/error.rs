@@ -1,7 +1,7 @@
 use thiserror::Error;
 
 /// ## Description
-/// This enum describes mpc721 contract errors
+/// This enum describes NFT contract errors
 #[derive(Error, Debug)]
 pub enum ContractError {
     #[error("Unauthorized")]

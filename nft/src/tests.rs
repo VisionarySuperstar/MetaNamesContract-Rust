@@ -11,7 +11,7 @@ use crate::{
     msg::{
         NFTApproveForAllMsg, NFTApproveMsg, NFTBurnMsg, NFTInitMsg, NFTMintMsg, NFTTransferFromMsg,
     },
-    state::MPC721ContractState,
+    state::NFTContractState,
 };
 
 #[test]
@@ -25,7 +25,7 @@ fn proper_execute_init() {
     let state = execute_init(&mock_contract_context(2), &msg);
     assert_eq!(
         state,
-        MPC721ContractState {
+        NFTContractState {
             name: "Cool Token".to_string(),
             symbol: "CTC".to_string(),
             uri_template: "ipfs://some.some".to_string(),

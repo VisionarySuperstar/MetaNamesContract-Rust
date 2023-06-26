@@ -1,4 +1,4 @@
-use mpc721_base::msg::{NFTApproveForAllMsg, NFTApproveMsg, NFTTransferFromMsg};
+use nft::msg::{NFTApproveForAllMsg, NFTApproveMsg, NFTTransferFromMsg};
 use partisia_name_system::{
     msg::{PnsRecordDeleteMsg, PnsRecordMintMsg, PnsRecordUpdateMsg},
     state::RecordClass,

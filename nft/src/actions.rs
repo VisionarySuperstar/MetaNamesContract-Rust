@@ -6,16 +6,16 @@ use crate::{
     msg::{
         NFTApproveForAllMsg, NFTApproveMsg, NFTBurnMsg, NFTInitMsg, NFTMintMsg, NFTTransferFromMsg,
     },
-    state::{MPC721ContractState, OperatorApproval, URL_LENGTH},
+    state::{NFTContractState, OperatorApproval, URL_LENGTH},
     ContractError,
 };
 
 /// ## Description
 /// Inits contract state.
-/// Returns [`(MPC721ContractState, Vec<EventGroup>)`] if operation was successful,
+/// Returns [`NFTContractState`] if operation was successful,
 /// otherwise panics with error message defined in [`ContractError`]
-pub fn execute_init(ctx: &ContractContext, msg: &NFTInitMsg) -> MPC721ContractState {
-    MPC721ContractState {
+pub fn execute_init(ctx: &ContractContext, msg: &NFTInitMsg) -> NFTContractState {
+    NFTContractState {
         name: msg.name.clone(),
         symbol: msg.symbol.clone(),
         supply: 0,
@@ -29,11 +29,11 @@ pub fn execute_init(ctx: &ContractContext, msg: &NFTInitMsg) -> MPC721ContractSt
 
 /// ## Description
 /// Mint a new token. Can only be executed by minter account.
-/// Returns [`(MPC721ContractState, Vec<EventGroup>)`] if operation was successful,
+/// Returns [`NFTContractState`] if operation was successful,
 /// otherwise panics with error message defined in [`ContractError`]
 pub fn execute_mint(
     ctx: &ContractContext,
-    state: &mut MPC721ContractState,
+    state: &mut NFTContractState,
     msg: &NFTMintMsg,
 ) -> Vec<EventGroup> {
     assert!(!state.exists(msg.token_id), "{}", ContractError::Minted);
@@ -63,7 +63,7 @@ pub fn execute_mint(
 /// operator of the current owner.
 pub fn execute_approve(
     ctx: &ContractContext,
-    state: &mut MPC721ContractState,
+    state: &mut NFTContractState,
     msg: &NFTApproveMsg,
 ) -> Vec<EventGroup> {
     let owner = state.owner_of(msg.token_id);
@@ -82,7 +82,7 @@ pub fn execute_approve(
 /// Throws if `operator` == `ctx.sender`.
 pub fn execute_set_approval_for_all(
     ctx: &ContractContext,
-    state: &mut MPC721ContractState,
+    state: &mut NFTContractState,
     msg: &NFTApproveForAllMsg,
 ) -> Vec<EventGroup> {
     assert!(
@@ -123,7 +123,7 @@ pub fn execute_set_approval_for_all(
 /// not the current owner. Throws if `token_id` is not a valid NFT.
 pub fn execute_transfer_from(
     ctx: &ContractContext,
-    state: &mut MPC721ContractState,
+    state: &mut NFTContractState,
     msg: &NFTTransferFromMsg,
 ) -> Vec<EventGroup> {
     assert!(
@@ -142,7 +142,7 @@ pub fn execute_transfer_from(
 /// Requires that the `token_id` exists and `ctx.sender` is approved or owner of the token.
 pub fn execute_burn(
     ctx: &ContractContext,
-    state: &mut MPC721ContractState,
+    state: &mut NFTContractState,
     msg: &NFTBurnMsg,
 ) -> Vec<EventGroup> {
     let token_id = msg.token_id;

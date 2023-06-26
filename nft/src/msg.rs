@@ -6,7 +6,7 @@ use rpc_msg_derive::IntoShortnameRPCEvent;
 use utils::events::IntoShortnameRPCEvent;
 
 /// ## Description
-/// This structure describes fields for mpc721 initialize msg
+/// This structure describes fields for NFT initialize msg
 #[derive(ReadWriteRPC, CreateTypeSpec, Clone, PartialEq, Eq, Debug)]
 pub struct NFTInitMsg {
     pub name: String,
@@ -15,7 +15,7 @@ pub struct NFTInitMsg {
 }
 
 /// ## Description
-/// This structure describes fields for mpc721 transfer from msg
+/// This structure describes fields for NFT transfer from msg
 #[derive(ReadWriteRPC, CreateTypeSpec, IntoShortnameRPCEvent, Clone, PartialEq, Eq, Debug)]
 #[rpc_msg(action = 0x03)]
 pub struct NFTTransferFromMsg {
@@ -28,7 +28,7 @@ pub struct NFTTransferFromMsg {
 }
 
 /// ## Description
-/// This structure describes fields for mpc721 approve msg
+/// This structure describes fields for NFT approve msg
 #[derive(ReadWriteRPC, CreateTypeSpec, IntoShortnameRPCEvent, Clone, PartialEq, Eq, Debug)]
 #[rpc_msg(action = 0x05)]
 pub struct NFTApproveMsg {
@@ -38,7 +38,7 @@ pub struct NFTApproveMsg {
 }
 
 /// ## Description
-/// This structure describes fields for mpc721 approve for all msg
+/// This structure describes fields for NFT approve for all msg
 #[derive(ReadWriteRPC, CreateTypeSpec, IntoShortnameRPCEvent, Clone, PartialEq, Eq, Debug)]
 #[rpc_msg(action = 0x07)]
 pub struct NFTApproveForAllMsg {
@@ -48,7 +48,7 @@ pub struct NFTApproveForAllMsg {
 }
 
 /// ## Description
-/// This structure describes fields for mpc721 mint msg
+/// This structure describes fields for NFT mint msg
 #[derive(ReadWriteRPC, CreateTypeSpec, IntoShortnameRPCEvent, Clone, PartialEq, Eq, Debug)]
 #[rpc_msg(action = 0x09)]
 pub struct NFTMintMsg {

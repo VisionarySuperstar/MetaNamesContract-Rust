@@ -3,7 +3,7 @@ use crate::{msg::InitMsg, state::ContractState};
 use contract_version_base::state::ContractVersionBase;
 use pbc_contract_common::{address::Address, context::ContractContext, events::EventGroup};
 
-use mpc721_base::{actions as nft_actions, msg as nft_msg};
+use nft::{actions as nft_actions, msg as nft_msg};
 
 use partisia_name_system::{actions as pns_actions, msg as pns_msg, state::RecordClass};
 

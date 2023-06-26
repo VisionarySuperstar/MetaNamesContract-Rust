@@ -7,9 +7,9 @@ use crate::ContractError;
 pub const URL_LENGTH: usize = 64;
 
 /// ## Description
-/// This structure describes main mpc721 contract state.
+/// This structure describes main NFT contract state.
 #[derive(ReadWriteState, CreateTypeSpec, Clone, PartialEq, Eq, Debug)]
-pub struct MPC721ContractState {
+pub struct NFTContractState {
     pub name: String,
     pub symbol: String,
     pub owners: SortedVecMap<u128, Address>,
@@ -26,7 +26,7 @@ pub struct OperatorApproval {
     pub operator: Address,
 }
 
-impl MPC721ContractState {
+impl NFTContractState {
     /// Find the owner of an NFT.
     /// Throws if no such token exists.
     /// ### Returns:
