@@ -21,7 +21,7 @@ create_type_spec_derive = { workspace = true }
 
 contract-version-base = { path = "../contract-version-base" }
 partisia-name-system = { path = "../partisia-name-system" }
-mpc721-base = { path = "../mpc721-base" }
+nft = { path = "../nft" }
 
 utils = { path = "../utils" }
 rpc-msg-derive = { path = "../rpc-msg-derive" }
@@ -33,5 +33,5 @@ thiserror = { workspace = true }
 utils = { path = "../utils" }
 
 [features]
-abi = ["pbc_contract_common/abi", "pbc_contract_codegen/abi", "pbc_traits/abi", "create_type_spec_derive/abi", "partisia-name-system/abi", "mpc721-base/abi", "contract-version-base/abi", "utils/abi"]
+abi = ["pbc_contract_common/abi", "pbc_contract_codegen/abi", "pbc_traits/abi", "create_type_spec_derive/abi", "partisia-name-system/abi", "nft/abi", "contract-version-base/abi", "utils/abi"]
 
