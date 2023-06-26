@@ -1,6 +1,6 @@
 use pbc_contract_common::address::{Address, AddressType};
-use pbc_contract_common::Hash;
 use pbc_contract_common::context::ContractContext;
+use pbc_contract_common::Hash;
 
 pub fn mock_address(le: u8) -> Address {
     Address {

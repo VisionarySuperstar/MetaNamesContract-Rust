@@ -1,13 +1,10 @@
 [package]
-name = "mpc721-hierarchy"
+name = "nft"
 version = "1.1.0"
 edition = "2021"
 
 [lib]
 crate-type = ["cdylib", "rlib"]
-
-[package.metadata.partisiablockchain]
-cargo-partisia = "0.2.9"
 
 [dependencies]
 pbc_contract_common = { workspace = true }
@@ -21,8 +18,8 @@ create_type_spec_derive = { workspace = true }
 utils = { path = "../utils" }
 rpc-msg-derive = { path = "../rpc-msg-derive" }
 
-serde_json = "1.0"
-thiserror = "1.0.31"
+serde_json = { workspace = true }
+thiserror = { workspace = true }
 
 [features]
 abi = ["pbc_contract_common/abi", "pbc_contract_codegen/abi", "pbc_traits/abi", "create_type_spec_derive/abi"]

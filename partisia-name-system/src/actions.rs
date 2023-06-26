@@ -3,14 +3,8 @@ use pbc_contract_common::{
     context::ContractContext, events::EventGroup, sorted_vec_map::SortedVecMap,
 };
 
-use mpc721_hierarchy::{actions as mpc721_actions, msg as mpc721_msg};
-
 use crate::{
-    msg::{
-        PnsApproveForAllMsg, PnsApproveMsg, PnsBurnMsg, PnsCheckOwnerMsg, PnsInitMsg, PnsMintMsg,
-        PnsMultiMintMsg, PnsRevokeForAllMsg, PnsRevokeMsg, PnsSetBaseUriMsg, PnsTransferFromMsg,
-        PnsTransferMsg, PnsUpdateMinterMsg, RecordDeleteMsg, RecordMintMsg, RecordUpdateMsg,
-    },
+    msg::{PnsMintMsg, PnsRecordDeleteMsg, PnsRecordMintMsg, PnsRecordUpdateMsg},
     state::{Domain, PartisiaNameSystemState},
     ContractError,
 };
@@ -22,133 +16,12 @@ const CONTRACT_VERSION: &str = env!("CARGO_PKG_VERSION");
 /// Inits contract state.
 /// Returns [`(PartisiaNameSystemState, Vec<EventGroup>)`] if operation was successful,
 /// otherwise panics with error message defined in [`ContractError`]
-pub fn execute_init(
-    ctx: &ContractContext,
-    msg: &PnsInitMsg,
-) -> (PartisiaNameSystemState, Vec<EventGroup>) {
-    let mpc721_msg = mpc721_msg::InitMsg {
-        owner: msg.owner,
-        name: msg.name.clone(),
-        symbol: msg.symbol.clone(),
-        base_uri: msg.base_uri.clone(),
-        minter: msg.minter,
-    };
-
-    let (mpc721, mut events) = mpc721_actions::execute_init(ctx, &mpc721_msg);
-    let mut state = PartisiaNameSystemState {
-        mpc721,
+pub fn execute_init(ctx: &ContractContext) -> PartisiaNameSystemState {
+    PartisiaNameSystemState {
         domains: SortedVecMap::new(),
         records: SortedVecMap::new(),
         version: ContractVersionBase::new(CONTRACT_NAME, CONTRACT_VERSION),
-    };
-
-    let mut mint_events: Vec<EventGroup> = vec![];
-    if let Some(tld) = &msg.tld {
-        let mint_msg = PnsMintMsg {
-            token_id: tld.clone(),
-            to: msg.minter,
-            token_uri: msg.tld_uri.clone(),
-            parent_id: None,
-        };
-
-        let ctx_with_sender = ContractContext {
-            sender: msg.minter,
-            current_transaction: ctx.current_transaction.to_owned(),
-            original_transaction: ctx.original_transaction.to_owned(),
-            ..*ctx
-        };
-
-        mint_events = execute_mint(&ctx_with_sender, &mut state, &mint_msg);
     }
-
-    events.extend(mint_events);
-
-    (state, events)
-}
-
-/// ## Description
-/// Transfer token to another account.
-/// Returns [`Vec<EventGroup>`] if operation was successful,
-/// otherwise panics with error message defined in [`ContractError`]
-pub fn execute_transfer(
-    ctx: &ContractContext,
-    state: &mut PartisiaNameSystemState,
-    msg: &PnsTransferMsg,
-) -> Vec<EventGroup> {
-    let num_token_id = state.token_id(&msg.token_id);
-    assert!(num_token_id.is_some(), "{}", ContractError::NotFound);
-
-    mpc721_actions::execute_transfer(
-        ctx,
-        &mut state.mpc721,
-        &mpc721_msg::TransferMsg {
-            to: msg.to,
-            token_id: num_token_id.unwrap(),
-        },
-    )
-}
-
-/// ## Description
-/// Only with approval extension. Transfer token from owner to spender.
-/// Returns [`Vec<EventGroup>`] if operation was successful,
-/// otherwise panics with error message defined in [`ContractError`]
-pub fn execute_transfer_from(
-    ctx: &ContractContext,
-    state: &mut PartisiaNameSystemState,
-    msg: &PnsTransferFromMsg,
-) -> Vec<EventGroup> {
-    let num_token_id = state.token_id(&msg.token_id);
-    assert!(num_token_id.is_some(), "{}", ContractError::NotFound);
-
-    mpc721_actions::execute_transfer_from(
-        ctx,
-        &mut state.mpc721,
-        &mpc721_msg::TransferFromMsg {
-            from: msg.from,
-            to: msg.to,
-            token_id: num_token_id.unwrap(),
-        },
-    )
-}
-
-/// ## Description
-/// Allows spender to transfer token from the owner account.
-/// Returns [`Vec<EventGroup>`] if operation was successful,
-/// otherwise panics with error message defined in [`ContractError`]
-pub fn execute_approve(
-    ctx: &ContractContext,
-    state: &mut PartisiaNameSystemState,
-    msg: &PnsApproveMsg,
-) -> Vec<EventGroup> {
-    let num_token_id = state.token_id(&msg.token_id);
-    assert!(num_token_id.is_some(), "{}", ContractError::NotFound);
-
-    mpc721_actions::execute_approve(
-        ctx,
-        &mut state.mpc721,
-        &mpc721_msg::ApproveMsg {
-            spender: msg.spender,
-            token_id: num_token_id.unwrap(),
-        },
-    )
-}
-
-/// ## Description
-/// Set base uri for the tokens.
-/// Returns [`Vec<EventGroup>`] if operation was successful,
-/// otherwise panics with error message defined in [`ContractError`]
-pub fn execute_set_base_uri(
-    ctx: &ContractContext,
-    state: &mut PartisiaNameSystemState,
-    msg: &PnsSetBaseUriMsg,
-) -> Vec<EventGroup> {
-    mpc721_actions::execute_set_base_uri(
-        ctx,
-        &mut state.mpc721,
-        &mpc721_msg::SetBaseUriMsg {
-            new_base_uri: msg.new_base_uri.clone(),
-        },
-    )
 }
 
 /// ## Description
@@ -160,190 +33,22 @@ pub fn execute_mint(
     state: &mut PartisiaNameSystemState,
     msg: &PnsMintMsg,
 ) -> Vec<EventGroup> {
-    assert!(!state.is_minted(&msg.token_id), "{}", ContractError::Minted);
+    assert!(!state.is_minted(&msg.domain), "{}", ContractError::Minted);
 
-    // Guards to test validity of parent before creating a new domain
-    if let Some(parent_id) = &msg.parent_id {
-        assert!(state.is_minted(parent_id), "{}", ContractError::NotFound);
-
-        let parent = state.domains.get(parent_id).unwrap();
-        assert!(
-            state.mpc721.allowed_to_manage(&ctx.sender, parent.token_id),
-            "{}",
-            ContractError::Unauthorized
-        );
-    }
-
-    let new_token_id = state.mpc721.supply + 1;
-    let mut events = mpc721_actions::execute_mint(
-        ctx,
-        &mut state.mpc721,
-        &mpc721_msg::MintMsg {
-            token_id: new_token_id,
-            to: msg.to,
-            token_uri: msg.token_uri.clone(),
-        },
-    );
-
-    let mut update_parent_events: Vec<EventGroup> = vec![];
-    if let Some(parent_id) = &msg.parent_id {
-        let parent = state.domains.get(parent_id).unwrap();
-        update_parent_events = mpc721_actions::execute_update_parent(
-            ctx,
-            &mut state.mpc721,
-            &mpc721_msg::UpdateParentMsg {
-                token_id: new_token_id,
-                parent_id: Some(parent.token_id),
-            },
-        );
+    if let Some(parent_id) = msg.parent_id.clone() {
+        assert!(state.is_minted(&parent_id), "{}", ContractError::NotFound);
     }
 
     state.domains.insert(
-        msg.token_id.clone(),
+        msg.domain.clone(),
         Domain {
-            token_id: new_token_id,
+            token_id: msg.token_id,
+            records: SortedVecMap::new(),
+            parent_id: msg.parent_id.clone(),
         },
     );
 
-    events.extend(update_parent_events);
-    events
-}
-
-/// ## Description
-/// Allows operator to transfer any owner tokens from his account.
-/// Returns [`Vec<EventGroup>`] if operation was successful,
-/// otherwise panics with error message defined in [`ContractError`]
-pub fn execute_approve_for_all(
-    ctx: &ContractContext,
-    state: &mut PartisiaNameSystemState,
-    msg: &PnsApproveForAllMsg,
-) -> Vec<EventGroup> {
-    mpc721_actions::execute_approve_for_all(
-        ctx,
-        &mut state.mpc721,
-        &mpc721_msg::ApproveForAllMsg {
-            operator: msg.operator,
-        },
-    )
-}
-
-/// ## Description
-/// Remove approval.
-/// Returns [`Vec<EventGroup>`] if operation was successful,
-/// otherwise panics with error message defined in [`ContractError`]
-pub fn execute_revoke(
-    ctx: &ContractContext,
-    state: &mut PartisiaNameSystemState,
-    msg: &PnsRevokeMsg,
-) -> Vec<EventGroup> {
-    let num_token_id = state.token_id(&msg.token_id);
-    assert!(num_token_id.is_some(), "{}", ContractError::NotFound);
-
-    mpc721_actions::execute_revoke(
-        ctx,
-        &mut state.mpc721,
-        &mpc721_msg::RevokeMsg {
-            spender: msg.spender,
-            token_id: num_token_id.unwrap(),
-        },
-    )
-}
-
-/// ## Description
-/// Remove operator.
-/// Returns [`Vec<EventGroup>`] if operation was successful,
-/// otherwise panics with error message defined in [`ContractError`]
-pub fn execute_revoke_for_all(
-    ctx: &ContractContext,
-    state: &mut PartisiaNameSystemState,
-    msg: &PnsRevokeForAllMsg,
-) -> Vec<EventGroup> {
-    mpc721_actions::execute_revoke_for_all(
-        ctx,
-        &mut state.mpc721,
-        &mpc721_msg::RevokeForAllMsg {
-            operator: msg.operator,
-        },
-    )
-}
-
-/// ## Description
-/// Destroy your token forever.
-/// Returns [`Vec<EventGroup>`] if operation was successful,
-/// otherwise panics with error message defined in [`ContractError`]
-pub fn execute_burn(
-    ctx: &ContractContext,
-    state: &mut PartisiaNameSystemState,
-    msg: &PnsBurnMsg,
-) -> Vec<EventGroup> {
-    let num_token_id = state.token_id(&msg.token_id);
-    assert!(num_token_id.is_some(), "{}", ContractError::NotFound);
-
-    mpc721_actions::execute_burn(
-        ctx,
-        &mut state.mpc721,
-        &mpc721_msg::BurnMsg {
-            token_id: num_token_id.unwrap(),
-        },
-    )
-}
-
-/// ## Description
-/// Updates the minter address checking that the sender is the contract owner address
-/// Returns [`Vec<EventGroup>`] if operation was successful,
-pub fn execute_update_minter(
-    ctx: &ContractContext,
-    state: &mut PartisiaNameSystemState,
-    msg: &PnsUpdateMinterMsg,
-) -> Vec<EventGroup> {
-    mpc721_actions::execute_update_minter(
-        ctx,
-        &mut state.mpc721,
-        mpc721_msg::UpdateMinterMsg {
-            new_minter: msg.new_minter,
-        },
-    )
-}
-
-/// ## Description
-/// Check if a user owns a particular token. Will revert otherwise
-/// Returns [`Vec<EventGroup>`] if operation was successful,
-/// otherwise panics with error message defined in [`ContractError`]
-pub fn execute_ownership_check(
-    ctx: &ContractContext,
-    state: &mut PartisiaNameSystemState,
-    msg: &PnsCheckOwnerMsg,
-) -> Vec<EventGroup> {
-    let num_token_id = state.token_id(&msg.token_id);
-    assert!(num_token_id.is_some(), "{}", ContractError::NotFound);
-
-    mpc721_actions::execute_ownership_check(
-        ctx,
-        &mut state.mpc721,
-        &mpc721_msg::CheckOwnerMsg {
-            token_id: num_token_id.unwrap(),
-            owner: msg.owner,
-        },
-    )
-}
-
-/// ## Description
-/// Mint Multiple NFTs in a single function call
-/// Returns [`Vec<EventGroup>`] if operation was successful,
-/// otherwise panics with error message defined in [`ContractError`]
-pub fn execute_multi_mint(
-    ctx: &ContractContext,
-    state: &mut PartisiaNameSystemState,
-    msg: &PnsMultiMintMsg,
-) -> Vec<EventGroup> {
-    let mut events: Vec<EventGroup> = vec![];
-    for mint in msg.mints.iter() {
-        let event = execute_mint(ctx, state, mint);
-
-        events.extend(event)
-    }
-
-    events
+    vec![]
 }
 
 /// ## Description
@@ -353,22 +58,12 @@ pub fn execute_multi_mint(
 pub fn execute_record_mint(
     ctx: &ContractContext,
     state: &mut PartisiaNameSystemState,
-    msg: &RecordMintMsg,
+    msg: &PnsRecordMintMsg,
 ) -> Vec<EventGroup> {
-    assert!(
-        state.is_minted(&msg.token_id),
-        "{}",
-        ContractError::NotFound
-    );
+    assert!(state.is_minted(&msg.domain), "{}", ContractError::NotFound);
 
-    let domain = state.domain_info(&msg.token_id).unwrap();
-    assert!(
-        state.mpc721.allowed_to_manage(&ctx.sender, domain.token_id),
-        "{}",
-        ContractError::Unauthorized
-    );
-
-    state.mint_record(&msg.token_id, &msg.class, &msg.data);
+    let domain = state.domains.get_mut(&msg.domain).unwrap();
+    domain.mint_record(&msg.class, &msg.data);
 
     vec![]
 }
@@ -380,28 +75,18 @@ pub fn execute_record_mint(
 pub fn execute_record_update(
     ctx: &ContractContext,
     state: &mut PartisiaNameSystemState,
-    msg: &RecordUpdateMsg,
+    msg: &PnsRecordUpdateMsg,
 ) -> Vec<EventGroup> {
+    assert!(state.is_minted(&msg.domain), "{}", ContractError::NotFound);
+
+    let domain = state.domains.get_mut(&msg.domain).unwrap();
     assert!(
-        state.is_minted(&msg.token_id),
+        domain.is_record_minted(&msg.class),
         "{}",
         ContractError::NotFound
     );
 
-    assert!(
-        state.is_record_minted(&msg.token_id, &msg.class),
-        "{}",
-        ContractError::NotFound
-    );
-
-    let domain = state.domain_info(&msg.token_id).unwrap();
-    assert!(
-        state.mpc721.allowed_to_manage(&ctx.sender, domain.token_id),
-        "{}",
-        ContractError::Unauthorized
-    );
-
-    state.update_record_data(&msg.token_id, &msg.class, &msg.data);
+    domain.update_record_data(&msg.class, &msg.data);
 
     vec![]
 }
@@ -413,28 +98,18 @@ pub fn execute_record_update(
 pub fn execute_record_delete(
     ctx: &ContractContext,
     state: &mut PartisiaNameSystemState,
-    msg: &RecordDeleteMsg,
+    msg: &PnsRecordDeleteMsg,
 ) -> Vec<EventGroup> {
+    assert!(state.is_minted(&msg.domain), "{}", ContractError::NotFound);
+
+    let domain = state.domains.get_mut(&msg.domain).unwrap();
     assert!(
-        state.is_minted(&msg.token_id),
+        domain.is_record_minted(&msg.class),
         "{}",
         ContractError::NotFound
     );
 
-    assert!(
-        state.is_record_minted(&msg.token_id, &msg.class),
-        "{}",
-        ContractError::NotFound
-    );
-
-    let domain = state.domain_info(&msg.token_id).unwrap();
-    assert!(
-        state.mpc721.allowed_to_manage(&ctx.sender, domain.token_id),
-        "{}",
-        ContractError::Unauthorized
-    );
-
-    state.delete_record(&msg.token_id, &msg.class);
+    domain.delete_record(&msg.class);
 
     vec![]
 }

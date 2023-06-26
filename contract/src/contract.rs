@@ -1,48 +1,35 @@
-use crate::state::ContractState;
+use crate::{msg::InitMsg, state::ContractState};
 
 use contract_version_base::state::ContractVersionBase;
 use pbc_contract_common::{address::Address, context::ContractContext, events::EventGroup};
 
-use partisia_name_system::{
-    actions::{
-        execute_approve, execute_approve_for_all, execute_burn, execute_init, execute_mint,
-        execute_multi_mint, execute_ownership_check, execute_record_delete, execute_record_mint,
-        execute_record_update, execute_revoke, execute_revoke_for_all, execute_set_base_uri,
-        execute_transfer, execute_transfer_from, execute_update_minter,
-    },
-    msg::{
-        PnsApproveForAllMsg, PnsApproveMsg, PnsBurnMsg, PnsCheckOwnerMsg, PnsInitMsg, PnsMintMsg, PnsMultiMintMsg,
-        RecordDeleteMsg, RecordMintMsg, RecordUpdateMsg, PnsRevokeForAllMsg, PnsRevokeMsg, PnsSetBaseUriMsg,
-        PnsTransferFromMsg, PnsTransferMsg, PnsUpdateMinterMsg,
-    },
-    state::RecordClass,
-};
+use nft::{actions as nft_actions, msg as nft_msg};
+
+use partisia_name_system::{actions as pns_actions, msg as pns_msg, state::RecordClass};
+
+use crate::ContractError;
 
 const CONTRACT_NAME: &str = env!("CARGO_PKG_NAME");
 const CONTRACT_VERSION: &str = env!("CARGO_PKG_VERSION");
 
 #[init]
-pub fn initialize(ctx: ContractContext, msg: PnsInitMsg) -> (ContractState, Vec<EventGroup>) {
-    let (pns, events) = execute_init(&ctx, &msg);
+pub fn initialize(ctx: ContractContext, msg: InitMsg) -> (ContractState, Vec<EventGroup>) {
+    let pns = pns_actions::execute_init(&ctx);
+    let nft = nft_actions::execute_init(
+        &ctx,
+        &nft_msg::NFTInitMsg {
+            name: msg.name,
+            symbol: msg.symbol,
+            uri_template: msg.uri_template,
+        },
+    );
     let state = ContractState {
         pns,
+        nft,
         version: ContractVersionBase::new(CONTRACT_NAME, CONTRACT_VERSION),
     };
 
-    (state, events)
-}
-
-#[action(shortname = 0x01)]
-pub fn transfer(
-    ctx: ContractContext,
-    state: ContractState,
-    to: Address,
-    token_id: Vec<u8>,
-) -> (ContractState, Vec<EventGroup>) {
-    let mut state = state;
-    let events = execute_transfer(&ctx, &mut state.pns, &PnsTransferMsg { to, token_id });
-
-    (state, events)
+    (state, vec![])
 }
 
 #[action(shortname = 0x03)]
@@ -51,13 +38,13 @@ pub fn transfer_from(
     state: ContractState,
     from: Address,
     to: Address,
-    token_id: Vec<u8>,
+    token_id: u128,
 ) -> (ContractState, Vec<EventGroup>) {
     let mut state = state;
-    let events = execute_transfer_from(
+    let events = nft_actions::execute_transfer_from(
         &ctx,
-        &mut state.pns,
-        &PnsTransferFromMsg { from, to, token_id },
+        &mut state.nft,
+        &nft_msg::NFTTransferFromMsg { from, to, token_id },
     );
 
     (state, events)
@@ -67,23 +54,32 @@ pub fn transfer_from(
 pub fn approve(
     ctx: ContractContext,
     state: ContractState,
-    spender: Address,
-    token_id: Vec<u8>,
+    approved: Option<Address>,
+    token_id: u128,
 ) -> (ContractState, Vec<EventGroup>) {
     let mut state = state;
-    let events = execute_approve(&ctx, &mut state.pns, &PnsApproveMsg { spender, token_id });
+    let events = nft_actions::execute_approve(
+        &ctx,
+        &mut state.nft,
+        &nft_msg::NFTApproveMsg { approved, token_id },
+    );
 
     (state, events)
 }
 
 #[action(shortname = 0x07)]
-pub fn set_base_uri(
+pub fn set_approval_for_all(
     ctx: ContractContext,
     state: ContractState,
-    new_base_uri: String,
+    operator: Address,
+    approved: bool,
 ) -> (ContractState, Vec<EventGroup>) {
     let mut state = state;
-    let events = execute_set_base_uri(&ctx, &mut state.pns, &PnsSetBaseUriMsg { new_base_uri });
+    let events = nft_actions::execute_set_approval_for_all(
+        &ctx,
+        &mut state.nft,
+        &nft_msg::NFTApproveForAllMsg { operator, approved },
+    );
 
     (state, events)
 }
@@ -92,122 +88,61 @@ pub fn set_base_uri(
 pub fn mint(
     ctx: ContractContext,
     state: ContractState,
-    token_id: Vec<u8>,
+    domain: Vec<u8>,
     to: Address,
     token_uri: Option<String>,
     parent_id: Option<Vec<u8>>,
 ) -> (ContractState, Vec<EventGroup>) {
+    assert!(!state.pns.is_minted(&domain), "{}", ContractError::Minted);
+
+    // TODO: Manage parentship
+
     let mut state = state;
-    let events = execute_mint(
+    let token_id = state.nft.get_next_token_id();
+    let nft_events = nft_actions::execute_mint(
         &ctx,
-        &mut state.pns,
-        &PnsMintMsg {
-            token_id,
+        &mut state.nft,
+        &nft_msg::NFTMintMsg {
             to,
-            token_uri,
-            parent_id,
+            token_id,
+            token_uri: token_uri.clone(),
         },
     );
 
-    (state, events)
-}
+    let pns_events = pns_actions::execute_mint(
+        &ctx,
+        &mut state.pns,
+        &pns_msg::PnsMintMsg {
+            domain,
+            to,
+            token_uri,
+            parent_id,
+            token_id,
+        },
+    );
 
-#[action(shortname = 0x11)]
-pub fn approve_for_all(
-    ctx: ContractContext,
-    state: ContractState,
-    operator: Address,
-) -> (ContractState, Vec<EventGroup>) {
-    let mut state = state;
-    let events = execute_approve_for_all(&ctx, &mut state.pns, &PnsApproveForAllMsg { operator });
-
-    (state, events)
-}
-
-#[action(shortname = 0x13)]
-pub fn revoke(
-    ctx: ContractContext,
-    state: ContractState,
-    spender: Address,
-    token_id: Vec<u8>,
-) -> (ContractState, Vec<EventGroup>) {
-    let mut state = state;
-    let events = execute_revoke(&ctx, &mut state.pns, &PnsRevokeMsg { spender, token_id });
+    let events = nft_events
+        .into_iter()
+        .chain(pns_events.into_iter())
+        .collect();
 
     (state, events)
-}
-
-#[action(shortname = 0x15)]
-pub fn revoke_for_all(
-    ctx: ContractContext,
-    state: ContractState,
-    operator: Address,
-) -> (ContractState, Vec<EventGroup>) {
-    let mut state = state;
-    let events = execute_revoke_for_all(&ctx, &mut state.pns, &PnsRevokeForAllMsg { operator });
-
-    (state, events)
-}
-
-#[action(shortname = 0x17)]
-pub fn burn(
-    ctx: ContractContext,
-    state: ContractState,
-    token_id: Vec<u8>,
-) -> (ContractState, Vec<EventGroup>) {
-    let mut state = state;
-    let events = execute_burn(&ctx, &mut state.pns, &PnsBurnMsg { token_id });
-
-    (state, events)
-}
-
-#[action(shortname = 0x18)]
-pub fn check_ownership(
-    ctx: ContractContext,
-    state: ContractState,
-    owner: Address,
-    token_id: Vec<u8>,
-) -> (ContractState, Vec<EventGroup>) {
-    let mut state = state;
-    let events = execute_ownership_check(&ctx, &mut state.pns, &PnsCheckOwnerMsg { owner, token_id });
-    (state, events)
-}
-#[action(shortname = 0x19)]
-pub fn update_minter(
-    ctx: ContractContext,
-    state: ContractState,
-    new_minter: Address,
-) -> (ContractState, Vec<EventGroup>) {
-    let mut state = state;
-    let events = execute_update_minter(&ctx, &mut state.pns, &PnsUpdateMinterMsg { new_minter });
-    (state, events)
-}
-#[action(shortname = 0x20)]
-pub fn multi_mint(
-    ctx: ContractContext,
-    state: ContractState,
-    mints: Vec<PnsMintMsg>,
-) -> (ContractState, Vec<EventGroup>) {
-    let mut state = state;
-
-    execute_multi_mint(&ctx, &mut state.pns, &PnsMultiMintMsg { mints });
-    (state, vec![])
 }
 
 #[action(shortname = 0x21)]
 pub fn mint_record(
     ctx: ContractContext,
     state: ContractState,
-    token_id: Vec<u8>,
+    domain: Vec<u8>,
     class: RecordClass,
     data: String,
 ) -> (ContractState, Vec<EventGroup>) {
     let mut state = state;
-    let events = execute_record_mint(
+    let events = pns_actions::execute_record_mint(
         &ctx,
         &mut state.pns,
-        &RecordMintMsg {
-            token_id,
+        &pns_msg::PnsRecordMintMsg {
+            domain,
             class,
             data,
         },
@@ -220,16 +155,16 @@ pub fn mint_record(
 pub fn update_record(
     ctx: ContractContext,
     state: ContractState,
-    token_id: Vec<u8>,
+    domain: Vec<u8>,
     class: RecordClass,
     data: String,
 ) -> (ContractState, Vec<EventGroup>) {
     let mut state = state;
-    let events = execute_record_update(
+    let events = pns_actions::execute_record_update(
         &ctx,
         &mut state.pns,
-        &RecordUpdateMsg {
-            token_id,
+        &pns_msg::PnsRecordUpdateMsg {
+            domain,
             class,
             data,
         },
@@ -242,11 +177,15 @@ pub fn update_record(
 pub fn delete_record(
     ctx: ContractContext,
     state: ContractState,
-    token_id: Vec<u8>,
+    domain: Vec<u8>,
     class: RecordClass,
 ) -> (ContractState, Vec<EventGroup>) {
     let mut state = state;
-    let events = execute_record_delete(&ctx, &mut state.pns, &RecordDeleteMsg { token_id, class });
+    let events = pns_actions::execute_record_delete(
+        &ctx,
+        &mut state.pns,
+        &pns_msg::PnsRecordDeleteMsg { domain, class },
+    );
 
     (state, events)
 }

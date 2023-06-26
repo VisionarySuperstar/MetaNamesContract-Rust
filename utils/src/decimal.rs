@@ -182,11 +182,11 @@ mod tests {
         let a = DecimalRatio::new(100, 3);
         let b = DecimalRatio::new(400, 0);
 
-        assert_eq!(b > a && b >= a, true);
-        assert_eq!(a < b && a <= b, true);
+        assert!(b > a && b >= a);
+        assert!(a < b && a <= b);
 
         let eq1 = DecimalRatio::new(100, 3);
         let eq2 = DecimalRatio::new(100, 3);
-        assert_eq!(eq1 == eq2, true);
+        assert!(eq1 == eq2);
     }
 }

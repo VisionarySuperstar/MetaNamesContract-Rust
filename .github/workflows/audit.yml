@@ -6,15 +6,17 @@ on:
 jobs:
   audit:
     runs-on: ubuntu-latest
+    container:
+      image: registry.gitlab.com/partisia/dockerimages/rustmaven:1.67
 
     steps:
       - uses: actions/checkout@v3
 
-      - name: Setup Rust
-        uses: actions-rs/toolchain@v1
-        with:
-          profile: minimal
-          toolchain: stable
+      - name: Set default rust version
+        run: rustup default 1.67
+
+      - name: Add wasm target
+        run: rustup target add wasm32-unknown-unknown
 
       - name: Setup caching dependencies
         uses: Swatinem/rust-cache@v2
@@ -23,7 +25,7 @@ jobs:
         run: cargo install cargo-audit
 
       - name: Fetch dependencies
-        run: cargo fetch
+        run: cargo fetch --target wasm32-unknown-unknown
 
       - name: Run audit
         run: cargo audit

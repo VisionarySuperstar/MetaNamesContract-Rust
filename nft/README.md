@@ -1,6 +1,6 @@
-# MPC721-Base Contract
+# NFT Contract
 
-A fork of the base implementation of MPC721 contract to permit a hierarchy between tokens.
+The base implementation of MPC721 contract.
 
 # Actions
 
@@ -30,19 +30,6 @@ MintMsg {
 }
 ```
 
-## execute_transfer
-
-Transfer token to another account.
-
-Params:
-
-```json
-TransferMsg {
-    "to": "<address>",
-    "token_id": 1,
-}
-```
-
 ## execute_transfer_from
 
 Only with approval extension. Transfer token from owner to spender.
@@ -65,7 +52,7 @@ Params:
 
 ```json
 ApproveMsg {
-    "spedner": "<address>",
+    "approved": "Option<address>",
     "token_id": 1,
 }
 ```
@@ -79,31 +66,7 @@ Params:
 ```json
 ApproveForAllMsg {
     "operator": "<address>",
-}
-```
-
-## execute_revoke
-
-Remove approval.
-
-Params:
-
-```json
-RevokeMsg {
-    "spedner": "<address>",
-    "token_id": 1,
-}
-```
-
-## execute_revoke_for_all
-
-Remove operator.
-
-Params:
-
-```json
-RevokeForAllMsg {
-    "operator": "<address>",
+    "approved": true,
 }
 ```
 

@@ -3,8 +3,8 @@ use pbc_contract_common::{
     context::CallbackContext,
     events::EventGroupBuilder,
 };
-use pbc_traits::WriteRPC;
 use pbc_traits::ReadRPC;
+use pbc_traits::WriteRPC;
 
 /// ## Description
 /// This trait describes methods that must be implemented

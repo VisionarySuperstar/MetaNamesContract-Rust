@@ -4,12 +4,6 @@ use thiserror::Error;
 /// This enum describes PNS contract errors
 #[derive(Error, Debug)]
 pub enum ContractError {
-    #[error("Unauthorized")]
-    Unauthorized,
-
-    #[error("Cannot transfer record belonging to this parent")]
-    ParentError,
-
     #[error("Token with specified id is already minted")]
     Minted,
 
@@ -24,7 +18,4 @@ pub enum ContractError {
 
     #[error("Not found")]
     NotFound,
-
-    #[error("Incorrect Owner")]
-    IncorrectOwner,
 }

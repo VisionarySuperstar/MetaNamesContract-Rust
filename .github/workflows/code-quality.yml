@@ -1,0 +1,39 @@
+name: Run code quality
+
+on:
+  workflow_call:
+
+jobs:
+  format:
+    runs-on: ubuntu-latest
+    container:
+      image: registry.gitlab.com/partisia/dockerimages/rustmaven:1.67
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Set default rust version
+        run: rustup default 1.67
+
+      - name: Add wasm target
+        run: rustup target add wasm32-unknown-unknown
+
+      - name: Check formatting
+        run: cargo fmt --all -- --check
+
+  lint:
+    runs-on: ubuntu-latest
+    container:
+      image: registry.gitlab.com/partisia/dockerimages/rustmaven:1.67
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Set default rust version
+        run: rustup default 1.67
+
+      - name: Add wasm target
+        run: rustup target add wasm32-unknown-unknown
+
+      - name: Run Clippy
+        run: cargo clippy --all-targets --all-features
