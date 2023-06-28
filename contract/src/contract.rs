@@ -95,7 +95,19 @@ pub fn mint(
 ) -> (ContractState, Vec<EventGroup>) {
     assert!(!state.pns.is_minted(&domain), "{}", ContractError::Minted);
 
-    // TODO: Manage parentship
+    // Parent validations
+    if let Some(parent_id) = parent_id.clone() {
+        let parent = state.pns.get_domain(&parent_id);
+        assert!(parent.is_some(), "{}", ContractError::DomainNotMinted);
+
+        let parent_token_id = parent.unwrap().token_id;
+
+        assert!(
+            state.nft.is_approved_or_owner(ctx.sender, parent_token_id),
+            "{}",
+            ContractError::Unauthorized
+        );
+    }
 
     let mut state = state;
     let token_id = state.nft.get_next_token_id();
@@ -114,10 +126,10 @@ pub fn mint(
         &mut state.pns,
         &pns_msg::PnsMintMsg {
             domain,
-            to,
-            token_uri,
             parent_id,
+            to,
             token_id,
+            token_uri,
         },
     );
 
