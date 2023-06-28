@@ -899,6 +899,8 @@ version = "0.0.1"
 dependencies = [
  "contract-version-base",
  "create_type_spec_derive",
+ "cucumber",
+ "futures",
  "nft",
  "partisia-name-system",
  "pbc_contract_codegen",

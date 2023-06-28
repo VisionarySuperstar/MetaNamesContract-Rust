@@ -27,6 +27,8 @@ serde_json = { workspace = true }
 thiserror = { workspace = true }
 
 [dev-dependencies]
+cucumber = { workspace = true }
+futures = { workspace = true }
 utils = { path = "../utils" }
 
 [features]
