@@ -8,7 +8,7 @@ pub const URL_LENGTH: usize = 64;
 
 /// ## Description
 /// This structure describes main NFT contract state.
-#[derive(ReadWriteState, CreateTypeSpec, Clone, PartialEq, Eq, Debug)]
+#[derive(ReadWriteState, CreateTypeSpec, Clone, Default, PartialEq, Eq, Debug)]
 pub struct NFTContractState {
     pub name: String,
     pub symbol: String,
