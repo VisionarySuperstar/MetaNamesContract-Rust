@@ -18,7 +18,3 @@ jobs:
   test:
     uses: ./.github/workflows/test.yml
     needs: code-quality
-
-  build-contract:
-    uses: ./.github/workflows/build-contract.yml
-    needs: test
