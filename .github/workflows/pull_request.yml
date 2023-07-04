@@ -7,14 +7,14 @@ jobs:
   audit:
     uses: ./.github/workflows/audit.yml
 
-  wasm-check:
-    uses: ./.github/workflows/wasm-check.yml
-    needs: audit
-
   code-quality:
     uses: ./.github/workflows/code-quality.yml
-    needs: audit
+    needs: wasm-check
 
   test:
     uses: ./.github/workflows/test.yml
     needs: code-quality
+
+  wasm-check:
+    uses: ./.github/workflows/wasm-check.yml
+    needs: audit
