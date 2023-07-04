@@ -18,7 +18,7 @@ Feature: Mint feature
     And Bob mints 'sub.name.meta' domain with Alice's 'name.meta' domain as the parent
     Then Bob owns 'sub.name.meta' domain
 
-  Scenario: The mint with with not owned parent does not happen
+  Scenario: The mint with not owned parent does not happen
     Given a meta names contract
     When  Alice mints 'name.meta' domain without a parent
     And Bob mints 'sub.name.meta' domain with Alice's 'name.meta' domain as the parent
