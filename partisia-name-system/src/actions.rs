@@ -113,3 +113,11 @@ pub fn execute_record_delete(
 
     vec![]
 }
+
+pub fn validate_domain_with_parent(domain: &[u8], parent: &[u8]) {
+    assert!(
+        parent.len() < domain.len() && domain.starts_with(parent),
+        "{}",
+        ContractError::InvalidDomainWithParent
+    )
+}

@@ -100,8 +100,9 @@ pub fn mint(
         let parent = state.pns.get_domain(&parent_id);
         assert!(parent.is_some(), "{}", ContractError::DomainNotMinted);
 
-        let parent_token_id = parent.unwrap().token_id;
+        pns_actions::validate_domain_with_parent(&domain, &parent_id);
 
+        let parent_token_id = parent.unwrap().token_id;
         assert!(
             state.nft.is_approved_or_owner(ctx.sender, parent_token_id),
             "{}",

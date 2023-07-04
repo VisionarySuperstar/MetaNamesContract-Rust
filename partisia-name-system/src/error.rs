@@ -18,4 +18,7 @@ pub enum ContractError {
 
     #[error("Not found")]
     NotFound,
+
+    #[error("The specified domain is not valid with the parent domain")]
+    InvalidDomainWithParent,
 }

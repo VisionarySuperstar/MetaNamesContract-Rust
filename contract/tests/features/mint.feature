@@ -23,3 +23,9 @@ Feature: Mint feature
     When  Alice mints 'meta.name' domain without a parent
     And Bob mints 'meta.name.sub' domain with 'meta.name' domain as the parent
     Then 'meta.name.sub' domain is not minted
+
+  Scenario: The mint with the owned but not coherent parent does not happen
+    Given a meta names contract
+    When Alice mints 'name.meta' domain without a parent
+    And Alice mints 'meta.random' domain with 'name.meta' domain as the parent
+    Then 'meta.random' domain is not minted
