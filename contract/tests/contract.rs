@@ -11,8 +11,6 @@ use utils::tests::{mock_address, mock_contract_context, string_to_bytes};
 const ALICE_ADDRESS: u8 = 1;
 const BOB_ADDRESS: u8 = 2;
 
-// `World` is your shared, likely mutable state.
-// Cucumber constructs it via `Default::default()` for each scenario.
 #[derive(Debug, Default, World)]
 pub struct ContractWorld {
     state: ContractState,
