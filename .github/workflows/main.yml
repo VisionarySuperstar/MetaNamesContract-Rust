@@ -9,14 +9,15 @@ jobs:
   audit:
     uses: ./.github/workflows/audit.yml
 
-  build-contract:
-    uses: ./.github/workflows/build-contract.yml
-    needs: test
-
   test:
     uses: ./.github/workflows/test.yml
-    needs: wasm-check
+    needs: audit
 
   wasm-check:
     uses: ./.github/workflows/wasm-check.yml
     needs: audit
+
+  build-contract:
+    uses: ./.github/workflows/build-contract.yml
+    needs: test
+
