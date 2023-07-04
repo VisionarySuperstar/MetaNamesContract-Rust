@@ -74,7 +74,11 @@ pub fn approve_domain(
     approved: Option<Address>,
     domain: Vec<u8>,
 ) -> (ContractState, Vec<EventGroup>) {
-    assert!(state.pns.is_minted(&domain), "{}", ContractError::DomainNotMinted);
+    assert!(
+        state.pns.is_minted(&domain),
+        "{}",
+        ContractError::DomainNotMinted
+    );
 
     let token_id = state.pns.get_token_id(&domain).unwrap();
 
