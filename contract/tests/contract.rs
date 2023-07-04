@@ -1,3 +1,5 @@
+use std::panic::catch_unwind;
+
 use cucumber::{given, then, when, World};
 use meta_names_contract::{
     contract::{approve, initialize, mint},
@@ -26,14 +28,14 @@ fn meta_names_contract(world: &mut ContractWorld) {
         uri_template: "metanames.io".to_string(),
     };
 
-    let (state, _) = initialize(mock_contract_context(2), msg);
+    let (state, _) = initialize(mock_contract_context(ALICE_ADDRESS), msg);
     world.state = state;
 }
 
 #[when("Alice mints 'name.meta' domain without a parent")]
 fn alice_mint_a_domain(world: &mut ContractWorld) {
     let (new_state, _) = mint(
-        mock_contract_context(2),
+        mock_contract_context(ALICE_ADDRESS),
         world.state.clone(),
         string_to_bytes(DEFAULT_DOMAIN_NAME),
         mock_address(ALICE_ADDRESS),
@@ -47,7 +49,7 @@ fn alice_mint_a_domain(world: &mut ContractWorld) {
 #[when("Alice mints 'sub.name.meta' domain with 'name.meta' domain as the parent")]
 fn alice_mint_subdomain_with_parent(world: &mut ContractWorld) {
     let (new_state, _) = mint(
-        mock_contract_context(2),
+        mock_contract_context(ALICE_ADDRESS),
         world.state.clone(),
         string_to_bytes(DEFAULT_SUBDOMAIN_NAME),
         mock_address(ALICE_ADDRESS),
@@ -60,22 +62,26 @@ fn alice_mint_subdomain_with_parent(world: &mut ContractWorld) {
 
 #[when("Bob mints 'sub.name.meta' domain with Alice's 'name.meta' domain as the parent")]
 fn bob_mints_subdomain_with_parent(world: &mut ContractWorld) {
-    let (new_state, _) = mint(
-        mock_contract_context(2),
-        world.state.clone(),
-        string_to_bytes(DEFAULT_SUBDOMAIN_NAME),
-        mock_address(BOB_ADDRESS),
-        None,
-        Some(string_to_bytes(DEFAULT_DOMAIN_NAME)),
-    );
+    let res = catch_unwind(|| {
+        mint(
+            mock_contract_context(BOB_ADDRESS),
+            world.state.clone(),
+            string_to_bytes(DEFAULT_SUBDOMAIN_NAME),
+            mock_address(BOB_ADDRESS),
+            None,
+            Some(string_to_bytes(DEFAULT_DOMAIN_NAME)),
+        )
+    });
 
-    world.state = new_state;
+    if let Ok((new_state, _)) = res {
+        world.state = new_state;
+    }
 }
 
 #[when("Alice mints a domain with a parent without owning it")]
 fn mint_a_domain_with_parent_without_owning_it(world: &mut ContractWorld) {
     let (new_state, _) = mint(
-        mock_contract_context(2),
+        mock_contract_context(ALICE_ADDRESS),
         world.state.clone(),
         string_to_bytes(DEFAULT_DOMAIN_NAME),
         mock_address(ALICE_ADDRESS),
@@ -97,10 +103,10 @@ fn alice_approves_bob_on_domain(world: &mut ContractWorld) {
         .token_id;
 
     let (new_state, _) = approve(
-        mock_contract_context(2),
+        mock_contract_context(ALICE_ADDRESS),
         world.state.clone(),
         Some(mock_address(BOB_ADDRESS)),
-        token_id
+        token_id,
     );
 
     world.state = new_state;
@@ -131,6 +137,20 @@ fn alice_owns_the_subdomain(world: &mut ContractWorld) {
     assert_eq!(
         world.state.nft.owner_of(domain.token_id),
         mock_address(ALICE_ADDRESS)
+    );
+}
+
+#[then("Bob owns 'sub.name.meta' domain")]
+fn bob_owns_the_subdomain(world: &mut ContractWorld) {
+    let domain = world
+        .state
+        .pns
+        .get_domain(string_to_bytes(DEFAULT_SUBDOMAIN_NAME).as_slice())
+        .unwrap();
+
+    assert_eq!(
+        world.state.nft.owner_of(domain.token_id),
+        mock_address(BOB_ADDRESS)
     );
 }
 
