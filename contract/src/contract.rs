@@ -67,6 +67,20 @@ pub fn approve(
     (state, events)
 }
 
+#[action(shortname = 0x06)]
+pub fn approve_domain(
+    ctx: ContractContext,
+    state: ContractState,
+    approved: Option<Address>,
+    domain: Vec<u8>,
+) -> (ContractState, Vec<EventGroup>) {
+    assert!(state.pns.is_minted(&domain), "{}", ContractError::DomainNotMinted);
+
+    let token_id = state.pns.get_token_id(&domain).unwrap();
+
+    approve(ctx, state, approved, token_id)
+}
+
 #[action(shortname = 0x07)]
 pub fn set_approval_for_all(
     ctx: ContractContext,

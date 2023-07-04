@@ -2,7 +2,7 @@ use std::panic::catch_unwind;
 
 use cucumber::{given, then, when, World};
 use meta_names_contract::{
-    contract::{approve, initialize, mint},
+    contract::{approve_domain, initialize, mint},
     msg::InitMsg,
     state::ContractState,
 };
@@ -54,20 +54,12 @@ fn mint_a_domain(world: &mut ContractWorld, user: String, domain: String) {
 }
 
 #[given(expr = "{word} approved {word} on '{word}' domain")]
-fn approve_domain(world: &mut ContractWorld, user: String, approved: String, domain: String) {
-    // TODO: Add approve_domain function
-    let token_id = world
-        .state
-        .pns
-        .get_domain(string_to_bytes(&domain).as_slice())
-        .unwrap()
-        .token_id;
-
-    let (new_state, _) = approve(
+fn user_approve_domain(world: &mut ContractWorld, user: String, approved: String, domain: String) {
+    let (new_state, _) = approve_domain(
         mock_contract_context(get_address_for_user(user)),
         world.state.clone(),
         Some(mock_address(get_address_for_user(approved))),
-        token_id,
+        domain.into_bytes(),
     );
 
     world.state = new_state;
