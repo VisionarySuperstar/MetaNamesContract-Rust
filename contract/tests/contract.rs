@@ -38,7 +38,7 @@ fn meta_names_contract(world: &mut ContractWorld) {
     world.state = state;
 }
 
-#[when(expr = "{word} mints {word} domain without a parent")]
+#[when(expr = "{word} mints '{word}' domain without a parent")]
 fn mint_a_domain(world: &mut ContractWorld, user: String, domain: String) {
     let (new_state, _) = mint(
         mock_contract_context(get_address_for_user(user.clone())),
@@ -52,7 +52,7 @@ fn mint_a_domain(world: &mut ContractWorld, user: String, domain: String) {
     world.state = new_state;
 }
 
-#[when(expr = "{word} mints {word} domain with {word} domain as the parent")]
+#[when(expr = "{word} mints '{word}' domain with '{word}' domain as the parent")]
 fn mint_domain_with_parent(
     world: &mut ContractWorld,
     user: String,
@@ -75,7 +75,7 @@ fn mint_domain_with_parent(
     }
 }
 
-#[when(expr = "{word} approves {word} on {word} domain")]
+#[when(expr = "{word} approves {word} on '{word}' domain")]
 fn approve_domain(world: &mut ContractWorld, user: String, approved: String, domain: String) {
     // TODO: Add approve_domain function
     let token_id = world
@@ -95,7 +95,7 @@ fn approve_domain(world: &mut ContractWorld, user: String, approved: String, dom
     world.state = new_state;
 }
 
-#[then(expr = "{word} owns {word} domain")]
+#[then(expr = "{word} owns '{word}' domain")]
 fn owns_the_domain(world: &mut ContractWorld, user: String, domain: String) {
     let domain = world
         .state
@@ -109,7 +109,7 @@ fn owns_the_domain(world: &mut ContractWorld, user: String, domain: String) {
     );
 }
 
-#[then(expr = "{word} domain is not minted")]
+#[then(expr = "'{word}' domain is not minted")]
 fn domain_is_not_minted(world: &mut ContractWorld, domain: String) {
     let domain = world
         .state
