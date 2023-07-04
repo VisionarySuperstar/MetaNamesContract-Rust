@@ -26,6 +26,6 @@ Feature: Mint feature
 
   Scenario: The mint with the owned but not coherent parent does not happen
     Given a meta names contract
-    And Alice minted 'name.meta' domain without a parent
-    When Alice mints 'meta.random' domain with 'name.meta' domain as the parent
+    And Alice minted 'meta.name' domain without a parent
+    When Alice mints 'meta.random' domain with 'meta.name' domain as the parent
     Then 'meta.random' domain is not minted

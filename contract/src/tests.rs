@@ -87,7 +87,7 @@ fn proper_mint_action_call() {
     let dest = mock_address(30u8);
 
     let msg = MintMsg {
-        domain: string_to_bytes("name.meta"),
+        domain: string_to_bytes("meta.name"),
         to: mock_address(1u8),
         token_uri: None,
         parent_id: Some(string_to_bytes("")),
@@ -99,7 +99,7 @@ fn proper_mint_action_call() {
     let mut test_event_group = EventGroup::builder();
     test_event_group
         .call(dest, Shortname::from_u32(MINT))
-        .argument(string_to_bytes("name.meta"))
+        .argument(string_to_bytes("meta.name"))
         .argument(mock_address(1u8))
         .argument(None::<String>)
         .argument(Some("".to_string()))
@@ -113,7 +113,7 @@ fn proper_record_mint_action_call() {
     let dest = mock_address(30u8);
 
     let msg = PnsRecordMintMsg {
-        domain: string_to_bytes("name.meta"),
+        domain: string_to_bytes("meta.name"),
         class: RecordClass::Wallet {},
         data: "".to_string(),
     };
@@ -124,7 +124,7 @@ fn proper_record_mint_action_call() {
     let mut test_event_group = EventGroup::builder();
     test_event_group
         .call(dest, Shortname::from_u32(RECORD_MINT))
-        .argument(string_to_bytes("name.meta"))
+        .argument(string_to_bytes("meta.name"))
         .argument(RecordClass::Wallet {})
         .argument("".to_string())
         .done();
@@ -137,7 +137,7 @@ fn proper_record_update_action_call() {
     let dest = mock_address(30u8);
 
     let msg = PnsRecordUpdateMsg {
-        domain: string_to_bytes("name.meta"),
+        domain: string_to_bytes("meta.name"),
         class: RecordClass::Wallet {},
         data: "".to_string(),
     };
@@ -148,7 +148,7 @@ fn proper_record_update_action_call() {
     let mut test_event_group = EventGroup::builder();
     test_event_group
         .call(dest, Shortname::from_u32(RECORD_UPDATE))
-        .argument(string_to_bytes("name.meta"))
+        .argument(string_to_bytes("meta.name"))
         .argument(RecordClass::Wallet {})
         .argument("".to_string())
         .done();
@@ -161,7 +161,7 @@ fn proper_record_delete_action_call() {
     let dest = mock_address(30u8);
 
     let msg = PnsRecordDeleteMsg {
-        domain: string_to_bytes("name.meta"),
+        domain: string_to_bytes("meta.name"),
         class: RecordClass::Wallet {},
     };
 
@@ -171,7 +171,7 @@ fn proper_record_delete_action_call() {
     let mut test_event_group = EventGroup::builder();
     test_event_group
         .call(dest, Shortname::from_u32(RECORD_DELETE))
-        .argument(string_to_bytes("name.meta"))
+        .argument(string_to_bytes("meta.name"))
         .argument(RecordClass::Wallet {})
         .done();
 
