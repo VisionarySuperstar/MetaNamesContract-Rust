@@ -39,16 +39,20 @@ fn meta_names_contract(world: &mut ContractWorld) {
 #[given(expr = "{word} minted '{word}' domain without a parent")]
 #[when(expr = "{word} mints '{word}' domain without a parent")]
 fn mint_a_domain(world: &mut ContractWorld, user: String, domain: String) {
-    let (new_state, _) = mint(
-        mock_contract_context(get_address_for_user(user.clone())),
-        world.state.clone(),
-        string_to_bytes(&domain),
-        mock_address(get_address_for_user(user)),
-        None,
-        None,
-    );
+    let res = catch_unwind(|| {
+        mint(
+            mock_contract_context(get_address_for_user(user.clone())),
+            world.state.clone(),
+            string_to_bytes(&domain),
+            mock_address(get_address_for_user(user)),
+            None,
+            None,
+        )
+    });
 
-    world.state = new_state;
+    if let Ok((new_state, _)) = res {
+        world.state = new_state;
+    }
 }
 
 #[given(expr = "{word} approved {word} on '{word}' domain")]
