@@ -206,7 +206,7 @@ fn proper_record_mint() {
     let record_mint_msg = PnsRecordMintMsg {
         domain: domain.clone(),
         class: record_class,
-        data: "data".to_string(),
+        data: string_to_bytes("data"),
     };
     let _ = execute_record_mint(&mock_contract_context(alice), &mut state, &record_mint_msg);
 
@@ -215,7 +215,7 @@ fn proper_record_mint() {
     assert_eq!(
         *record,
         Record {
-            data: "data".to_string(),
+            data: string_to_bytes("data"),
         }
     );
 }
@@ -241,7 +241,7 @@ fn when_token_not_present_record_mint_fails() {
     let record_mint = PnsRecordMintMsg {
         domain: string_to_bytes("not-existing.meta"),
         class: RecordClass::Wallet {},
-        data: "some data".to_string(),
+        data: string_to_bytes("some data"),
     };
 
     let _ = execute_record_mint(&mock_contract_context(alice), &mut state, &record_mint);
@@ -268,7 +268,7 @@ fn record_already_minted_on_record_mint() {
     let record_mint = PnsRecordMintMsg {
         domain: string_to_bytes("name"),
         class: RecordClass::Wallet {},
-        data: "some data".to_string(),
+        data: string_to_bytes("some data"),
     };
 
     let _ = execute_record_mint(&mock_contract_context(alice), &mut state, &record_mint);
@@ -296,14 +296,14 @@ fn proper_record_update() {
     let record_mint_msg = PnsRecordMintMsg {
         domain: domain.clone(),
         class: record_class,
-        data: "data".to_string(),
+        data: string_to_bytes("data"),
     };
     let _ = execute_record_mint(&mock_contract_context(alice), &mut state, &record_mint_msg);
 
     let record_update_msg = PnsRecordUpdateMsg {
         domain: domain.clone(),
         class: record_class,
-        data: "new data".to_string(),
+        data: string_to_bytes("new data"),
     };
 
     let _ = execute_record_update(
@@ -317,7 +317,7 @@ fn proper_record_update() {
     assert_eq!(
         *record,
         Record {
-            data: "new data".to_string(),
+            data: string_to_bytes("new data"),
         }
     );
 }
@@ -333,7 +333,7 @@ fn when_record_does_not_exist_record_update_fails() {
     let record_update_msg = PnsRecordUpdateMsg {
         domain: string_to_bytes("name"),
         class: RecordClass::Twitter {},
-        data: "new data".to_string(),
+        data: string_to_bytes("new data"),
     };
 
     let _ = execute_record_update(
@@ -364,7 +364,7 @@ fn proper_record_delete() {
     let record_mint_msg = PnsRecordMintMsg {
         domain: domain.clone(),
         class: record_class,
-        data: "data".to_string(),
+        data: string_to_bytes("data"),
     };
     let _ = execute_record_mint(&mock_contract_context(alice), &mut state, &record_mint_msg);
 

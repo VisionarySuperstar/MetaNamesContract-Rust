@@ -48,7 +48,7 @@ pub struct PnsRecordMintMsg {
     /// Class type
     pub class: RecordClass,
     /// Data
-    pub data: String,
+    pub data: Vec<u8>,
 }
 
 /// ## Description
@@ -60,7 +60,7 @@ pub struct PnsRecordUpdateMsg {
     /// Class type
     pub class: RecordClass,
     /// Data
-    pub data: String,
+    pub data: Vec<u8>,
 }
 
 /// ## Description
