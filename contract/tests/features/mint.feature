@@ -18,7 +18,7 @@ Feature: Mint feature
     When Bob mints 'meta.name.sub' domain with 'meta.name' domain as the parent
     Then Bob owns 'meta.name.sub' domain
 
-  Scenario: The mint with not owned parent does not happen
+  Scenario: The mint with a not owned parent does not happen
     Given a meta names contract
     And Alice minted 'meta.name' domain without a parent
     When Bob mints 'meta.name.sub' domain with 'meta.name' domain as the parent
@@ -30,7 +30,7 @@ Feature: Mint feature
     When Alice mints 'meta.random' domain with 'meta.name' domain as the parent
     Then 'meta.random' domain is not minted
 
-  Scenario: The mint with a too long domain does not happen
+  Scenario: The mint of a 35 chars long domain does not happen
     Given a meta names contract
     When Alice mints 'this.is.a.too.long.domain.meta.name' domain without a parent
     Then 'this.is.a.too.long.domain.meta.name' domain is not minted
