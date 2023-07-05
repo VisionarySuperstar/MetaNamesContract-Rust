@@ -11,6 +11,7 @@ use crate::{
 
 const CONTRACT_NAME: &str = env!("CARGO_PKG_NAME");
 const CONTRACT_VERSION: &str = env!("CARGO_PKG_VERSION");
+const MAX_DOMAIN_LEN: usize = 32;
 
 /// ## Description
 /// Inits contract state.
@@ -112,6 +113,14 @@ pub fn execute_record_delete(
     domain.delete_record(&msg.class);
 
     vec![]
+}
+
+pub fn validate_domain(domain: &[u8]) {
+    assert!(
+        domain.len() <= MAX_DOMAIN_LEN,
+        "{}",
+        ContractError::InvalidDomain
+    )
 }
 
 pub fn validate_domain_with_parent(domain: &[u8], parent: &[u8]) {

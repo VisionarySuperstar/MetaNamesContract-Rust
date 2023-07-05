@@ -29,3 +29,8 @@ Feature: Mint feature
     And Alice minted 'meta.name' domain without a parent
     When Alice mints 'meta.random' domain with 'meta.name' domain as the parent
     Then 'meta.random' domain is not minted
+
+  Scenario: The mint with a too long domain does not happen
+    Given a meta names contract
+    When Alice mints 'this.is.a.too.long.domain.meta.name' domain without a parent
+    Then 'this.is.a.too.long.domain.meta.name' domain is not minted

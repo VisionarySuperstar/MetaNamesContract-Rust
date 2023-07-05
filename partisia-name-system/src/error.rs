@@ -21,4 +21,7 @@ pub enum ContractError {
 
     #[error("The specified domain is not valid with the parent domain")]
     InvalidDomainWithParent,
+
+    #[error("The specified domain is not valid")]
+    InvalidDomain,
 }
