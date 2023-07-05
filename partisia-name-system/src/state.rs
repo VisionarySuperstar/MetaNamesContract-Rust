@@ -7,9 +7,8 @@ use read_write_state_derive::ReadWriteState;
 use crate::ContractError;
 
 // TODO: Add cucumber tests
-// TODO: Add length validations
 
-const DATA_LENGTH: usize = 64;
+pub const MAX_RECORD_DATA_LENGTH: usize = 64;
 
 /// ## Description
 /// This structure describes Partisia Name System state

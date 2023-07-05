@@ -5,7 +5,7 @@ use pbc_contract_common::{
 
 use crate::{
     msg::{PnsMintMsg, PnsRecordDeleteMsg, PnsRecordMintMsg, PnsRecordUpdateMsg},
-    state::{Domain, PartisiaNameSystemState},
+    state::{Domain, PartisiaNameSystemState, MAX_RECORD_DATA_LENGTH},
     ContractError,
 };
 
@@ -62,6 +62,7 @@ pub fn execute_record_mint(
     msg: &PnsRecordMintMsg,
 ) -> Vec<EventGroup> {
     assert!(state.is_minted(&msg.domain), "{}", ContractError::NotFound);
+    assert!(msg.data.clone().len() < MAX_RECORD_DATA_LENGTH, "{}", ContractError::RecordDataTooLong);
 
     let domain = state.domains.get_mut(&msg.domain).unwrap();
     domain.mint_record(&msg.class, &msg.data);
