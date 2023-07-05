@@ -102,7 +102,7 @@ fn proper_mint_action_call() {
         .argument(string_to_bytes("meta.name"))
         .argument(mock_address(1u8))
         .argument(None::<String>)
-        .argument(Some("".to_string()))
+        .argument(Some(string_to_bytes("")))
         .done();
 
     assert_eq!(event_group.build(), test_event_group.build());
@@ -115,7 +115,7 @@ fn proper_record_mint_action_call() {
     let msg = PnsRecordMintMsg {
         domain: string_to_bytes("meta.name"),
         class: RecordClass::Wallet {},
-        data: "".to_string(),
+        data: string_to_bytes(""),
     };
 
     let mut event_group = EventGroup::builder();
@@ -126,7 +126,7 @@ fn proper_record_mint_action_call() {
         .call(dest, Shortname::from_u32(RECORD_MINT))
         .argument(string_to_bytes("meta.name"))
         .argument(RecordClass::Wallet {})
-        .argument("".to_string())
+        .argument(string_to_bytes(""))
         .done();
 
     assert_eq!(event_group.build(), test_event_group.build());
@@ -139,7 +139,7 @@ fn proper_record_update_action_call() {
     let msg = PnsRecordUpdateMsg {
         domain: string_to_bytes("meta.name"),
         class: RecordClass::Wallet {},
-        data: "".to_string(),
+        data: string_to_bytes(""),
     };
 
     let mut event_group = EventGroup::builder();
@@ -150,7 +150,7 @@ fn proper_record_update_action_call() {
         .call(dest, Shortname::from_u32(RECORD_UPDATE))
         .argument(string_to_bytes("meta.name"))
         .argument(RecordClass::Wallet {})
-        .argument("".to_string())
+        .argument(string_to_bytes(""))
         .done();
 
     assert_eq!(event_group.build(), test_event_group.build());

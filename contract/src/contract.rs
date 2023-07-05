@@ -168,7 +168,7 @@ pub fn mint_record(
     state: ContractState,
     domain: Vec<u8>,
     class: RecordClass,
-    data: String,
+    data: Vec<u8>,
 ) -> (ContractState, Vec<EventGroup>) {
     let mut state = state;
     let events = pns_actions::execute_record_mint(
@@ -190,7 +190,7 @@ pub fn update_record(
     state: ContractState,
     domain: Vec<u8>,
     class: RecordClass,
-    data: String,
+    data: Vec<u8>,
 ) -> (ContractState, Vec<EventGroup>) {
     let mut state = state;
     let events = pns_actions::execute_record_update(
