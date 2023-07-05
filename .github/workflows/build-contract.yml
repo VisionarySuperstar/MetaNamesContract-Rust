@@ -1,0 +1,40 @@
+name: Build contract
+
+on:
+  workflow_call:
+
+jobs:
+  build-contract:
+    runs-on: ubuntu-latest
+    container:
+      image: registry.gitlab.com/partisia/dockerimages/rustmaven:1.67
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Set default rust version
+        run: rustup default 1.67
+
+      - name: Add wasm target
+        run: rustup target add wasm32-unknown-unknown
+
+      - name: Setup caching dependencies
+        uses: Swatinem/rust-cache@v2
+
+      - name: Install partisia-contract
+        run: cargo install cargo-partisia-contract
+
+      - name: Fetch dependencies
+        run: cargo fetch --target wasm32-unknown-unknown
+
+      - name: Build release contract
+        run: |
+          cargo partisia-contract build --release
+          cd target/wasm32-unknown-unknown/release
+          zip meta_names_contract.zip meta_names_contract.wasm meta_names_contract.abi
+
+      - name: Upload contract artifacts
+        uses: actions/upload-artifact@v2
+        with:
+          name: meta_names_contract
+          path: target/wasm32-unknown-unknown/release/meta_names_contract.zip

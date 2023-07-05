@@ -8,7 +8,7 @@ use crate::ContractError;
 
 /// ## Description
 /// This structure describes Partisia Name System state
-#[derive(ReadWriteState, CreateTypeSpec, Clone, PartialEq, Eq, Debug)]
+#[derive(ReadWriteState, CreateTypeSpec, Clone, Default, PartialEq, Eq, Debug)]
 pub struct PartisiaNameSystemState {
     pub version: ContractVersionBase,
     pub domains: SortedVecMap<Vec<u8>, Domain>,

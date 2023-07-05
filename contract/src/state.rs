@@ -6,7 +6,7 @@ use partisia_name_system::state::PartisiaNameSystemState;
 use crate::contract::__PBC_IS_ZK_CONTRACT;
 
 #[state]
-#[derive(PartialEq, Eq, Debug)]
+#[derive(PartialEq, Eq, Default, Clone, Debug)]
 pub struct ContractState {
     pub pns: PartisiaNameSystemState,
     pub nft: NFTContractState,

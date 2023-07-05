@@ -67,6 +67,24 @@ pub fn approve(
     (state, events)
 }
 
+#[action(shortname = 0x06)]
+pub fn approve_domain(
+    ctx: ContractContext,
+    state: ContractState,
+    approved: Option<Address>,
+    domain: Vec<u8>,
+) -> (ContractState, Vec<EventGroup>) {
+    assert!(
+        state.pns.is_minted(&domain),
+        "{}",
+        ContractError::DomainNotMinted
+    );
+
+    let token_id = state.pns.get_token_id(&domain).unwrap();
+
+    approve(ctx, state, approved, token_id)
+}
+
 #[action(shortname = 0x07)]
 pub fn set_approval_for_all(
     ctx: ContractContext,
@@ -95,7 +113,20 @@ pub fn mint(
 ) -> (ContractState, Vec<EventGroup>) {
     assert!(!state.pns.is_minted(&domain), "{}", ContractError::Minted);
 
-    // TODO: Manage parentship
+    // Parent validations
+    if let Some(parent_id) = parent_id.clone() {
+        let parent = state.pns.get_domain(&parent_id);
+        assert!(parent.is_some(), "{}", ContractError::DomainNotMinted);
+
+        pns_actions::validate_domain_with_parent(&domain, &parent_id);
+
+        let parent_token_id = parent.unwrap().token_id;
+        assert!(
+            state.nft.is_approved_or_owner(ctx.sender, parent_token_id),
+            "{}",
+            ContractError::Unauthorized
+        );
+    }
 
     let mut state = state;
     let token_id = state.nft.get_next_token_id();
@@ -114,10 +145,10 @@ pub fn mint(
         &mut state.pns,
         &pns_msg::PnsMintMsg {
             domain,
-            to,
-            token_uri,
             parent_id,
+            to,
             token_id,
+            token_uri,
         },
     );
 

@@ -27,7 +27,13 @@ serde_json = { workspace = true }
 thiserror = { workspace = true }
 
 [dev-dependencies]
+cucumber = { workspace = true }
+futures = { workspace = true }
 utils = { path = "../utils" }
+
+[[test]]
+name = "contract"
+harness = false
 
 [features]
 abi = ["pbc_contract_common/abi", "pbc_contract_codegen/abi", "pbc_traits/abi", "create_type_spec_derive/abi", "partisia-name-system/abi", "nft/abi", "contract-version-base/abi", "utils/abi"]
