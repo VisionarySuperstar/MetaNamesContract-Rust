@@ -25,7 +25,11 @@ thiserror = { workspace = true }
 [dev-dependencies]
 cucumber = { workspace = true }
 futures = { workspace = true }
-
+utils = { path = "../utils" }
 
 [features]
 abi = ["pbc_contract_common/abi", "pbc_contract_codegen/abi", "pbc_traits/abi", "create_type_spec_derive/abi", "contract-version-base/abi", "utils/abi"]
+
+[[test]]
+name = "cucumber"
+harness = false
