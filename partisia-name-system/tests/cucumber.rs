@@ -13,9 +13,16 @@ use utils::tests::{mock_contract_context, string_to_bytes};
 
 fn get_record_class_given(class: String) -> RecordClass {
     match class.as_str() {
-        "Wallet" => RecordClass::Wallet {},
+        "Bio" => RecordClass::Bio {},
+        "Discord" => RecordClass::Discord {},
         "Uri" => RecordClass::Uri {},
         "Twitter" => RecordClass::Twitter {},
+        "Wallet" => RecordClass::Wallet {},
+        "Custom" => RecordClass::Custom {},
+        "Custom2" => RecordClass::Custom2 {},
+        "Custom3" => RecordClass::Custom3 {},
+        "Custom4" => RecordClass::Custom4 {},
+        "Custom5" => RecordClass::Custom5 {},
         _ => panic!("Unknown record class"),
     }
 }

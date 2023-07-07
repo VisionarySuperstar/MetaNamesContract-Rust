@@ -36,15 +36,27 @@ pub struct Record {
     Eq, PartialEq, Debug, Clone, Ord, PartialOrd, Copy, CreateTypeSpec, ReadWriteState, ReadWriteRPC,
 )]
 pub enum RecordClass {
-    /// Wallet
     #[discriminant(0)]
-    Wallet {},
-    /// Website
+    Bio {},
     #[discriminant(1)]
-    Uri {},
-    /// Twitter
+    Discord {},
     #[discriminant(2)]
     Twitter {},
+    #[discriminant(3)]
+    Uri {},
+    #[discriminant(4)]
+    Wallet {},
+    // Customizables
+    #[discriminant(5)]
+    Custom {},
+    #[discriminant(6)]
+    Custom2 {},
+    #[discriminant(7)]
+    Custom3 {},
+    #[discriminant(8)]
+    Custom4 {},
+    #[discriminant(9)]
+    Custom5 {},
 }
 
 impl Domain {
