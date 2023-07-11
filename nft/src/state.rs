@@ -5,6 +5,7 @@ use read_write_state_derive::ReadWriteState;
 use crate::ContractError;
 
 pub const URL_LENGTH: usize = 64;
+pub const MAX_DOMAIN_LEN: usize = 32;
 
 /// ## Description
 /// This structure describes main NFT contract state.
