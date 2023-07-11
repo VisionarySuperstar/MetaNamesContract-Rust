@@ -148,9 +148,7 @@ pub fn mint(
         &pns_msg::PnsMintMsg {
             domain,
             parent_id,
-            to,
             token_id,
-            token_uri,
         },
     );
 
