@@ -1,7 +1,6 @@
 use create_type_spec_derive::CreateTypeSpec;
 use read_write_rpc_derive::ReadWriteRPC;
 
-
 use crate::state::RecordClass;
 
 /// ## Description

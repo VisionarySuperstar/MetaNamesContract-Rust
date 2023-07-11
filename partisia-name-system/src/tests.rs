@@ -7,7 +7,7 @@ use crate::{
     state::{Record, RecordClass},
 };
 
-use utils::tests::{string_to_bytes, mock_contract_context};
+use utils::tests::{mock_contract_context, string_to_bytes};
 
 #[test]
 fn proper_mint() {
