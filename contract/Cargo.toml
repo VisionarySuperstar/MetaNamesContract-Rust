@@ -32,7 +32,7 @@ futures = { workspace = true }
 utils = { path = "../utils" }
 
 [[test]]
-name = "contract"
+name = "cucumber"
 harness = false
 
 [features]
