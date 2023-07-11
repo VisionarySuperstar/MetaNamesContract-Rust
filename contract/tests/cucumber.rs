@@ -6,7 +6,7 @@ use meta_names_contract::{
     msg::InitMsg,
     state::ContractState,
 };
-use utils::tests::{mock_address, mock_contract_context, string_to_bytes};
+use utils::tests::{mock_address, mock_contract_context};
 
 const ALICE_ADDRESS: u8 = 1;
 const BOB_ADDRESS: u8 = 2;
@@ -43,7 +43,7 @@ fn mint_a_domain(world: &mut ContractWorld, user: String, domain: String) {
         mint(
             mock_contract_context(get_address_for_user(user.clone())),
             world.state.clone(),
-            string_to_bytes(&domain),
+            domain,
             mock_address(get_address_for_user(user)),
             None,
             None,
@@ -61,7 +61,7 @@ fn user_approve_domain(world: &mut ContractWorld, user: String, approved: String
         mock_contract_context(get_address_for_user(user)),
         world.state.clone(),
         Some(mock_address(get_address_for_user(approved))),
-        domain.into_bytes(),
+        domain,
     );
 
     world.state = new_state;
@@ -78,10 +78,10 @@ fn mint_domain_with_parent(
         mint(
             mock_contract_context(get_address_for_user(user.clone())),
             world.state.clone(),
-            string_to_bytes(&domain),
+            domain,
             mock_address(get_address_for_user(user)),
             None,
-            Some(string_to_bytes(&parent)),
+            Some(parent),
         )
     });
 
@@ -95,7 +95,7 @@ fn owns_the_domain(world: &mut ContractWorld, user: String, domain: String) {
     let domain = world
         .state
         .pns
-        .get_domain(string_to_bytes(&domain).as_slice())
+        .get_domain(&domain)
         .unwrap();
 
     assert_eq!(
@@ -109,7 +109,7 @@ fn domain_is_not_minted(world: &mut ContractWorld, domain: String) {
     let domain = world
         .state
         .pns
-        .get_domain(string_to_bytes(&domain).as_slice());
+        .get_domain(&domain);
 
     assert_eq!(domain, None);
 }

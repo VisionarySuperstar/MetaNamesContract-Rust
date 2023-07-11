@@ -9,7 +9,7 @@ use partisia_name_system::{
     msg::{PnsMintMsg, PnsRecordDeleteMsg, PnsRecordMintMsg, PnsRecordUpdateMsg},
     state::{PartisiaNameSystemState, RecordClass},
 };
-use utils::tests::{mock_contract_context, string_to_bytes};
+use utils::tests::mock_contract_context;
 
 fn get_record_class_given(class: String) -> RecordClass {
     match class.as_str() {
@@ -43,7 +43,7 @@ fn pns_contract(world: &mut PartisiaNameSystemWorld) {
 #[when(regex = ".+ mints '(.+)' domain without a parent")]
 fn mint_a_domain(world: &mut PartisiaNameSystemWorld, domain: String) {
     let msg = PnsMintMsg {
-        domain: domain.into_bytes(),
+        domain,
         token_id: 0,
         parent_id: None,
     };
@@ -63,9 +63,9 @@ fn mint_a_domain(world: &mut PartisiaNameSystemWorld, domain: String) {
 #[when(regex = ".+ mints '(.+)' domain with '(.+)' domain as the parent")]
 fn mint_a_domain_with_parent(world: &mut PartisiaNameSystemWorld, domain: String, parent: String) {
     let msg = PnsMintMsg {
-        domain: domain.into_bytes(),
+        domain,
         token_id: 0,
-        parent_id: Some(parent.into_bytes()),
+        parent_id: Some(parent),
     };
 
     let res = catch_unwind(|| {
@@ -94,7 +94,7 @@ fn mint_a_record(
         match action.as_str() {
             "mints" | "minted" => {
                 let msg = PnsRecordMintMsg {
-                    domain: domain.into_bytes(),
+                    domain,
                     class: get_record_class_given(class),
                     data: data.into_bytes(),
                 };
@@ -103,7 +103,7 @@ fn mint_a_record(
 
             "updates" => {
                 let msg = PnsRecordUpdateMsg {
-                    domain: domain.into_bytes(),
+                    domain,
                     class: get_record_class_given(class),
                     data: data.into_bytes(),
                 };
@@ -126,7 +126,7 @@ fn mint_a_record(
 #[when(regex = ".+ deletes the '(.+)' record for the '(.+)' domain")]
 fn domain_record_delete(world: &mut PartisiaNameSystemWorld, class: String, domain: String) {
     let msg = PnsRecordDeleteMsg {
-        domain: domain.into_bytes(),
+        domain,
         class: get_record_class_given(class),
     };
 
@@ -135,7 +135,7 @@ fn domain_record_delete(world: &mut PartisiaNameSystemWorld, class: String, doma
 
 #[then(regex = "'(.+)' domain (is|is not) minted")]
 fn is_domain_minted(world: &mut PartisiaNameSystemWorld, domain: String, action: String) {
-    let domain = world.state.get_domain(string_to_bytes(&domain).as_slice());
+    let domain = world.state.get_domain(&domain);
 
     match action.as_str() {
         "is" => assert!(domain.is_some()),
@@ -151,7 +151,7 @@ fn domain_has_record(
     class: String,
     data: String,
 ) {
-    let domain = world.state.get_domain(string_to_bytes(&domain).as_slice());
+    let domain = world.state.get_domain(&domain);
 
     if let Some(domain) = domain {
         let record = domain.get_record(&get_record_class_given(class)).unwrap();
@@ -162,14 +162,14 @@ fn domain_has_record(
 
 #[then(expr = "'{word}' domain does not exist")]
 fn has_no_domain(world: &mut PartisiaNameSystemWorld, domain: String) {
-    let domain = world.state.get_domain(string_to_bytes(&domain).as_slice());
+    let domain = world.state.get_domain(&domain);
 
     assert_eq!(domain, None);
 }
 
 #[then(expr = "'{word}' domain does not have a '{word}' record")]
 fn domain_has_no_record(world: &mut PartisiaNameSystemWorld, domain: String, class: String) {
-    let domain = world.state.get_domain(string_to_bytes(&domain).as_slice());
+    let domain = world.state.get_domain(&domain);
 
     if let Some(domain) = domain {
         let record = domain.get_record(&get_record_class_given(class));
