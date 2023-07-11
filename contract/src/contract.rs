@@ -72,7 +72,7 @@ pub fn approve_domain(
     ctx: ContractContext,
     state: ContractState,
     approved: Option<Address>,
-    domain: Vec<u8>,
+    domain: String,
 ) -> (ContractState, Vec<EventGroup>) {
     assert!(
         state.pns.is_minted(&domain),
@@ -106,10 +106,10 @@ pub fn set_approval_for_all(
 pub fn mint(
     ctx: ContractContext,
     state: ContractState,
-    domain: Vec<u8>,
+    domain: String,
     to: Address,
     token_uri: Option<String>,
-    parent_id: Option<Vec<u8>>,
+    parent_id: Option<String>,
 ) -> (ContractState, Vec<EventGroup>) {
     assert!(!state.pns.is_minted(&domain), "{}", ContractError::Minted);
 
@@ -138,7 +138,7 @@ pub fn mint(
         &nft_msg::NFTMintMsg {
             to,
             token_id,
-            token_uri: token_uri.clone(),
+            token_uri,
         },
     );
 
@@ -164,7 +164,7 @@ pub fn mint(
 pub fn mint_record(
     ctx: ContractContext,
     state: ContractState,
-    domain: Vec<u8>,
+    domain: String,
     class: RecordClass,
     data: Vec<u8>,
 ) -> (ContractState, Vec<EventGroup>) {
@@ -186,7 +186,7 @@ pub fn mint_record(
 pub fn update_record(
     ctx: ContractContext,
     state: ContractState,
-    domain: Vec<u8>,
+    domain: String,
     class: RecordClass,
     data: Vec<u8>,
 ) -> (ContractState, Vec<EventGroup>) {
@@ -208,7 +208,7 @@ pub fn update_record(
 pub fn delete_record(
     ctx: ContractContext,
     state: ContractState,
-    domain: Vec<u8>,
+    domain: String,
     class: RecordClass,
 ) -> (ContractState, Vec<EventGroup>) {
     let mut state = state;

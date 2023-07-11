@@ -123,7 +123,7 @@ pub fn execute_record_delete(
 /// Validate the domain name
 /// Returns [`()`] if operation was successful,
 /// otherwise panics with error message defined in [`ContractError`]
-pub fn validate_domain(domain: &[u8]) {
+pub fn validate_domain(domain: &str) {
     assert!(
         domain.len() <= MAX_DOMAIN_LEN,
         "{}",
@@ -135,7 +135,7 @@ pub fn validate_domain(domain: &[u8]) {
 /// Validate the domain name with parent
 /// Returns [`()`] if operation was successful,
 /// otherwise panics with error message defined in [`ContractError`]
-pub fn validate_domain_with_parent(domain: &[u8], parent: &[u8]) {
+pub fn validate_domain_with_parent(domain: &str, parent: &str) {
     assert!(
         parent.len() < domain.len() && domain.starts_with(parent),
         "{}",

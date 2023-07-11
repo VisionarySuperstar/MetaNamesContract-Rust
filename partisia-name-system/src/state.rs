@@ -14,14 +14,14 @@ pub const MAX_DOMAIN_LEN: usize = 32;
 #[derive(ReadWriteState, CreateTypeSpec, Clone, Default, PartialEq, Eq, Debug)]
 pub struct PartisiaNameSystemState {
     pub version: ContractVersionBase,
-    pub domains: SortedVecMap<Vec<u8>, Domain>,
-    pub records: SortedVecMap<Vec<u8>, Record>,
+    pub domains: SortedVecMap<String, Domain>,
+    pub records: SortedVecMap<String, Record>,
 }
 
 #[derive(ReadWriteState, CreateTypeSpec, Clone, PartialEq, Eq, Debug)]
 pub struct Domain {
     pub token_id: u128,
-    pub parent_id: Option<Vec<u8>>,
+    pub parent_id: Option<String>,
     pub records: SortedVecMap<RecordClass, Record>,
 }
 
@@ -117,28 +117,28 @@ impl Domain {
 impl PartisiaNameSystemState {
     /// ## Description
     /// Returns info given domain
-    pub fn get_domain(&self, domain: &[u8]) -> Option<&Domain> {
-        self.domains.get(&domain.to_vec())
+    pub fn get_domain(&self, domain: &str) -> Option<&Domain> {
+        self.domains.get(&String::from(domain))
     }
 
     /// ## Description
     /// Returns parent info by domain
-    pub fn get_parent(&self, domain: &[u8]) -> Option<&Domain> {
+    pub fn get_parent(&self, domain: &str) -> Option<&Domain> {
         self.domains
-            .get(&domain.to_vec())
+            .get(&String::from(domain))
             .and_then(|d| d.parent_id.as_ref())
             .and_then(|parent_id| self.domains.get(parent_id))
     }
 
     /// ## Description
     /// Says is token id minted or not
-    pub fn is_minted(&self, token_id: &[u8]) -> bool {
-        self.domains.contains_key(&token_id.to_vec())
+    pub fn is_minted(&self, domain: &str) -> bool {
+        self.domains.contains_key(&String::from(domain))
     }
 
     /// ## Description
     /// This function returns token id for given domain
-    pub fn get_token_id(&self, domain: &[u8]) -> Option<u128> {
-        self.domains.get(&domain.to_vec()).map(|d| d.token_id)
+    pub fn get_token_id(&self, domain: &str) -> Option<u128> {
+        self.domains.get(&String::from(domain)).map(|d| d.token_id)
     }
 }
