@@ -7,59 +7,7 @@ use crate::{
     state::{Record, RecordClass},
 };
 
-use pbc_contract_common::{address::Shortname, context::ContractContext, events::EventGroup};
-
-use utils::{
-    events::IntoShortnameRPCEvent,
-    tests::{mock_address, mock_empty_transaction_hash, string_to_bytes},
-};
-
-// TODO: DRY up tests
-
-// TODO: Review action calls
-
-const MINT: u32 = 0x20;
-
-#[test]
-fn proper_mint_action_call() {
-    let dest = mock_address(30u8);
-
-    let msg = PnsMintMsg {
-        domain: string_to_bytes("name"),
-        token_id: 1,
-        to: mock_address(1u8),
-        token_uri: Some("uri".to_string()),
-        parent_id: None,
-    };
-
-    let mut event_group = EventGroup::builder();
-    msg.as_interaction(&mut event_group, &dest);
-
-    let mut test_event_group = EventGroup::builder();
-    test_event_group
-        .call(dest, Shortname::from_u32(MINT))
-        .argument(string_to_bytes("name"))
-        .argument(1u128)
-        .argument(mock_address(1u8))
-        .argument(Some("uri".to_string()))
-        .argument(None::<Vec<u8>>)
-        .done();
-
-    assert_eq!(event_group.build(), test_event_group.build());
-}
-
-// Test actions
-
-fn mock_contract_context(sender: u8) -> ContractContext {
-    ContractContext {
-        contract_address: mock_address(1u8),
-        sender: mock_address(sender),
-        block_time: 100,
-        block_production_time: 100,
-        current_transaction: mock_empty_transaction_hash(),
-        original_transaction: mock_empty_transaction_hash(),
-    }
-}
+use utils::tests::{mock_contract_context, string_to_bytes};
 
 #[test]
 fn proper_mint() {
@@ -72,8 +20,6 @@ fn proper_mint() {
     let mint_msg = PnsMintMsg {
         token_id: 1,
         domain: domain.clone(),
-        to: mock_address(alice),
-        token_uri: Some(String::from("name")),
         parent_id: None,
     };
 
@@ -94,8 +40,6 @@ fn proper_mint_with_parent() {
     let mint_msg = PnsMintMsg {
         token_id: 1,
         domain,
-        to: mock_address(alice),
-        token_uri: Some(String::from("meta")),
         parent_id: None,
     };
 
@@ -105,8 +49,6 @@ fn proper_mint_with_parent() {
     let mint_msg = PnsMintMsg {
         token_id: 2,
         domain,
-        to: mock_address(alice),
-        token_uri: Some(String::from("name")),
         parent_id: Some(string_to_bytes("meta")),
     };
 
@@ -128,8 +70,6 @@ fn when_parent_does_not_exist_mint_fails() {
     let mint_msg = PnsMintMsg {
         token_id: 1,
         domain,
-        to: mock_address(alice),
-        token_uri: Some(String::from("meta")),
         parent_id: Some(string_to_bytes("notfound")),
     };
 
@@ -147,8 +87,6 @@ fn token_already_minted_on_mint() {
     let mint_msg = PnsMintMsg {
         domain: string_to_bytes("name"),
         token_id: 1,
-        token_uri: Some("name".to_string()),
-        to: mock_address(alice),
         parent_id: None,
     };
 
@@ -157,8 +95,6 @@ fn token_already_minted_on_mint() {
     let mint_msg = PnsMintMsg {
         domain: string_to_bytes("name"),
         token_id: 2,
-        token_uri: Some("name".to_string()),
-        to: mock_address(alice),
         parent_id: None,
     };
 
@@ -177,8 +113,6 @@ fn mint_fails_when_parent_does_not_exist() {
     let mint_msg = PnsMintMsg {
         domain: domain.clone(),
         token_id: 1,
-        to: mock_address(alice),
-        token_uri: Some(String::from("name")),
         parent_id: Some(string_to_bytes("not.existing.meta")),
     };
 
@@ -196,8 +130,6 @@ fn proper_record_mint() {
     let mint_msg = PnsMintMsg {
         domain: domain.clone(),
         token_id: 1,
-        to: mock_address(alice),
-        token_uri: Some(String::from("name")),
         parent_id: None,
     };
     let _ = execute_mint(&mock_contract_context(minter), &mut state, &mint_msg);
@@ -206,7 +138,7 @@ fn proper_record_mint() {
     let record_mint_msg = PnsRecordMintMsg {
         domain: domain.clone(),
         class: record_class,
-        data: "data".to_string(),
+        data: string_to_bytes("data"),
     };
     let _ = execute_record_mint(&mock_contract_context(alice), &mut state, &record_mint_msg);
 
@@ -215,7 +147,7 @@ fn proper_record_mint() {
     assert_eq!(
         *record,
         Record {
-            data: "data".to_string(),
+            data: string_to_bytes("data"),
         }
     );
 }
@@ -231,8 +163,6 @@ fn when_token_not_present_record_mint_fails() {
     let mint_msg = PnsMintMsg {
         domain: string_to_bytes("name"),
         token_id: 1,
-        to: mock_address(alice),
-        token_uri: Some("name".to_string()),
         parent_id: None,
     };
 
@@ -241,7 +171,7 @@ fn when_token_not_present_record_mint_fails() {
     let record_mint = PnsRecordMintMsg {
         domain: string_to_bytes("not-existing.meta"),
         class: RecordClass::Wallet {},
-        data: "some data".to_string(),
+        data: string_to_bytes("some data"),
     };
 
     let _ = execute_record_mint(&mock_contract_context(alice), &mut state, &record_mint);
@@ -258,8 +188,6 @@ fn record_already_minted_on_record_mint() {
     let mint_msg = PnsMintMsg {
         domain: string_to_bytes("name"),
         token_id: 1,
-        to: mock_address(alice),
-        token_uri: Some("name".to_string()),
         parent_id: None,
     };
 
@@ -268,7 +196,7 @@ fn record_already_minted_on_record_mint() {
     let record_mint = PnsRecordMintMsg {
         domain: string_to_bytes("name"),
         class: RecordClass::Wallet {},
-        data: "some data".to_string(),
+        data: string_to_bytes("some data"),
     };
 
     let _ = execute_record_mint(&mock_contract_context(alice), &mut state, &record_mint);
@@ -286,8 +214,6 @@ fn proper_record_update() {
     let mint_msg = PnsMintMsg {
         domain: domain.clone(),
         token_id: 1,
-        to: mock_address(alice),
-        token_uri: Some(String::from("name")),
         parent_id: None,
     };
     let _ = execute_mint(&mock_contract_context(minter), &mut state, &mint_msg);
@@ -296,14 +222,14 @@ fn proper_record_update() {
     let record_mint_msg = PnsRecordMintMsg {
         domain: domain.clone(),
         class: record_class,
-        data: "data".to_string(),
+        data: string_to_bytes("data"),
     };
     let _ = execute_record_mint(&mock_contract_context(alice), &mut state, &record_mint_msg);
 
     let record_update_msg = PnsRecordUpdateMsg {
         domain: domain.clone(),
         class: record_class,
-        data: "new data".to_string(),
+        data: string_to_bytes("new data"),
     };
 
     let _ = execute_record_update(
@@ -317,7 +243,7 @@ fn proper_record_update() {
     assert_eq!(
         *record,
         Record {
-            data: "new data".to_string(),
+            data: string_to_bytes("new data"),
         }
     );
 }
@@ -333,7 +259,7 @@ fn when_record_does_not_exist_record_update_fails() {
     let record_update_msg = PnsRecordUpdateMsg {
         domain: string_to_bytes("name"),
         class: RecordClass::Twitter {},
-        data: "new data".to_string(),
+        data: string_to_bytes("new data"),
     };
 
     let _ = execute_record_update(
@@ -354,8 +280,6 @@ fn proper_record_delete() {
     let mint_msg = PnsMintMsg {
         domain: domain.clone(),
         token_id: 1,
-        to: mock_address(alice),
-        token_uri: Some(String::from("name")),
         parent_id: None,
     };
     let _ = execute_mint(&mock_contract_context(minter), &mut state, &mint_msg);
@@ -364,7 +288,7 @@ fn proper_record_delete() {
     let record_mint_msg = PnsRecordMintMsg {
         domain: domain.clone(),
         class: record_class,
-        data: "data".to_string(),
+        data: string_to_bytes("data"),
     };
     let _ = execute_record_mint(&mock_contract_context(alice), &mut state, &record_mint_msg);
 

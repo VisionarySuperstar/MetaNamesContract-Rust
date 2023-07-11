@@ -6,6 +6,9 @@ use read_write_state_derive::ReadWriteState;
 
 use crate::ContractError;
 
+pub const MAX_RECORD_DATA_LENGTH: usize = 64;
+pub const MAX_DOMAIN_LEN: usize = 32;
+
 /// ## Description
 /// This structure describes Partisia Name System state
 #[derive(ReadWriteState, CreateTypeSpec, Clone, Default, PartialEq, Eq, Debug)]
@@ -24,7 +27,7 @@ pub struct Domain {
 
 #[derive(ReadWriteState, CreateTypeSpec, Clone, PartialEq, Eq, Debug)]
 pub struct Record {
-    pub data: String,
+    pub data: Vec<u8>,
 }
 
 #[repr(u8)]
@@ -32,15 +35,27 @@ pub struct Record {
     Eq, PartialEq, Debug, Clone, Ord, PartialOrd, Copy, CreateTypeSpec, ReadWriteState, ReadWriteRPC,
 )]
 pub enum RecordClass {
-    /// Wallet
     #[discriminant(0)]
-    Wallet {},
-    /// Website
+    Bio {},
     #[discriminant(1)]
-    Uri {},
-    /// Twitter
+    Discord {},
     #[discriminant(2)]
     Twitter {},
+    #[discriminant(3)]
+    Uri {},
+    #[discriminant(4)]
+    Wallet {},
+    // Customizables
+    #[discriminant(5)]
+    Custom {},
+    #[discriminant(6)]
+    Custom2 {},
+    #[discriminant(7)]
+    Custom3 {},
+    #[discriminant(8)]
+    Custom4 {},
+    #[discriminant(9)]
+    Custom5 {},
 }
 
 impl Domain {
@@ -58,7 +73,7 @@ impl Domain {
 
     /// ## Description
     /// Mints record for token
-    pub fn mint_record(&mut self, class: &RecordClass, data: &str) {
+    pub fn mint_record(&mut self, class: &RecordClass, data: &[u8]) {
         assert!(
             !self.is_record_minted(class),
             "{}",
@@ -66,14 +81,14 @@ impl Domain {
         );
 
         let record = Record {
-            data: data.to_string(),
+            data: data.to_vec(),
         };
         self.records.insert(*class, record);
     }
 
     /// ## Description
     /// Update data of a record
-    pub fn update_record_data(&mut self, class: &RecordClass, data: &str) {
+    pub fn update_record_data(&mut self, class: &RecordClass, data: &[u8]) {
         assert!(
             self.is_record_minted(class),
             "{}",
@@ -81,7 +96,7 @@ impl Domain {
         );
 
         self.records.get_mut(class).map(|record| {
-            record.data = data.to_string();
+            record.data = data.to_vec();
             record
         });
     }

@@ -24,4 +24,7 @@ pub enum ContractError {
 
     #[error("The specified domain is not valid")]
     InvalidDomain,
+
+    #[error("The record data is too long")]
+    RecordDataTooLong,
 }

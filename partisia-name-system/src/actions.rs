@@ -5,13 +5,12 @@ use pbc_contract_common::{
 
 use crate::{
     msg::{PnsMintMsg, PnsRecordDeleteMsg, PnsRecordMintMsg, PnsRecordUpdateMsg},
-    state::{Domain, PartisiaNameSystemState},
+    state::{Domain, PartisiaNameSystemState, MAX_DOMAIN_LEN, MAX_RECORD_DATA_LENGTH},
     ContractError,
 };
 
 const CONTRACT_NAME: &str = env!("CARGO_PKG_NAME");
 const CONTRACT_VERSION: &str = env!("CARGO_PKG_VERSION");
-const MAX_DOMAIN_LEN: usize = 32;
 
 /// ## Description
 /// Inits contract state.
@@ -62,6 +61,11 @@ pub fn execute_record_mint(
     msg: &PnsRecordMintMsg,
 ) -> Vec<EventGroup> {
     assert!(state.is_minted(&msg.domain), "{}", ContractError::NotFound);
+    assert!(
+        msg.data.clone().len() < MAX_RECORD_DATA_LENGTH,
+        "{}",
+        ContractError::RecordDataTooLong
+    );
 
     let domain = state.domains.get_mut(&msg.domain).unwrap();
     domain.mint_record(&msg.class, &msg.data);
@@ -115,6 +119,10 @@ pub fn execute_record_delete(
     vec![]
 }
 
+/// ## Description
+/// Validate the domain name
+/// Returns [`()`] if operation was successful,
+/// otherwise panics with error message defined in [`ContractError`]
 pub fn validate_domain(domain: &[u8]) {
     assert!(
         domain.len() <= MAX_DOMAIN_LEN,
@@ -123,6 +131,10 @@ pub fn validate_domain(domain: &[u8]) {
     )
 }
 
+/// ## Description
+/// Validate the domain name with parent
+/// Returns [`()`] if operation was successful,
+/// otherwise panics with error message defined in [`ContractError`]
 pub fn validate_domain_with_parent(domain: &[u8], parent: &[u8]) {
     assert!(
         parent.len() < domain.len() && domain.starts_with(parent),

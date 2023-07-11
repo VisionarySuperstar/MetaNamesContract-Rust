@@ -112,8 +112,6 @@ pub fn execute_set_approval_for_all(
     vec![]
 }
 
-// TODO: Add transfer action
-
 /// Transfer ownership of an NFT -- THE CALLER IS RESPONSIBLE
 /// TO CONFIRM THAT `to` IS CAPABLE OF RECEIVING NFTS OR ELSE
 /// THEY MAY BE PERMANENTLY LOST
