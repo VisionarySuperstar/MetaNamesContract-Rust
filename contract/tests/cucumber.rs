@@ -92,11 +92,7 @@ fn mint_domain_with_parent(
 
 #[then(expr = "{word} owns '{word}' domain")]
 fn owns_the_domain(world: &mut ContractWorld, user: String, domain: String) {
-    let domain = world
-        .state
-        .pns
-        .get_domain(&domain)
-        .unwrap();
+    let domain = world.state.pns.get_domain(&domain).unwrap();
 
     assert_eq!(
         world.state.nft.owner_of(domain.token_id),
@@ -106,10 +102,7 @@ fn owns_the_domain(world: &mut ContractWorld, user: String, domain: String) {
 
 #[then(expr = "'{word}' domain is not minted")]
 fn domain_is_not_minted(world: &mut ContractWorld, domain: String) {
-    let domain = world
-        .state
-        .pns
-        .get_domain(&domain);
+    let domain = world.state.pns.get_domain(&domain);
 
     assert_eq!(domain, None);
 }
