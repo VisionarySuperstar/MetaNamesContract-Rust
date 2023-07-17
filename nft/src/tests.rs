@@ -62,7 +62,7 @@ fn proper_mint() {
 
     assert_eq!(state.owners, SortedVecMap::from([(1, mock_address(alice))]));
     let mut expected_bytes: [u8; URL_LENGTH] = [0; URL_LENGTH];
-    let bytes = "ipfs://some.some/token".to_string().into_bytes();
+    let bytes = "token".to_string().into_bytes();
     expected_bytes[..bytes.len()].copy_from_slice(&bytes);
 
     assert_eq!(

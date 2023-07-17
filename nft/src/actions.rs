@@ -1,3 +1,5 @@
+use std::vec;
+
 use pbc_contract_common::{
     context::ContractContext, events::EventGroup, sorted_vec_map::SortedVecMap,
 };
@@ -40,15 +42,14 @@ pub fn execute_mint(
 
     state.owners.insert(msg.token_id, msg.to);
     if let Some(token_uri) = msg.token_uri.clone() {
-        let formatted_uri = format!("{}{}", state.uri_template, token_uri).into_bytes();
         assert!(
-            formatted_uri.len() <= URL_LENGTH,
+            token_uri.len() <= URL_LENGTH,
             "{}",
             ContractError::UriTooLong
         );
 
         let mut uri_details: [u8; URL_LENGTH] = [0; URL_LENGTH];
-        uri_details[..formatted_uri.len()].copy_from_slice(&formatted_uri);
+        uri_details[..token_uri.len()].copy_from_slice(token_uri.as_bytes());
         state.token_uri_details.insert(msg.token_id, uri_details);
     }
 
@@ -91,22 +92,19 @@ pub fn execute_set_approval_for_all(
         ContractError::Unauthorized
     );
 
+    let operator_approval = OperatorApproval {
+        owner: ctx.sender,
+        operator: msg.operator,
+    };
+
     if msg.approved {
-        let already_present = state
-            .operator_approvals
-            .clone()
-            .into_iter()
-            .any(|approval| approval.owner == ctx.sender && approval.operator == msg.operator);
-        if !already_present {
-            state.operator_approvals.push(OperatorApproval {
-                owner: ctx.sender,
-                operator: msg.operator,
-            });
+        if !state.operator_approvals.contains(&operator_approval) {
+            state.operator_approvals.push(operator_approval);
         }
     } else {
-        state.operator_approvals.retain(|approval| {
-            !(approval.owner == ctx.sender && approval.operator == msg.operator)
-        });
+        state
+            .operator_approvals
+            .retain(|&approval| approval != operator_approval);
     }
 
     vec![]

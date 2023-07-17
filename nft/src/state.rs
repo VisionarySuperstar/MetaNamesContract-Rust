@@ -20,7 +20,7 @@ pub struct NFTContractState {
     pub token_uri_details: SortedVecMap<u128, [u8; URL_LENGTH]>,
 }
 
-#[derive(ReadWriteState, CreateTypeSpec, Clone, PartialEq, Eq, Debug)]
+#[derive(ReadWriteState, CreateTypeSpec, Copy, Clone, PartialEq, Eq, Debug)]
 pub struct OperatorApproval {
     pub owner: Address,
     pub operator: Address,
@@ -64,9 +64,8 @@ impl NFTContractState {
     ///
     /// A [`bool`] True if `_operator` is an approved operator for `_owner`, false otherwise.
     pub fn is_approved_for_all(&self, owner: Address, operator: Address) -> bool {
-        self.operator_approvals
-            .iter()
-            .any(|approval| approval.owner == owner && approval.operator == operator)
+        let as_operator_approval: OperatorApproval = OperatorApproval { owner, operator };
+        self.operator_approvals.contains(&as_operator_approval)
     }
 
     /// Helper function to check whether a tokenId exists.
