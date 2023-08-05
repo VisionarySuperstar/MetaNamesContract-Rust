@@ -5,6 +5,8 @@ use read_write_rpc_derive::ReadWriteRPC;
 use rpc_msg_derive::IntoShortnameRPCEvent;
 use utils::events::IntoShortnameRPCEvent;
 
+use crate::state::PayableMintInfo;
+
 /// ## Description
 /// This structure describes fields for PNS initialize msg
 #[derive(ReadWriteRPC, CreateTypeSpec, Clone, PartialEq, Eq, Debug)]
@@ -14,6 +16,7 @@ pub struct InitMsg {
     /// token symbol
     pub symbol: String,
     pub uri_template: String,
+    pub payable_mint_info: PayableMintInfo,
 }
 
 /// ## Description
@@ -21,11 +24,22 @@ pub struct InitMsg {
 #[derive(ReadWriteRPC, CreateTypeSpec, IntoShortnameRPCEvent, Clone, PartialEq, Eq, Debug)]
 #[rpc_msg(action = 0x09)]
 pub struct MintMsg {
-    pub domain: Vec<u8>,
+    pub domain: String,
     /// receiver address
     pub to: Address,
     /// optional token_uri
     pub token_uri: Option<String>,
     /// optional parent
-    pub parent_id: Option<Vec<u8>>,
+    pub parent_id: Option<String>,
+}
+
+#[derive(ReadWriteRPC, CreateTypeSpec, IntoShortnameRPCEvent, Clone, PartialEq, Eq, Debug)]
+#[rpc_msg(action = 0x03)]
+pub struct MPC20TransferFromMsg {
+    /// token owner
+    pub from: Address,
+    /// token receiver
+    pub to: Address,
+    /// amount to receive
+    pub amount: u128,
 }

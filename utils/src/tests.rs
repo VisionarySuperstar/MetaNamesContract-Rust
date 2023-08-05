@@ -1,5 +1,5 @@
 use pbc_contract_common::address::{Address, AddressType};
-use pbc_contract_common::context::ContractContext;
+use pbc_contract_common::context::{CallbackContext, ContractContext};
 use pbc_contract_common::Hash;
 
 pub fn mock_address(le: u8) -> Address {
@@ -29,6 +29,13 @@ pub fn mock_contract_context(sender: u8) -> ContractContext {
         block_production_time: 100,
         current_transaction: mock_empty_transaction_hash(),
         original_transaction: mock_empty_transaction_hash(),
+    }
+}
+
+pub fn mock_successful_callback_context() -> CallbackContext {
+    CallbackContext {
+        success: true,
+        results: vec![],
     }
 }
 

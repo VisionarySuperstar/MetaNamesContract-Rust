@@ -2,14 +2,15 @@ use std::panic::catch_unwind;
 
 use cucumber::{given, then, when, World};
 use meta_names_contract::{
-    contract::{approve_domain, initialize, mint},
-    msg::InitMsg,
-    state::ContractState,
+    contract::{approve_domain, initialize, mint, on_mint_callback},
+    msg::{InitMsg, MintMsg},
+    state::{ContractState, PayableMintInfo},
 };
-use utils::tests::{mock_address, mock_contract_context};
+use utils::tests::{mock_address, mock_contract_context, mock_successful_callback_context};
 
 const ALICE_ADDRESS: u8 = 1;
 const BOB_ADDRESS: u8 = 2;
+const PAYABLE_TOKEN_ADDRESS: u8 = 10;
 
 #[derive(Debug, Default, World)]
 pub struct ContractWorld {
@@ -30,6 +31,10 @@ fn meta_names_contract(world: &mut ContractWorld) {
         name: "Meta Names".to_string(),
         symbol: "META".to_string(),
         uri_template: "metanames.io".to_string(),
+        payable_mint_info: PayableMintInfo {
+            token: Some(mock_address(PAYABLE_TOKEN_ADDRESS)),
+            receiver: Some(mock_address(ALICE_ADDRESS)),
+        },
     };
 
     let (state, _) = initialize(mock_contract_context(ALICE_ADDRESS), msg);
@@ -37,16 +42,19 @@ fn meta_names_contract(world: &mut ContractWorld) {
 }
 
 #[given(expr = "{word} minted '{word}' domain without a parent")]
-#[when(expr = "{word} mints '{word}' domain without a parent")]
+#[when(expr = "{word} mints '{word}' domain without fees and a parent")]
 fn mint_a_domain(world: &mut ContractWorld, user: String, domain: String) {
     let res = catch_unwind(|| {
-        mint(
+        on_mint_callback(
             mock_contract_context(get_address_for_user(user.clone())),
+            mock_successful_callback_context(),
             world.state.clone(),
-            domain,
-            mock_address(get_address_for_user(user)),
-            None,
-            None,
+            MintMsg {
+                domain,
+                to: mock_address(get_address_for_user(user)),
+                token_uri: None,
+                parent_id: None,
+            },
         )
     });
 

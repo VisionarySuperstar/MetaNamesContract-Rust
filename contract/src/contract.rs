@@ -1,11 +1,22 @@
-use crate::{msg::InitMsg, state::ContractState};
+use std::vec;
+
+use crate::{
+    actions::{action_build_mint_callback, action_mint},
+    msg::{InitMsg, MintMsg},
+    state::ContractState,
+};
 
 use contract_version_base::state::ContractVersionBase;
-use pbc_contract_common::{address::Address, context::ContractContext, events::EventGroup};
+use pbc_contract_common::{
+    address::Address,
+    context::{CallbackContext, ContractContext},
+    events::EventGroup,
+};
 
 use nft::{actions as nft_actions, msg as nft_msg};
 
 use partisia_name_system::{actions as pns_actions, msg as pns_msg, state::RecordClass};
+use utils::events::assert_callback_success;
 
 use crate::ContractError;
 
@@ -14,6 +25,17 @@ const CONTRACT_VERSION: &str = env!("CARGO_PKG_VERSION");
 
 #[init]
 pub fn initialize(ctx: ContractContext, msg: InitMsg) -> (ContractState, Vec<EventGroup>) {
+    assert!(
+        msg.payable_mint_info.token.is_some(),
+        "{}",
+        ContractError::PayableTokenNotSet
+    );
+    assert!(
+        msg.payable_mint_info.receiver.is_some(),
+        "{}",
+        ContractError::PayableReceiverNotSet
+    );
+
     let pns = pns_actions::execute_init(&ctx);
     let nft = nft_actions::execute_init(
         &ctx,
@@ -26,6 +48,7 @@ pub fn initialize(ctx: ContractContext, msg: InitMsg) -> (ContractState, Vec<Eve
     let state = ContractState {
         pns,
         nft,
+        payable_mint_info: msg.payable_mint_info,
         version: ContractVersionBase::new(CONTRACT_NAME, CONTRACT_VERSION),
     };
 
@@ -111,53 +134,55 @@ pub fn mint(
     token_uri: Option<String>,
     parent_id: Option<String>,
 ) -> (ContractState, Vec<EventGroup>) {
+    // Basic validations
     assert!(!state.pns.is_minted(&domain), "{}", ContractError::Minted);
 
     pns_actions::validate_domain(&domain);
 
-    // Parent validations
-    if let Some(parent_id) = parent_id.clone() {
-        let parent = state.pns.get_domain(&parent_id);
-        assert!(parent.is_some(), "{}", ContractError::DomainNotMinted);
+    let mut events = vec![];
+    let mut mut_state = state;
 
-        pns_actions::validate_domain_with_parent(&domain, &parent_id);
+    match parent_id {
+        Some(_) => {
+            // Skip minting fees since this is a subdomain
+            let (new_state, mint_events) =
+                action_mint(ctx, mut_state, domain, to, token_uri, parent_id);
 
-        let parent_token_id = parent.unwrap().token_id;
-        assert!(
-            state.nft.is_approved_or_owner(ctx.sender, parent_token_id),
-            "{}",
-            ContractError::Unauthorized
-        );
+            mut_state = new_state;
+
+            events.extend(mint_events);
+        }
+
+        None => {
+            let payout_transfer_events = action_build_mint_callback(
+                ctx,
+                mut_state.payable_mint_info,
+                &MintMsg {
+                    domain,
+                    to,
+                    token_uri,
+                    parent_id,
+                },
+                0x30,
+            );
+
+            events.extend(payout_transfer_events);
+        }
     }
 
-    let mut state = state;
-    let token_id = state.nft.get_next_token_id();
-    let nft_events = nft_actions::execute_mint(
-        &ctx,
-        &mut state.nft,
-        &nft_msg::NFTMintMsg {
-            to,
-            token_id,
-            token_uri,
-        },
-    );
+    (mut_state, events)
+}
 
-    let pns_events = pns_actions::execute_mint(
-        &ctx,
-        &mut state.pns,
-        &pns_msg::PnsMintMsg {
-            domain,
-            parent_id,
-            token_id,
-        },
-    );
+#[callback(shortname = 0x30)]
+pub fn on_mint_callback(
+    ctx: ContractContext,
+    callback_ctx: CallbackContext,
+    state: ContractState,
+    msg: MintMsg,
+) -> (ContractState, Vec<EventGroup>) {
+    assert_callback_success(&callback_ctx);
 
-    let events = nft_events
-        .into_iter()
-        .chain(pns_events.into_iter())
-        .collect();
-
-    (state, events)
+    action_mint(ctx, state, msg.domain, msg.to, msg.token_uri, msg.parent_id)
 }
 
 #[action(shortname = 0x21)]

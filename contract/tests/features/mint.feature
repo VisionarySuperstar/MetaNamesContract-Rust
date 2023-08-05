@@ -1,8 +1,9 @@
 Feature: Mint feature
 
-  Scenario: The mint without the parent happens properly
+  // NOTE: Cannot make integration tests on normal mint as there are minting fees
+  Scenario: The mint without fees without the parent happens properly
     Given a meta names contract
-    When Alice mints 'meta.name' domain without a parent
+    When Alice mints 'meta.name' domain without fees and a parent
     Then Alice owns 'meta.name' domain
 
   Scenario: The mint with the owned parent happens properly
@@ -32,5 +33,5 @@ Feature: Mint feature
 
   Scenario: The mint of a 35 chars long domain does not happen
     Given a meta names contract
-    When Alice mints 'this.is.a.too.long.domain.meta.name' domain without a parent
+    When Alice mints 'this.is.a.too.long.domain.meta.name' domain without fees and a parent
     Then 'this.is.a.too.long.domain.meta.name' domain is not minted
