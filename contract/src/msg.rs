@@ -17,6 +17,7 @@ pub struct InitMsg {
     pub symbol: String,
     pub uri_template: String,
     pub payable_mint_info: PayableMintInfo,
+    pub admin_addresses: Vec<Address>,
 }
 
 /// ## Description

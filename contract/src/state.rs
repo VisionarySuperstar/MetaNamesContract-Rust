@@ -1,3 +1,4 @@
+use access_control::state::AccessControlState;
 use contract_version_base::state::ContractVersionBase;
 use create_type_spec_derive::CreateTypeSpec;
 use nft::state::NFTContractState;
@@ -12,9 +13,10 @@ use crate::contract::__PBC_IS_ZK_CONTRACT;
 #[state]
 #[derive(PartialEq, Eq, Default, Clone, Debug)]
 pub struct ContractState {
-    pub pns: PartisiaNameSystemState,
+    pub access_control: AccessControlState,
     pub nft: NFTContractState,
     pub payable_mint_info: PayableMintInfo,
+    pub pns: PartisiaNameSystemState,
     pub version: ContractVersionBase,
 }
 

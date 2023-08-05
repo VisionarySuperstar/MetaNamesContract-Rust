@@ -2,12 +2,15 @@ use std::panic::catch_unwind;
 
 use cucumber::{given, then, when, World};
 use meta_names_contract::{
-    contract::{approve_domain, initialize, mint, on_mint_callback},
+    contract::{
+        approve_domain, initialize, mint, on_mint_callback, update_admin_address, ADMIN_ROLE,
+    },
     msg::{InitMsg, MintMsg},
     state::{ContractState, PayableMintInfo},
 };
 use utils::tests::{mock_address, mock_contract_context, mock_successful_callback_context};
 
+const SYSTEM_ADDRESS: u8 = 0;
 const ALICE_ADDRESS: u8 = 1;
 const BOB_ADDRESS: u8 = 2;
 const PAYABLE_TOKEN_ADDRESS: u8 = 10;
@@ -28,6 +31,7 @@ fn get_address_for_user(user: String) -> u8 {
 #[given("a meta names contract")]
 fn meta_names_contract(world: &mut ContractWorld) {
     let msg = InitMsg {
+        admin_addresses: vec![mock_address(SYSTEM_ADDRESS)],
         name: "Meta Names".to_string(),
         symbol: "META".to_string(),
         uri_template: "metanames.io".to_string(),
@@ -63,6 +67,30 @@ fn mint_a_domain(world: &mut ContractWorld, user: String, domain: String) {
     }
 }
 
+#[given(regex = r"(\w+) user (with) the admin (role)")]
+#[when(regex = r"(\w+) user (grants|denies) the admin role for (\w+) user")]
+fn user_admin_role(world: &mut ContractWorld, admin: String, action: String, user: String) {
+    let res = catch_unwind(|| match action.as_str() {
+        "with" => update_admin_address(
+            mock_contract_context(SYSTEM_ADDRESS),
+            world.state.clone(),
+            mock_address(get_address_for_user(admin)),
+            true,
+        ),
+        "grants" | "denied" => update_admin_address(
+            mock_contract_context(get_address_for_user(admin)),
+            world.state.clone(),
+            mock_address(get_address_for_user(user)),
+            action == "grants",
+        ),
+        _ => panic!("Unknown action"),
+    });
+
+    if let Ok((new_state, _)) = res {
+        world.state = new_state;
+    }
+}
+
 #[given(expr = "{word} approved {word} on '{word}' domain")]
 fn user_approve_domain(world: &mut ContractWorld, user: String, approved: String, domain: String) {
     let (new_state, _) = approve_domain(
@@ -76,6 +104,7 @@ fn user_approve_domain(world: &mut ContractWorld, user: String, approved: String
 }
 
 #[when(expr = "{word} mints '{word}' domain with '{word}' domain as the parent")]
+#[when(regex = r"(\w+) mints '(.+)' domain without (a parent)")]
 fn mint_domain_with_parent(
     world: &mut ContractWorld,
     user: String,
@@ -83,13 +112,19 @@ fn mint_domain_with_parent(
     parent: String,
 ) {
     let res = catch_unwind(|| {
+        let parent_opt = if parent == "a parent" {
+            None
+        } else {
+            Some(parent.clone())
+        };
+
         mint(
             mock_contract_context(get_address_for_user(user.clone())),
             world.state.clone(),
             domain,
             mock_address(get_address_for_user(user)),
             None,
-            Some(parent),
+            parent_opt,
         )
     });
 
@@ -113,6 +148,16 @@ fn domain_is_not_minted(world: &mut ContractWorld, domain: String) {
     let domain = world.state.pns.get_domain(&domain);
 
     assert_eq!(domain, None);
+}
+
+#[then(regex = r"(\w+) user (is|is not) an admin")]
+fn user_is_admin(world: &mut ContractWorld, user: String, is: String) {
+    let is_admin = world
+        .state
+        .access_control
+        .has_role(ADMIN_ROLE, &mock_address(get_address_for_user(user)));
+
+    assert_eq!(is_admin, is == "is");
 }
 
 // This runs before everything else, so you can setup things here.

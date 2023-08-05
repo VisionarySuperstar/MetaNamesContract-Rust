@@ -6,6 +6,12 @@ Feature: Mint feature
     When Alice mints 'meta.name' domain without fees and a parent
     Then Alice owns 'meta.name' domain
 
+  Scenario: The minting process of a domain without any parent, carried out by an administrator user, is executed correctly
+    Given a meta names contract
+    And Alice user with the admin role
+    When Alice mints 'meta.name' domain without a parent
+    Then Alice owns 'meta.name' domain
+
   Scenario: The mint with the owned parent happens properly
     Given a meta names contract
     And Alice minted 'meta.name' domain without a parent

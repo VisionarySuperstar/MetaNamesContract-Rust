@@ -1,7 +1,6 @@
 [package]
-name = "meta-names-contract"
-version = "0.5.0"
-authors = ["Yeboster"]
+name = "access-control"
+version = "2.0.0"
 edition = "2021"
 
 [lib]
@@ -16,25 +15,10 @@ read_write_rpc_derive = { workspace = true }
 read_write_state_derive = { workspace = true }
 create_type_spec_derive = { workspace = true }
 
-access-control = { path = "../access-control" }
-contract-version-base = { path = "../contract-version-base" }
-partisia-name-system = { path = "../partisia-name-system" }
-nft = { path = "../nft" }
-
-utils = { path = "../utils" }
-rpc-msg-derive = { path = "../rpc-msg-derive" }
-
-serde_json = { workspace = true }
 thiserror = { workspace = true }
 
 [dev-dependencies]
-cucumber = { workspace = true }
-futures = { workspace = true }
 utils = { path = "../utils" }
-
-[[test]]
-name = "cucumber"
-harness = false
 
 [features]
 abi = [
@@ -42,8 +26,4 @@ abi = [
   "pbc_contract_codegen/abi",
   "pbc_traits/abi",
   "create_type_spec_derive/abi",
-  "partisia-name-system/abi",
-  "nft/abi",
-  "contract-version-base/abi",
-  "utils/abi",
 ]

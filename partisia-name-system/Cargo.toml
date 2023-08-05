@@ -1,6 +1,6 @@
 [package]
 name = "partisia-name-system"
-version = "0.0.1"
+version = "1.0.0"
 edition = "2021"
 
 [lib]
@@ -16,7 +16,7 @@ read_write_state_derive = { workspace = true }
 create_type_spec_derive = { workspace = true }
 
 utils = { path = "../utils" }
-contract-version-base = { path = "../contract-version-base"}
+contract-version-base = { path = "../contract-version-base" }
 rpc-msg-derive = { path = "../rpc-msg-derive" }
 
 serde_json = { workspace = true }
@@ -28,7 +28,14 @@ futures = { workspace = true }
 utils = { path = "../utils" }
 
 [features]
-abi = ["pbc_contract_common/abi", "pbc_contract_codegen/abi", "pbc_traits/abi", "create_type_spec_derive/abi", "contract-version-base/abi", "utils/abi"]
+abi = [
+  "pbc_contract_common/abi",
+  "pbc_contract_codegen/abi",
+  "pbc_traits/abi",
+  "create_type_spec_derive/abi",
+  "contract-version-base/abi",
+  "utils/abi",
+]
 
 [[test]]
 name = "cucumber"
