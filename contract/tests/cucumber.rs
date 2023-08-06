@@ -3,10 +3,10 @@ use std::panic::catch_unwind;
 use cucumber::{given, then, when, World};
 use meta_names_contract::{
     contract::{
-        approve_domain, initialize, mint, on_mint_callback, update_admin_address, ADMIN_ROLE,
+        approve_domain, initialize, mint, on_mint_callback, update_config, update_user_role,
     },
     msg::{InitMsg, MintMsg},
-    state::{ContractState, PayableMintInfo},
+    state::{ContractConfig, ContractState, PayableMintInfo, UserRole},
 };
 use utils::tests::{mock_address, mock_contract_context, mock_successful_callback_context};
 
@@ -28,10 +28,21 @@ fn get_address_for_user(user: String) -> u8 {
     }
 }
 
-#[given("a meta names contract")]
-fn meta_names_contract(world: &mut ContractWorld) {
+fn get_user_role(role: String) -> UserRole {
+    match role.as_str() {
+        "admin" => UserRole::Admin {},
+        "whitelist" => UserRole::Whitelist {},
+        _ => panic!("Unknown role"),
+    }
+}
+
+#[given(regex = "a meta names contract with 'whitelist' (enabled|disabled)")]
+fn meta_names_contract(world: &mut ContractWorld, whitelist: String) {
     let msg = InitMsg {
         admin_addresses: vec![mock_address(SYSTEM_ADDRESS)],
+        config: ContractConfig {
+            whitelist_enabled: whitelist == "enabled",
+        },
         name: "Meta Names".to_string(),
         symbol: "META".to_string(),
         uri_template: "metanames.io".to_string(),
@@ -67,19 +78,27 @@ fn mint_a_domain(world: &mut ContractWorld, user: String, domain: String) {
     }
 }
 
-#[given(regex = r"(\w+) user (with) the admin (role)")]
-#[when(regex = r"(\w+) user (grants|denies) the admin role for (\w+) user")]
-fn user_admin_role(world: &mut ContractWorld, admin: String, action: String, user: String) {
+#[given(regex = r"(\w+) user (with) the (\w+) (role)")]
+#[when(regex = r"(\w+) user (grants|denies) the (\w+) role for (\w+) user")]
+fn user_admin_role(
+    world: &mut ContractWorld,
+    admin: String,
+    action: String,
+    role: String,
+    user: String,
+) {
     let res = catch_unwind(|| match action.as_str() {
-        "with" => update_admin_address(
+        "with" => update_user_role(
             mock_contract_context(SYSTEM_ADDRESS),
             world.state.clone(),
+            get_user_role(role),
             mock_address(get_address_for_user(admin)),
             true,
         ),
-        "grants" | "denied" => update_admin_address(
+        "grants" | "denied" => update_user_role(
             mock_contract_context(get_address_for_user(admin)),
             world.state.clone(),
+            get_user_role(role),
             mock_address(get_address_for_user(user)),
             action == "grants",
         ),
@@ -133,6 +152,30 @@ fn mint_domain_with_parent(
     }
 }
 
+#[when(regex = r"(\w+) updates the config '(.+)' to '(.+)'")]
+fn update_contract_config(world: &mut ContractWorld, user: String, key: String, value: String) {
+    let res = catch_unwind(|| {
+        let new_config = match key.as_str() {
+            "whitelist_enabled" => {
+                let mut new_config = world.state.config.clone();
+                new_config.whitelist_enabled = value == "true";
+                new_config
+            }
+            _ => panic!("Unknown config key"),
+        };
+
+        update_config(
+            mock_contract_context(get_address_for_user(user.clone())),
+            world.state.clone(),
+            new_config,
+        )
+    });
+
+    if let Ok((new_state, _)) = res {
+        world.state = new_state;
+    }
+}
+
 #[then(expr = "{word} owns '{word}' domain")]
 fn owns_the_domain(world: &mut ContractWorld, user: String, domain: String) {
     let domain = world.state.pns.get_domain(&domain).unwrap();
@@ -150,14 +193,24 @@ fn domain_is_not_minted(world: &mut ContractWorld, domain: String) {
     assert_eq!(domain, None);
 }
 
-#[then(regex = r"(\w+) user (is|is not) an admin")]
-fn user_is_admin(world: &mut ContractWorld, user: String, is: String) {
-    let is_admin = world
-        .state
-        .access_control
-        .has_role(ADMIN_ROLE, &mock_address(get_address_for_user(user)));
+#[then(regex = r"(\w+) user (has|has not) the (\w+) role")]
+fn user_is_admin(world: &mut ContractWorld, user: String, has: String, role: String) {
+    let has_role = world.state.access_control.has_role(
+        get_user_role(role) as u8,
+        &mock_address(get_address_for_user(user)),
+    );
 
-    assert_eq!(is_admin, is == "is");
+    assert_eq!(has_role, has == "has");
+}
+
+#[then(regex = "the contract config '(.+)' is '(.+)'")]
+fn contract_config_is(world: &mut ContractWorld, key: String, value: String) {
+    let config = world.state.config.clone();
+
+    match key.as_str() {
+        "whitelist_enabled" => assert_eq!(config.whitelist_enabled, value == "true"),
+        _ => panic!("Unknown config key"),
+    }
 }
 
 // This runs before everything else, so you can setup things here.

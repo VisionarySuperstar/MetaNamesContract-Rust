@@ -3,7 +3,7 @@ use std::vec;
 use crate::{
     actions::{action_build_mint_callback, action_mint},
     msg::{InitMsg, MintMsg},
-    state::ContractState,
+    state::{ContractConfig, ContractState, UserRole},
 };
 
 use contract_version_base::state::ContractVersionBase;
@@ -15,7 +15,7 @@ use pbc_contract_common::{
 
 use nft::{actions as nft_actions, msg as nft_msg};
 
-use access_control::{actions as ac_actions, msg as ac_msg, state::DEFAULT_ADMIN_ROLE};
+use access_control::{actions as ac_actions, msg as ac_msg};
 use partisia_name_system::{actions as pns_actions, msg as pns_msg, state::RecordClass};
 use utils::events::assert_callback_success;
 
@@ -23,7 +23,6 @@ use crate::ContractError;
 
 const CONTRACT_NAME: &str = env!("CARGO_PKG_NAME");
 const CONTRACT_VERSION: &str = env!("CARGO_PKG_VERSION");
-pub const ADMIN_ROLE: u8 = DEFAULT_ADMIN_ROLE;
 
 #[init]
 pub fn initialize(ctx: ContractContext, msg: InitMsg) -> (ContractState, Vec<EventGroup>) {
@@ -53,6 +52,7 @@ pub fn initialize(ctx: ContractContext, msg: InitMsg) -> (ContractState, Vec<Eve
 
     let state = ContractState {
         access_control,
+        config: msg.config,
         nft,
         payable_mint_info: msg.payable_mint_info,
         pns,
@@ -149,7 +149,9 @@ pub fn mint(
     let mut events = vec![];
     let mut mut_state = state;
 
-    let is_admin = mut_state.access_control.has_role(ADMIN_ROLE, &ctx.sender);
+    let is_admin = mut_state
+        .access_control
+        .has_role(UserRole::Admin {} as u8, &ctx.sender);
     if parent_id.is_some() || is_admin {
         let (new_state, mint_events) =
             action_mint(ctx, mut_state, domain, to, token_uri, parent_id);
@@ -158,6 +160,13 @@ pub fn mint(
 
         events.extend(mint_events);
     } else {
+        if mut_state.config.whitelist_enabled {
+            let is_whitelisted = mut_state
+                .access_control
+                .has_role(UserRole::Whitelist {} as u8, &ctx.sender);
+            assert!(is_whitelisted, "{}", ContractError::UserNotWhitelisted);
+        }
+
         let payout_transfer_events = action_build_mint_callback(
             ctx,
             mut_state.payable_mint_info,
@@ -250,10 +259,11 @@ pub fn delete_record(
 }
 
 #[action(shortname = 0x24)]
-pub fn update_admin_address(
+pub fn update_user_role(
     ctx: ContractContext,
     mut state: ContractState,
-    admin: Address,
+    role: UserRole,
+    address: Address,
     active: bool,
 ) -> (ContractState, Vec<EventGroup>) {
     if active {
@@ -261,8 +271,8 @@ pub fn update_admin_address(
             &ctx,
             &mut state.access_control,
             &ac_msg::ACRoleMsg {
-                role: ADMIN_ROLE,
-                account: admin,
+                role: role as u8,
+                account: address,
             },
         );
     } else {
@@ -270,11 +280,27 @@ pub fn update_admin_address(
             &ctx,
             &mut state.access_control,
             &ac_msg::ACRoleMsg {
-                role: ADMIN_ROLE,
-                account: admin,
+                role: role as u8,
+                account: address,
             },
         );
     }
+
+    (state, vec![])
+}
+
+#[action(shortname = 0x25)]
+pub fn update_config(
+    ctx: ContractContext,
+    mut state: ContractState,
+    config: ContractConfig,
+) -> (ContractState, Vec<EventGroup>) {
+    let is_admin = state
+        .access_control
+        .has_role(UserRole::Admin {} as u8, &ctx.sender);
+    assert!(is_admin, "{}", ContractError::Unauthorized);
+
+    state.config = config;
 
     (state, vec![])
 }

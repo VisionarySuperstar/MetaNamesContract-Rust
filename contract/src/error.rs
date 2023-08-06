@@ -18,4 +18,7 @@ pub enum ContractError {
 
     #[error("Payable receiver is not set")]
     PayableReceiverNotSet,
+
+    #[error("User is not whitelisted")]
+    UserNotWhitelisted,
 }

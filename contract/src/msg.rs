@@ -5,7 +5,7 @@ use read_write_rpc_derive::ReadWriteRPC;
 use rpc_msg_derive::IntoShortnameRPCEvent;
 use utils::events::IntoShortnameRPCEvent;
 
-use crate::state::PayableMintInfo;
+use crate::state::{ContractConfig, PayableMintInfo};
 
 /// ## Description
 /// This structure describes fields for PNS initialize msg
@@ -18,6 +18,7 @@ pub struct InitMsg {
     pub uri_template: String,
     pub payable_mint_info: PayableMintInfo,
     pub admin_addresses: Vec<Address>,
+    pub config: ContractConfig,
 }
 
 /// ## Description
