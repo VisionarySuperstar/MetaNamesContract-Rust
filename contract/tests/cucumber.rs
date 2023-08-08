@@ -36,24 +36,61 @@ fn get_user_role(role: String) -> UserRole {
     }
 }
 
-#[given(regex = "a meta names contract with 'whitelist' (enabled|disabled)")]
-fn meta_names_contract(world: &mut ContractWorld, whitelist: String) {
-    let msg = InitMsg {
-        admin_addresses: vec![mock_address(SYSTEM_ADDRESS)],
-        config: ContractConfig {
-            whitelist_enabled: whitelist == "enabled",
-        },
-        name: "Meta Names".to_string(),
-        symbol: "META".to_string(),
-        uri_template: "metanames.io".to_string(),
+#[given(regex = "a meta names contract")]
+fn meta_names_contract(world: &mut ContractWorld) {
+    let config = ContractConfig {
         payable_mint_info: PayableMintInfo {
             token: Some(mock_address(PAYABLE_TOKEN_ADDRESS)),
             receiver: Some(mock_address(ALICE_ADDRESS)),
         },
+        ..ContractConfig::default()
+    };
+
+    let msg = InitMsg {
+        admin_addresses: vec![mock_address(SYSTEM_ADDRESS)],
+        config,
+        name: "Meta Names".to_string(),
+        symbol: "META".to_string(),
+        uri_template: "metanames.io".to_string(),
     };
 
     let (state, _) = initialize(mock_contract_context(ALICE_ADDRESS), msg);
     world.state = state;
+}
+
+#[given(regex = r"(contract) config '(.+)' is '(.+)'")]
+#[when(regex = r"(\w+) updates the config '(.+)' to '(.+)'")]
+fn update_contract_config(world: &mut ContractWorld, user: String, key: String, value: String) {
+    let res = catch_unwind(|| {
+        let new_config = match key.as_str() {
+            "whitelist_enabled" => {
+                let mut new_config = world.state.config.clone();
+                new_config.whitelist_enabled = value == "true";
+                new_config
+            }
+            "mint_count_limit_enabled" => {
+                let mut new_config = world.state.config.clone();
+                new_config.mint_count_limit_enabled = value == "true";
+                new_config
+            }
+            "mint_count_limit" => {
+                let mut new_config = world.state.config.clone();
+                new_config.mint_count_limit = value.parse::<u32>().unwrap();
+                new_config
+            }
+            _ => panic!("Unknown config key"),
+        };
+
+        update_config(
+            mock_contract_context(get_address_for_user(user.clone())),
+            world.state.clone(),
+            new_config,
+        )
+    });
+
+    if let Ok((new_state, _)) = res {
+        world.state = new_state;
+    }
 }
 
 #[given(expr = "{word} minted '{word}' domain without a parent")]
@@ -152,30 +189,6 @@ fn mint_domain_with_parent(
     }
 }
 
-#[when(regex = r"(\w+) updates the config '(.+)' to '(.+)'")]
-fn update_contract_config(world: &mut ContractWorld, user: String, key: String, value: String) {
-    let res = catch_unwind(|| {
-        let new_config = match key.as_str() {
-            "whitelist_enabled" => {
-                let mut new_config = world.state.config.clone();
-                new_config.whitelist_enabled = value == "true";
-                new_config
-            }
-            _ => panic!("Unknown config key"),
-        };
-
-        update_config(
-            mock_contract_context(get_address_for_user(user.clone())),
-            world.state.clone(),
-            new_config,
-        )
-    });
-
-    if let Ok((new_state, _)) = res {
-        world.state = new_state;
-    }
-}
-
 #[then(expr = "{word} owns '{word}' domain")]
 fn owns_the_domain(world: &mut ContractWorld, user: String, domain: String) {
     let domain = world.state.pns.get_domain(&domain).unwrap();
@@ -191,6 +204,13 @@ fn domain_is_not_minted(world: &mut ContractWorld, domain: String) {
     let domain = world.state.pns.get_domain(&domain);
 
     assert_eq!(domain, None);
+}
+
+#[then(expr = "{word} mint count is {int}")]
+fn mint_counts(world: &mut ContractWorld, user: String, count: u32) {
+    let user = mock_address(get_address_for_user(user));
+
+    assert_eq!(world.state.stats.mint_count.get(&user), Some(&count));
 }
 
 #[then(regex = r"(\w+) user (has|has not) the (\w+) role")]
@@ -209,6 +229,11 @@ fn contract_config_is(world: &mut ContractWorld, key: String, value: String) {
 
     match key.as_str() {
         "whitelist_enabled" => assert_eq!(config.whitelist_enabled, value == "true"),
+        "mint_count_limit_enabled" => assert_eq!(config.mint_count_limit_enabled, value == "true"),
+        "mint_count_limit" => {
+            let value = value.parse::<u32>().unwrap();
+            assert_eq!(config.mint_count_limit, value);
+        }
         _ => panic!("Unknown config key"),
     }
 }

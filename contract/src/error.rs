@@ -21,4 +21,7 @@ pub enum ContractError {
 
     #[error("User is not whitelisted")]
     UserNotWhitelisted,
+
+    #[error("Mint count limit reached")]
+    MintCountLimitReached,
 }

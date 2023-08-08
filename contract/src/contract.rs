@@ -3,7 +3,7 @@ use std::vec;
 use crate::{
     actions::{action_build_mint_callback, action_mint},
     msg::{InitMsg, MintMsg},
-    state::{ContractConfig, ContractState, UserRole},
+    state::{ContractConfig, ContractState, ContractStats, UserRole},
 };
 
 use contract_version_base::state::ContractVersionBase;
@@ -27,12 +27,12 @@ const CONTRACT_VERSION: &str = env!("CARGO_PKG_VERSION");
 #[init]
 pub fn initialize(ctx: ContractContext, msg: InitMsg) -> (ContractState, Vec<EventGroup>) {
     assert!(
-        msg.payable_mint_info.token.is_some(),
+        msg.config.payable_mint_info.token.is_some(),
         "{}",
         ContractError::PayableTokenNotSet
     );
     assert!(
-        msg.payable_mint_info.receiver.is_some(),
+        msg.config.payable_mint_info.receiver.is_some(),
         "{}",
         ContractError::PayableReceiverNotSet
     );
@@ -54,8 +54,8 @@ pub fn initialize(ctx: ContractContext, msg: InitMsg) -> (ContractState, Vec<Eve
         access_control,
         config: msg.config,
         nft,
-        payable_mint_info: msg.payable_mint_info,
         pns,
+        stats: ContractStats::default(),
         version: ContractVersionBase::new(CONTRACT_NAME, CONTRACT_VERSION),
     };
 
@@ -167,9 +167,18 @@ pub fn mint(
             assert!(is_whitelisted, "{}", ContractError::UserNotWhitelisted);
         }
 
+        if mut_state.config.mint_count_limit_enabled && !is_admin {
+            let mint_count = mut_state.stats.mint_count.get(&ctx.sender);
+            assert!(
+                mint_count.is_none() || mint_count < Some(&mut_state.config.mint_count_limit),
+                "{}",
+                ContractError::MintCountLimitReached
+            );
+        }
+
         let payout_transfer_events = action_build_mint_callback(
             ctx,
-            mut_state.payable_mint_info,
+            mut_state.config.payable_mint_info,
             &MintMsg {
                 domain,
                 to,
