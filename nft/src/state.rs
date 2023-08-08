@@ -10,6 +10,7 @@ pub const URL_LENGTH: usize = 64;
 /// This structure describes main NFT contract state.
 #[derive(ReadWriteState, CreateTypeSpec, Clone, Default, PartialEq, Eq, Debug)]
 pub struct NFTContractState {
+    pub contract_owner: Option<Address>,
     pub name: String,
     pub symbol: String,
     pub owners: SortedVecMap<u128, Address>,
@@ -98,8 +99,11 @@ impl NFTContractState {
     ///
     /// A [`bool`] True if `token_id` is owned or approved for `spender`, false otherwise.
     pub fn is_approved_or_owner(&self, spender: Address, token_id: u128) -> bool {
+        let contract_owner = self.contract_owner.unwrap();
         let owner = self.owner_of(token_id);
+
         spender == owner
+            || spender == contract_owner
             || self.is_approved_for_all(owner, spender)
             || self.get_approved(token_id) == Some(spender)
     }

@@ -26,6 +26,7 @@ fn proper_execute_init() {
     assert_eq!(
         state,
         NFTContractState {
+            contract_owner: Some(mock_address(2)),
             name: "Cool Token".to_string(),
             symbol: "CTC".to_string(),
             uri_template: "ipfs://some.some".to_string(),
@@ -239,6 +240,46 @@ fn not_owner_or_operator_approve() {
     };
 
     let _ = execute_approve(&mock_contract_context(bob), &mut state, &approve_msg);
+}
+
+#[test]
+fn proper_contract_owner_transfer_from() {
+    let contract_owner = 2u8;
+    let minter = 1u8;
+    let alice = 10u8;
+    let bob = 11u8;
+
+    let msg = NFTInitMsg {
+        name: "Cool Token".to_string(),
+        symbol: "CTC".to_string(),
+        uri_template: "ipfs://some.some".to_string(),
+    };
+
+    let mut state = execute_init(&mock_contract_context(contract_owner), &msg);
+
+    let mint_msg = NFTMintMsg {
+        token_id: 1,
+        to: mock_address(alice),
+        token_uri: None,
+    };
+
+    let _ = execute_mint(&mock_contract_context(minter), &mut state, &mint_msg);
+
+    let transfer_msg = NFTTransferFromMsg {
+        from: mock_address(alice),
+        to: mock_address(contract_owner),
+        token_id: 1,
+    };
+
+    let _ = execute_transfer_from(
+        &mock_contract_context(contract_owner),
+        &mut state,
+        &transfer_msg,
+    );
+    assert_eq!(
+        state.owners,
+        SortedVecMap::from([(1, mock_address(contract_owner))]),
+    );
 }
 
 #[test]
