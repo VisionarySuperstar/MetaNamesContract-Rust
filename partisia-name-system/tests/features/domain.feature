@@ -1,6 +1,6 @@
 Feature: Domain feature
 
-  Scenario: The domain mint without the parent happens correctly
+  Scenario: The domain mint without the parent occurs correctly
     Given a PNS contract
     When Alice mints 'meta.name' domain without a parent
     Then 'meta.name' domain is minted

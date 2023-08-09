@@ -121,6 +121,12 @@ impl PartisiaNameSystemState {
         self.domains.get(&String::from(domain))
     }
 
+    pub fn get_domain_by_token_id(&self, token_id: u128) -> Option<(&String, &Domain)> {
+        self.domains
+            .iter()
+            .find(|(_, domain)| domain.token_id == token_id)
+    }
+
     /// ## Description
     /// Returns parent info by domain
     pub fn get_parent(&self, domain: &str) -> Option<&Domain> {

@@ -1,7 +1,7 @@
 Feature: Mint feature
 
   // NOTE: Cannot make integration tests on normal mint as there are minting fees
-  Scenario: The mint without fees without the parent happens properly
+  Scenario: The mint without fees without the parent occurs properly
     Given a meta names contract
     When Alice mints 'meta.name' domain without fees and a parent
     Then Alice owns 'meta.name' domain
@@ -35,13 +35,13 @@ Feature: Mint feature
     When Alice mints 'meta.name' domain without a parent
     Then 'meta.name' domain is not minted
 
-  Scenario: The mint with the owned parent happens properly
+  Scenario: The mint with the owned parent occurs properly
     Given a meta names contract
     And Alice minted 'meta.name' domain without a parent
     When Alice mints 'meta.name.sub' domain with 'meta.name' domain as the parent
     Then Alice owns 'meta.name.sub' domain
 
-  Scenario: The mint with the approved parent happens properly
+  Scenario: The mint with the approved parent occurs properly
     Given a meta names contract
     And Alice minted 'meta.name' domain without a parent
     And Alice approved Bob on 'meta.name' domain

@@ -3,10 +3,12 @@ use std::panic::catch_unwind;
 use cucumber::{given, then, when, World};
 use partisia_name_system::{
     actions::{
-        execute_init, execute_mint, execute_record_delete, execute_record_mint,
-        execute_record_update,
+        execute_init, execute_mint, execute_record_delete, execute_record_delete_all,
+        execute_record_mint, execute_record_update,
     },
-    msg::{PnsMintMsg, PnsRecordDeleteMsg, PnsRecordMintMsg, PnsRecordUpdateMsg},
+    msg::{
+        PnsMintMsg, PnsRecordDeleteAllMsg, PnsRecordDeleteMsg, PnsRecordMintMsg, PnsRecordUpdateMsg,
+    },
     state::{PartisiaNameSystemState, RecordClass},
 };
 use utils::tests::mock_contract_context;
@@ -122,7 +124,6 @@ fn mint_a_record(
     }
 }
 
-// Alice deletes the 'Wallet' record for the 'meta.name' domain
 #[when(regex = ".+ deletes the '(.+)' record for the '(.+)' domain")]
 fn domain_record_delete(world: &mut PartisiaNameSystemWorld, class: String, domain: String) {
     let msg = PnsRecordDeleteMsg {
@@ -131,6 +132,13 @@ fn domain_record_delete(world: &mut PartisiaNameSystemWorld, class: String, doma
     };
 
     execute_record_delete(&mock_contract_context(1), &mut world.state, &msg);
+}
+
+#[when(regex = ".+ deletes all records for the '(.+)' domain")]
+fn domain_record_delete_all(world: &mut PartisiaNameSystemWorld, domain: String) {
+    let msg = PnsRecordDeleteAllMsg { domain };
+
+    execute_record_delete_all(&mock_contract_context(1), &mut world.state, &msg);
 }
 
 #[then(regex = "'(.+)' domain (is|is not) minted")]

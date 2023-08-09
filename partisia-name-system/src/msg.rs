@@ -44,3 +44,10 @@ pub struct PnsRecordDeleteMsg {
     /// Class type
     pub class: RecordClass,
 }
+
+/// ## Description
+/// This structure describes fields for the Record Delete All Msg
+#[derive(ReadWriteRPC, CreateTypeSpec, Clone, PartialEq, Eq, Debug)]
+pub struct PnsRecordDeleteAllMsg {
+    pub domain: String,
+}

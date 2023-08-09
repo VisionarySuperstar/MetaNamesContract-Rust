@@ -1,5 +1,3 @@
-use std::vec;
-
 use create_type_spec_derive::CreateTypeSpec;
 use pbc_contract_common::{
     address::Address, context::ContractContext, sorted_vec_map::SortedVecMap,

@@ -4,7 +4,9 @@ use pbc_contract_common::{
 };
 
 use crate::{
-    msg::{PnsMintMsg, PnsRecordDeleteMsg, PnsRecordMintMsg, PnsRecordUpdateMsg},
+    msg::{
+        PnsMintMsg, PnsRecordDeleteAllMsg, PnsRecordDeleteMsg, PnsRecordMintMsg, PnsRecordUpdateMsg,
+    },
     state::{Domain, PartisiaNameSystemState, MAX_DOMAIN_LEN, MAX_RECORD_DATA_LENGTH},
     ContractError,
 };
@@ -115,6 +117,19 @@ pub fn execute_record_delete(
     );
 
     domain.delete_record(&msg.class);
+
+    vec![]
+}
+
+pub fn execute_record_delete_all(
+    ctx: &ContractContext,
+    state: &mut PartisiaNameSystemState,
+    msg: &PnsRecordDeleteAllMsg,
+) -> Vec<EventGroup> {
+    assert!(state.is_minted(&msg.domain), "{}", ContractError::NotFound);
+
+    let domain = state.domains.get_mut(&msg.domain).unwrap();
+    domain.records = SortedVecMap::new();
 
     vec![]
 }

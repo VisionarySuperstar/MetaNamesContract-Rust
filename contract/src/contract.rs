@@ -1,5 +1,3 @@
-use std::vec;
-
 use crate::{
     actions::{action_build_mint_callback, action_mint},
     msg::{InitMsg, MintMsg},
@@ -71,13 +69,35 @@ pub fn transfer_from(
     token_id: u128,
 ) -> (ContractState, Vec<EventGroup>) {
     let mut state = state;
-    let events = nft_actions::execute_transfer_from(
+    let mut nft_events = nft_actions::execute_transfer_from(
         &ctx,
         &mut state.nft,
         &nft_msg::NFTTransferFromMsg { from, to, token_id },
     );
 
-    (state, events)
+    let (name, _) = state.pns.get_domain_by_token_id(token_id).unwrap();
+    let msg = &pns_msg::PnsRecordDeleteAllMsg {
+        domain: name.clone(),
+    };
+    let pns_events = pns_actions::execute_record_delete_all(&ctx, &mut state.pns, msg);
+
+    nft_events.extend(pns_events);
+
+    (state, nft_events)
+}
+
+#[action(shortname = 0x04)]
+pub fn transfer_domain(
+    ctx: ContractContext,
+    state: ContractState,
+    from: Address,
+    to: Address,
+    domain: String,
+) -> (ContractState, Vec<EventGroup>) {
+    let token_id = state.pns.get_token_id(&domain);
+    assert!(token_id.is_some(), "{}", ContractError::DomainNotMinted);
+
+    transfer_from(ctx, state, from, to, token_id.unwrap())
 }
 
 #[action(shortname = 0x05)]

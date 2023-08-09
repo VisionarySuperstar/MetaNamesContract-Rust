@@ -3,10 +3,16 @@ use std::panic::catch_unwind;
 use cucumber::{given, then, when, World};
 use meta_names_contract::{
     contract::{
-        approve_domain, initialize, mint, on_mint_callback, update_config, update_user_role,
+        approve_domain, initialize, mint, on_mint_callback, transfer_domain, update_config,
+        update_user_role,
     },
     msg::{InitMsg, MintMsg},
     state::{ContractConfig, ContractState, PayableMintInfo, UserRole},
+};
+use partisia_name_system::{
+    actions::{execute_record_mint, execute_record_update},
+    msg::{PnsRecordMintMsg, PnsRecordUpdateMsg},
+    state::RecordClass,
 };
 use utils::tests::{mock_address, mock_contract_context, mock_successful_callback_context};
 
@@ -33,6 +39,23 @@ fn get_user_role(role: String) -> UserRole {
         "admin" => UserRole::Admin {},
         "whitelist" => UserRole::Whitelist {},
         _ => panic!("Unknown role"),
+    }
+}
+
+// Taken from partisia-name-system/tests/cucumber.rs
+fn get_record_class_given(class: String) -> RecordClass {
+    match class.as_str() {
+        "Bio" => RecordClass::Bio {},
+        "Discord" => RecordClass::Discord {},
+        "Uri" => RecordClass::Uri {},
+        "Twitter" => RecordClass::Twitter {},
+        "Wallet" => RecordClass::Wallet {},
+        "Custom" => RecordClass::Custom {},
+        "Custom2" => RecordClass::Custom2 {},
+        "Custom3" => RecordClass::Custom3 {},
+        "Custom4" => RecordClass::Custom4 {},
+        "Custom5" => RecordClass::Custom5 {},
+        _ => panic!("Unknown record class"),
     }
 }
 
@@ -159,6 +182,50 @@ fn user_approve_domain(world: &mut ContractWorld, user: String, approved: String
     world.state = new_state;
 }
 
+// Taken from partisia-name-system/tests/cucumber.rs
+#[given(regex = ".+ (minted) the '(.+)' record with '(.+)' data for the '(.+)' domain")]
+#[when(regex = ".+ (mints|updates) the '(.+)' record with '(.+)' data for the '(.+)' domain")]
+fn mint_a_record(
+    world: &mut ContractWorld,
+    action: String,
+    class: String,
+    data: String,
+    domain: String,
+) {
+    let res = catch_unwind(|| {
+        let mut state = world.state.clone();
+        let context = &mock_contract_context(1);
+        match action.as_str() {
+            "mints" | "minted" => {
+                let msg = PnsRecordMintMsg {
+                    domain,
+                    class: get_record_class_given(class),
+                    data: data.into_bytes(),
+                };
+                execute_record_mint(context, &mut state.pns, &msg);
+            }
+
+            "updates" => {
+                let msg = PnsRecordUpdateMsg {
+                    domain,
+                    class: get_record_class_given(class),
+                    data: data.into_bytes(),
+                };
+
+                execute_record_update(context, &mut state.pns, &msg);
+            }
+
+            _ => panic!("Not handled"),
+        };
+
+        state
+    });
+
+    if let Ok(new_state) = res {
+        world.state = new_state;
+    }
+}
+
 #[when(expr = "{word} mints '{word}' domain with '{word}' domain as the parent")]
 #[when(regex = r"(\w+) mints '(.+)' domain without (a parent)")]
 fn mint_domain_with_parent(
@@ -181,6 +248,23 @@ fn mint_domain_with_parent(
             mock_address(get_address_for_user(user)),
             None,
             parent_opt,
+        )
+    });
+
+    if let Ok((new_state, _)) = res {
+        world.state = new_state;
+    }
+}
+
+#[when(expr = "{word} transfers the '{word}' domain to {word}")]
+fn transfer_domain_to(world: &mut ContractWorld, user: String, domain: String, to: String) {
+    let res = catch_unwind(|| {
+        transfer_domain(
+            mock_contract_context(get_address_for_user(user.clone())),
+            world.state.clone(),
+            mock_address(get_address_for_user(user.clone())),
+            mock_address(get_address_for_user(to)),
+            domain,
         )
     });
 
@@ -235,6 +319,18 @@ fn contract_config_is(world: &mut ContractWorld, key: String, value: String) {
             assert_eq!(config.mint_count_limit, value);
         }
         _ => panic!("Unknown config key"),
+    }
+}
+
+// Taken from partisia-name-system/tests/cucumber.rs
+#[then(expr = "'{word}' domain does not have a '{word}' record")]
+fn domain_has_no_record(world: &mut ContractWorld, domain: String, class: String) {
+    let domain = world.state.pns.get_domain(&domain);
+
+    if let Some(domain) = domain {
+        let record = domain.get_record(&get_record_class_given(class));
+
+        assert_eq!(record, None);
     }
 }
 
