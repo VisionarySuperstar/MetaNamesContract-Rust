@@ -41,10 +41,11 @@ pub enum UserRole {
 
 #[derive(ReadWriteRPC, ReadWriteState, CreateTypeSpec, PartialEq, Eq, Default, Clone, Debug)]
 pub struct ContractConfig {
-    pub whitelist_enabled: bool,
+    pub contract_enabled: bool,
     pub mint_count_limit_enabled: bool,
     pub mint_count_limit: u32,
     pub payable_mint_info: PayableMintInfo,
+    pub whitelist_enabled: bool,
 }
 
 #[derive(ReadWriteState, CreateTypeSpec, PartialEq, Eq, Default, Clone, Debug)]

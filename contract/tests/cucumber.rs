@@ -30,6 +30,7 @@ fn get_address_for_user(user: String) -> u8 {
     match user.as_str() {
         "Alice" => ALICE_ADDRESS,
         "Bob" => BOB_ADDRESS,
+        "contract" => SYSTEM_ADDRESS,
         _ => panic!("Unknown user"),
     }
 }
@@ -62,6 +63,7 @@ fn get_record_class_given(class: String) -> RecordClass {
 #[given(regex = "a meta names contract")]
 fn meta_names_contract(world: &mut ContractWorld) {
     let config = ContractConfig {
+        contract_enabled: true,
         payable_mint_info: PayableMintInfo {
             token: Some(mock_address(PAYABLE_TOKEN_ADDRESS)),
             receiver: Some(mock_address(ALICE_ADDRESS)),
@@ -86,6 +88,11 @@ fn meta_names_contract(world: &mut ContractWorld) {
 fn update_contract_config(world: &mut ContractWorld, user: String, key: String, value: String) {
     let res = catch_unwind(|| {
         let new_config = match key.as_str() {
+            "contract_enabled" => {
+                let mut new_config = world.state.config.clone();
+                new_config.contract_enabled = value == "true";
+                new_config
+            }
             "whitelist_enabled" => {
                 let mut new_config = world.state.config.clone();
                 new_config.whitelist_enabled = value == "true";

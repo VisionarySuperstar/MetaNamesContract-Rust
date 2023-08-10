@@ -68,6 +68,8 @@ pub fn transfer_from(
     to: Address,
     token_id: u128,
 ) -> (ContractState, Vec<EventGroup>) {
+    assert_contract_enabled(&state);
+
     let mut state = state;
     let mut nft_events = nft_actions::execute_transfer_from(
         &ctx,
@@ -94,6 +96,8 @@ pub fn transfer_domain(
     to: Address,
     domain: String,
 ) -> (ContractState, Vec<EventGroup>) {
+    assert_contract_enabled(&state);
+
     let token_id = state.pns.get_token_id(&domain);
     assert!(token_id.is_some(), "{}", ContractError::DomainNotMinted);
 
@@ -107,6 +111,8 @@ pub fn approve(
     approved: Option<Address>,
     token_id: u128,
 ) -> (ContractState, Vec<EventGroup>) {
+    assert_contract_enabled(&state);
+
     let mut state = state;
     let events = nft_actions::execute_approve(
         &ctx,
@@ -124,6 +130,8 @@ pub fn approve_domain(
     approved: Option<Address>,
     domain: String,
 ) -> (ContractState, Vec<EventGroup>) {
+    assert_contract_enabled(&state);
+
     assert!(
         state.pns.is_minted(&domain),
         "{}",
@@ -142,6 +150,8 @@ pub fn set_approval_for_all(
     operator: Address,
     approved: bool,
 ) -> (ContractState, Vec<EventGroup>) {
+    assert_contract_enabled(&state);
+
     let mut state = state;
     let events = nft_actions::execute_set_approval_for_all(
         &ctx,
@@ -161,6 +171,8 @@ pub fn mint(
     token_uri: Option<String>,
     parent_id: Option<String>,
 ) -> (ContractState, Vec<EventGroup>) {
+    assert_contract_enabled(&state);
+
     // Basic validations
     assert!(!state.pns.is_minted(&domain), "{}", ContractError::Minted);
 
@@ -221,6 +233,8 @@ pub fn on_mint_callback(
     state: ContractState,
     msg: MintMsg,
 ) -> (ContractState, Vec<EventGroup>) {
+    assert_contract_enabled(&state);
+
     assert_callback_success(&callback_ctx);
 
     action_mint(ctx, state, msg.domain, msg.to, msg.token_uri, msg.parent_id)
@@ -234,6 +248,8 @@ pub fn mint_record(
     class: RecordClass,
     data: Vec<u8>,
 ) -> (ContractState, Vec<EventGroup>) {
+    assert_contract_enabled(&state);
+
     let mut state = state;
     let events = pns_actions::execute_record_mint(
         &ctx,
@@ -256,6 +272,8 @@ pub fn update_record(
     class: RecordClass,
     data: Vec<u8>,
 ) -> (ContractState, Vec<EventGroup>) {
+    assert_contract_enabled(&state);
+
     let mut state = state;
     let events = pns_actions::execute_record_update(
         &ctx,
@@ -277,6 +295,8 @@ pub fn delete_record(
     domain: String,
     class: RecordClass,
 ) -> (ContractState, Vec<EventGroup>) {
+    assert_contract_enabled(&state);
+
     let mut state = state;
     let events = pns_actions::execute_record_delete(
         &ctx,
@@ -332,4 +352,12 @@ pub fn update_config(
     state.config = config;
 
     (state, vec![])
+}
+
+fn assert_contract_enabled(state: &ContractState) {
+    assert!(
+        state.config.contract_enabled,
+        "{}",
+        ContractError::ContractDisabled
+    );
 }

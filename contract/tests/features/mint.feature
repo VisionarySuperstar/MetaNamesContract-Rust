@@ -6,6 +6,13 @@ Feature: Mint feature
     When Alice mints 'meta.name' domain without fees and a parent
     Then Alice owns 'meta.name' domain
 
+  Scenario: The mint does not occur when the contract is disabled
+    Given a meta names contract
+    And Alice user with the admin role
+    And contract config 'contract_enabled' is 'false'
+    When Alice mints 'meta.name' domain without a parent
+    Then 'meta.name' domain is not minted
+
   Scenario: The minting process of a domain without any parent, carried out by an administrator user, is executed correctly
     Given a meta names contract
     And Alice user with the admin role
