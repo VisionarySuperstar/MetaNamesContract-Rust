@@ -5,7 +5,8 @@ use pbc_contract_common::{
 
 use crate::{
     msg::{
-        PnsMintMsg, PnsRecordDeleteAllMsg, PnsRecordDeleteMsg, PnsRecordMintMsg, PnsRecordUpdateMsg,
+        PnsDomainUpdateExpirationMsg, PnsMintMsg, PnsRecordDeleteAllMsg, PnsRecordDeleteMsg,
+        PnsRecordMintMsg, PnsRecordUpdateMsg,
     },
     state::{Domain, PartisiaNameSystemState, MAX_DOMAIN_LEN, MAX_RECORD_DATA_LENGTH},
     ContractError,
@@ -39,6 +40,11 @@ pub fn execute_mint(
 
     if let Some(parent_id) = msg.parent_id.clone() {
         assert!(state.is_minted(&parent_id), "{}", ContractError::NotFound);
+        assert!(
+            state.is_active(&parent_id, ctx.block_production_time),
+            "{}",
+            ContractError::DomainExpired
+        );
     }
 
     state.domains.insert(
@@ -46,6 +52,8 @@ pub fn execute_mint(
         Domain {
             token_id: msg.token_id,
             records: SortedVecMap::new(),
+            minted_at: ctx.block_production_time,
+            expires_at: msg.expires_at,
             parent_id: msg.parent_id.clone(),
         },
     );
@@ -63,6 +71,11 @@ pub fn execute_record_mint(
     msg: &PnsRecordMintMsg,
 ) -> Vec<EventGroup> {
     assert!(state.is_minted(&msg.domain), "{}", ContractError::NotFound);
+    assert!(
+        state.is_active(&msg.domain, ctx.block_production_time),
+        "{}",
+        ContractError::DomainExpired
+    );
     assert!(
         msg.data.clone().len() < MAX_RECORD_DATA_LENGTH,
         "{}",
@@ -85,6 +98,11 @@ pub fn execute_record_update(
     msg: &PnsRecordUpdateMsg,
 ) -> Vec<EventGroup> {
     assert!(state.is_minted(&msg.domain), "{}", ContractError::NotFound);
+    assert!(
+        state.is_active(&msg.domain, ctx.block_production_time),
+        "{}",
+        ContractError::DomainExpired
+    );
 
     let domain = state.domains.get_mut(&msg.domain).unwrap();
     assert!(
@@ -108,6 +126,11 @@ pub fn execute_record_delete(
     msg: &PnsRecordDeleteMsg,
 ) -> Vec<EventGroup> {
     assert!(state.is_minted(&msg.domain), "{}", ContractError::NotFound);
+    assert!(
+        state.is_active(&msg.domain, ctx.block_production_time),
+        "{}",
+        ContractError::DomainExpired
+    );
 
     let domain = state.domains.get_mut(&msg.domain).unwrap();
     assert!(
@@ -121,6 +144,9 @@ pub fn execute_record_delete(
     vec![]
 }
 
+/// ## Description
+/// Delete all records for a domain
+/// Does not require the domain to be active
 pub fn execute_record_delete_all(
     ctx: &ContractContext,
     state: &mut PartisiaNameSystemState,
@@ -130,6 +156,21 @@ pub fn execute_record_delete_all(
 
     let domain = state.domains.get_mut(&msg.domain).unwrap();
     domain.records = SortedVecMap::new();
+
+    vec![]
+}
+
+///## Description
+/// Update the expiration date for a domain
+pub fn execute_update_expiration(
+    ctx: &ContractContext,
+    state: &mut PartisiaNameSystemState,
+    msg: &PnsDomainUpdateExpirationMsg,
+) -> Vec<EventGroup> {
+    assert!(state.is_minted(&msg.domain), "{}", ContractError::NotFound);
+
+    let domain = state.domains.get_mut(&msg.domain).unwrap();
+    domain.expires_at = msg.expires_at;
 
     vec![]
 }

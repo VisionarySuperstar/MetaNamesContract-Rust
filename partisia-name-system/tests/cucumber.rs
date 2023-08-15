@@ -11,7 +11,7 @@ use partisia_name_system::{
     },
     state::{PartisiaNameSystemState, RecordClass},
 };
-use utils::tests::mock_contract_context;
+use utils::tests::{mock_contract_context, tomorrow_timestamp};
 
 fn get_record_class_given(class: String) -> RecordClass {
     match class.as_str() {
@@ -48,6 +48,7 @@ fn mint_a_domain(world: &mut PartisiaNameSystemWorld, domain: String) {
         domain,
         token_id: 0,
         parent_id: None,
+        expires_at: Some(tomorrow_timestamp()),
     };
 
     let res = catch_unwind(|| {
@@ -68,6 +69,7 @@ fn mint_a_domain_with_parent(world: &mut PartisiaNameSystemWorld, domain: String
         domain,
         token_id: 0,
         parent_id: Some(parent),
+        expires_at: None,
     };
 
     let res = catch_unwind(|| {

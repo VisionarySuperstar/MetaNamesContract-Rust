@@ -27,4 +27,10 @@ pub enum ContractError {
 
     #[error("Mint count limit reached")]
     MintCountLimitReached,
+
+    #[error("The specified domain is not active")]
+    DomainNotActive,
+
+    #[error("The given subscription years value is not valid")]
+    InvalidSubscriptionYears,
 }

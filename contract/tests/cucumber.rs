@@ -3,18 +3,21 @@ use std::panic::catch_unwind;
 use cucumber::{given, then, when, World};
 use meta_names_contract::{
     contract::{
-        approve_domain, initialize, mint, on_mint_callback, transfer_domain, update_config,
-        update_user_role,
+        approve_domain, initialize, mint, on_mint_callback, renew_subscription, transfer_domain,
+        update_config, update_user_role,
     },
     msg::{InitMsg, MintMsg},
     state::{ContractConfig, ContractState, PayableMintInfo, UserRole},
 };
 use partisia_name_system::{
-    actions::{execute_record_mint, execute_record_update},
-    msg::{PnsRecordMintMsg, PnsRecordUpdateMsg},
+    actions::{execute_record_mint, execute_record_update, execute_update_expiration},
+    msg::{PnsDomainUpdateExpirationMsg, PnsRecordMintMsg, PnsRecordUpdateMsg},
     state::RecordClass,
 };
-use utils::tests::{mock_address, mock_contract_context, mock_successful_callback_context};
+use utils::{
+    tests::{mock_address, mock_contract_context, mock_successful_callback_context},
+    time::milliseconds_in_years,
+};
 
 const SYSTEM_ADDRESS: u8 = 0;
 const ALICE_ADDRESS: u8 = 1;
@@ -24,6 +27,7 @@ const PAYABLE_TOKEN_ADDRESS: u8 = 10;
 #[derive(Debug, Default, World)]
 pub struct ContractWorld {
     state: ContractState,
+    point_in_time: i64,
 }
 
 fn get_address_for_user(user: String) -> u8 {
@@ -79,7 +83,11 @@ fn meta_names_contract(world: &mut ContractWorld) {
         uri_template: "metanames.io".to_string(),
     };
 
-    let (state, _) = initialize(mock_contract_context(ALICE_ADDRESS), msg);
+    let cxt = mock_contract_context(ALICE_ADDRESS);
+    world.point_in_time = cxt.block_production_time;
+
+    let (state, _) = initialize(cxt, msg);
+
     world.state = state;
 }
 
@@ -136,6 +144,7 @@ fn mint_a_domain(world: &mut ContractWorld, user: String, domain: String) {
                 to: mock_address(get_address_for_user(user)),
                 token_uri: None,
                 parent_id: None,
+                subscription_years: None,
             },
         )
     });
@@ -233,6 +242,37 @@ fn mint_a_record(
     }
 }
 
+#[given(expr = "{word} renewed '{word}' domain for {int} years")]
+#[when(expr = "{word} renews '{word}' domain for {int} years")]
+fn renew_domain(world: &mut ContractWorld, user: String, domain_name: String, years: u32) {
+    let context = mock_contract_context(get_address_for_user(user.clone()));
+
+    // To properly test renewing a domain, we need to override the expiration time of the domain
+    let expires_at = Some(world.point_in_time);
+    execute_update_expiration(
+        &context,
+        &mut world.state.pns,
+        &PnsDomainUpdateExpirationMsg {
+            domain: domain_name.clone(),
+            expires_at,
+        },
+    );
+
+    let res = catch_unwind(|| {
+        renew_subscription(
+            context,
+            world.state.clone(),
+            domain_name,
+            mock_address(get_address_for_user(user)),
+            years,
+        )
+    });
+
+    if let Ok((new_state, _)) = res {
+        world.state = new_state;
+    }
+}
+
 #[when(expr = "{word} mints '{word}' domain with '{word}' domain as the parent")]
 #[when(regex = r"(\w+) mints '(.+)' domain without (a parent)")]
 fn mint_domain_with_parent(
@@ -255,6 +295,7 @@ fn mint_domain_with_parent(
             mock_address(get_address_for_user(user)),
             None,
             parent_opt,
+            Some(1),
         )
     });
 
@@ -339,6 +380,14 @@ fn domain_has_no_record(world: &mut ContractWorld, domain: String, class: String
 
         assert_eq!(record, None);
     }
+}
+
+#[then(expr = "'{word}' domain expires in {int} years")]
+fn domain_expires_in(world: &mut ContractWorld, domain: String, years: u32) {
+    let domain = world.state.pns.get_domain(&domain).unwrap();
+
+    let expected_expires_at = world.point_in_time + milliseconds_in_years(years as i64);
+    assert_eq!(domain.expires_at, Some(expected_expires_at));
 }
 
 // This runs before everything else, so you can setup things here.

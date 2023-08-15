@@ -1,6 +1,9 @@
 use crate::{
-    actions::{action_build_mint_callback, action_mint},
-    msg::{InitMsg, MintMsg},
+    actions::{
+        action_build_mint_callback, action_build_renew_callback, action_mint,
+        action_renew_subscription,
+    },
+    msg::{InitMsg, MintMsg, RenewDomainMsg},
     state::{ContractConfig, ContractState, ContractStats, UserRole},
 };
 
@@ -170,6 +173,7 @@ pub fn mint(
     to: Address,
     token_uri: Option<String>,
     parent_id: Option<String>,
+    subscription_years: Option<u32>,
 ) -> (ContractState, Vec<EventGroup>) {
     assert_contract_enabled(&state);
 
@@ -186,7 +190,7 @@ pub fn mint(
         .has_role(UserRole::Admin {} as u8, &ctx.sender);
     if parent_id.is_some() || is_admin {
         let (new_state, mint_events) =
-            action_mint(ctx, mut_state, domain, to, token_uri, parent_id);
+            action_mint(ctx, mut_state, domain, to, token_uri, parent_id, None);
 
         mut_state = new_state;
 
@@ -202,12 +206,13 @@ pub fn mint(
         if mut_state.config.mint_count_limit_enabled && !is_admin {
             let mint_count = mut_state.stats.mint_count.get(&ctx.sender);
             assert!(
-                mint_count.is_none() || mint_count < Some(&mut_state.config.mint_count_limit),
+                mint_count.is_none() || mint_count <= Some(&mut_state.config.mint_count_limit),
                 "{}",
                 ContractError::MintCountLimitReached
             );
         }
 
+        let subscription_years = subscription_years.unwrap_or(1);
         let payout_transfer_events = action_build_mint_callback(
             ctx,
             mut_state.config.payable_mint_info,
@@ -216,6 +221,7 @@ pub fn mint(
                 to,
                 token_uri,
                 parent_id,
+                subscription_years: Some(subscription_years),
             },
             0x30,
         );
@@ -237,7 +243,15 @@ pub fn on_mint_callback(
 
     assert_callback_success(&callback_ctx);
 
-    action_mint(ctx, state, msg.domain, msg.to, msg.token_uri, msg.parent_id)
+    action_mint(
+        ctx,
+        state,
+        msg.domain,
+        msg.to,
+        msg.token_uri,
+        msg.parent_id,
+        msg.subscription_years,
+    )
 }
 
 #[action(shortname = 0x21)]
@@ -360,4 +374,60 @@ fn assert_contract_enabled(state: &ContractState) {
         "{}",
         ContractError::ContractDisabled
     );
+}
+
+#[action(shortname = 0x26)]
+pub fn renew_subscription(
+    ctx: ContractContext,
+    mut state: ContractState,
+    domain: String,
+    payer: Address,
+    subscription_years: u32,
+) -> (ContractState, Vec<EventGroup>) {
+    assert_contract_enabled(&state);
+    assert!(
+        subscription_years > 0,
+        "{}",
+        ContractError::InvalidSubscriptionYears
+    );
+
+    let is_admin = state
+        .access_control
+        .has_role(UserRole::Admin {} as u8, &ctx.sender);
+
+    let events;
+    if is_admin {
+        let (new_state, renew_events) =
+            action_renew_subscription(ctx, state, domain, subscription_years);
+
+        state = new_state;
+        events = renew_events;
+    } else {
+        events = action_build_renew_callback(
+            ctx,
+            state.config.payable_mint_info,
+            &RenewDomainMsg {
+                domain,
+                payer,
+                subscription_years,
+            },
+            0x31,
+        );
+    };
+
+    (state, events)
+}
+
+#[callback(shortname = 0x31)]
+pub fn on_renew_subscription_callback(
+    ctx: ContractContext,
+    callback_ctx: CallbackContext,
+    state: ContractState,
+    msg: RenewDomainMsg,
+) -> (ContractState, Vec<EventGroup>) {
+    assert_contract_enabled(&state);
+
+    assert_callback_success(&callback_ctx);
+
+    action_renew_subscription(ctx, state, msg.domain, msg.subscription_years)
 }

@@ -27,4 +27,7 @@ pub enum ContractError {
 
     #[error("The record data is too long")]
     RecordDataTooLong,
+
+    #[error("The specified domain is expired")]
+    DomainExpired,
 }

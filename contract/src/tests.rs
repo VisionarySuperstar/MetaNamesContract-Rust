@@ -40,7 +40,7 @@ fn test_mint_fees() {
     ];
 
     for (name, fee) in fees_tuples {
-        let fees = calculate_mint_fees(name);
+        let fees = calculate_mint_fees(name, 1);
         assert_eq!(fees, fee);
     }
 }
