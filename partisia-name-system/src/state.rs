@@ -48,16 +48,18 @@ pub enum RecordClass {
     Uri {},
     #[discriminant(4)]
     Wallet {},
-    // Customizables
     #[discriminant(5)]
-    Custom {},
+    Avatar {},
+    // Customizables
     #[discriminant(6)]
-    Custom2 {},
+    Custom {},
     #[discriminant(7)]
-    Custom3 {},
+    Custom2 {},
     #[discriminant(8)]
-    Custom4 {},
+    Custom3 {},
     #[discriminant(9)]
+    Custom4 {},
+    #[discriminant(10)]
     Custom5 {},
 }
 
