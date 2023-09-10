@@ -22,7 +22,6 @@ const CONTRACT_VERSION: &str = env!("CARGO_PKG_VERSION");
 pub fn execute_init(ctx: &ContractContext) -> PartisiaNameSystemState {
     PartisiaNameSystemState {
         domains: SortedVecMap::new(),
-        records: SortedVecMap::new(),
         version: ContractVersionBase::new(CONTRACT_NAME, CONTRACT_VERSION),
     }
 }

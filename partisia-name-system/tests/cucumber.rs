@@ -20,6 +20,7 @@ fn get_record_class_given(class: String) -> RecordClass {
         "Uri" => RecordClass::Uri {},
         "Twitter" => RecordClass::Twitter {},
         "Wallet" => RecordClass::Wallet {},
+        "Avatar" => RecordClass::Avatar {},
         "Custom" => RecordClass::Custom {},
         "Custom2" => RecordClass::Custom2 {},
         "Custom3" => RecordClass::Custom3 {},
