@@ -54,7 +54,7 @@ pub struct ContractStats {
 }
 
 impl ContractStats {
-    pub fn increate_mint_count(&mut self, address: Address) {
+    pub fn increase_mint_count(&mut self, address: Address) {
         let count = self.mint_count.get(&address).unwrap_or(&0);
         self.mint_count.insert(address, count + 1);
     }
