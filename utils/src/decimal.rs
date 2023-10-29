@@ -6,6 +6,7 @@ use read_write_rpc_derive::ReadWriteRPC;
 use read_write_state_derive::ReadWriteState;
 
 /// This structure describes wasm compatible decimal wrapper.
+#[repr(C)]
 #[derive(
     ReadWriteRPC, ReadWriteState, CreateTypeSpec, Clone, Copy, Eq, PartialEq, Debug, Default,
 )]

@@ -21,6 +21,7 @@ pub struct ContractState {
     pub version: ContractVersionBase,
 }
 
+#[repr(C)]
 #[derive(
     ReadWriteRPC, ReadWriteState, CreateTypeSpec, PartialEq, Eq, Default, Copy, Clone, Debug,
 )]
@@ -39,6 +40,7 @@ pub enum UserRole {
     Whitelist {},
 }
 
+#[repr(C)]
 #[derive(ReadWriteRPC, ReadWriteState, CreateTypeSpec, PartialEq, Eq, Default, Clone, Debug)]
 pub struct ContractConfig {
     pub contract_enabled: bool,
@@ -48,6 +50,7 @@ pub struct ContractConfig {
     pub whitelist_enabled: bool,
 }
 
+#[repr(C)]
 #[derive(ReadWriteState, CreateTypeSpec, PartialEq, Eq, Default, Clone, Debug)]
 pub struct ContractStats {
     pub mint_count: SortedVecMap<Address, u32>,

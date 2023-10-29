@@ -10,12 +10,14 @@ pub const MAX_RECORD_DATA_LENGTH: usize = 64;
 pub const MAX_DOMAIN_LEN: usize = 32;
 
 /// This structure describes Partisia Name System state
+#[repr(C)]
 #[derive(ReadWriteState, CreateTypeSpec, Clone, Default, PartialEq, Eq, Debug)]
 pub struct PartisiaNameSystemState {
     pub version: ContractVersionBase,
     pub domains: SortedVecMap<String, Domain>,
 }
 
+#[repr(C)]
 #[derive(ReadWriteState, CreateTypeSpec, Clone, PartialEq, Eq, Debug)]
 pub struct Domain {
     pub token_id: u128,
@@ -26,6 +28,7 @@ pub struct Domain {
     pub records: SortedVecMap<RecordClass, Record>,
 }
 
+#[repr(C)]
 #[derive(ReadWriteState, CreateTypeSpec, Clone, PartialEq, Eq, Debug)]
 pub struct Record {
     pub data: Vec<u8>,

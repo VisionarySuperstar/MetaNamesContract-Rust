@@ -7,6 +7,7 @@ use read_write_state_derive::ReadWriteState;
 pub const DEFAULT_ADMIN_ROLE: u8 = 0x00;
 
 /// This structure describes access control extension state
+#[repr(C)]
 #[derive(ReadWriteState, CreateTypeSpec, Clone, PartialEq, Eq, Debug, Default)]
 pub struct AccessControlState {
     /// configured roles
@@ -14,6 +15,7 @@ pub struct AccessControlState {
 }
 
 /// This structure describes role with some granted access control
+#[repr(C)]
 #[derive(ReadWriteState, CreateTypeSpec, Clone, PartialEq, Eq, Debug)]
 pub struct Role {
     /// configured admin role
