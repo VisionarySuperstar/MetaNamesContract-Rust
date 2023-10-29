@@ -1,6 +1,5 @@
 use thiserror::Error;
 
-/// ## Description
 /// This enum describes PNS contract errors
 #[derive(Error, Debug)]
 pub enum ContractError {

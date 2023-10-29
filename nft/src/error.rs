@@ -1,6 +1,5 @@
 use thiserror::Error;
 
-/// ## Description
 /// This enum describes NFT contract errors
 #[derive(Error, Debug)]
 pub enum ContractError {

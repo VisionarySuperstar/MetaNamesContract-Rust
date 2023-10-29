@@ -3,7 +3,6 @@ use read_write_rpc_derive::ReadWriteRPC;
 
 use crate::state::RecordClass;
 
-/// ## Description
 /// This structure describes fields for PNS mint msg
 #[derive(ReadWriteRPC, CreateTypeSpec, Clone, PartialEq, Eq, Debug)]
 pub struct PnsMintMsg {
@@ -16,7 +15,6 @@ pub struct PnsMintMsg {
     pub parent_id: Option<String>,
 }
 
-/// ## Description
 /// This structure describes fields for PNS Record Mint Msg
 #[derive(ReadWriteRPC, CreateTypeSpec, Clone, PartialEq, Eq, Debug)]
 pub struct PnsRecordMintMsg {
@@ -27,7 +25,6 @@ pub struct PnsRecordMintMsg {
     pub data: Vec<u8>,
 }
 
-/// ## Description
 /// This structure describes fields for the record update msg
 #[derive(ReadWriteRPC, CreateTypeSpec, Clone, PartialEq, Eq, Debug)]
 pub struct PnsRecordUpdateMsg {
@@ -38,7 +35,6 @@ pub struct PnsRecordUpdateMsg {
     pub data: Vec<u8>,
 }
 
-/// ## Description
 /// This structure describes fields for the Record Delete Msg
 #[derive(ReadWriteRPC, CreateTypeSpec, Clone, PartialEq, Eq, Debug)]
 pub struct PnsRecordDeleteMsg {
@@ -47,14 +43,12 @@ pub struct PnsRecordDeleteMsg {
     pub class: RecordClass,
 }
 
-/// ## Description
 /// This structure describes fields for the Record Delete All Msg
 #[derive(ReadWriteRPC, CreateTypeSpec, Clone, PartialEq, Eq, Debug)]
 pub struct PnsRecordDeleteAllMsg {
     pub domain: String,
 }
 
-/// ## Description
 /// This structure describes fields for the Domain Update Expiration Msg
 #[derive(ReadWriteRPC, CreateTypeSpec, Clone, PartialEq, Eq, Debug)]
 pub struct PnsDomainUpdateExpirationMsg {

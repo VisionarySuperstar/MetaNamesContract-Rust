@@ -19,7 +19,6 @@ pub const ZK_CONTRACT_DEPLOYER: Address = Address {
 
 pub const MIN_MPC_STAKE: u64 = 2000_0000;
 
-/// ## Description
 /// Creates event that will deploy a new zero-knowledge contract.
 /// Returns newly deployed contract address
 /// ## Params
@@ -58,7 +57,6 @@ where
     )
 }
 
-/// ## Description
 /// Creates event that will deploy a new zero-knowledge contract.
 /// Returns newly deployed contract address
 /// ## Params

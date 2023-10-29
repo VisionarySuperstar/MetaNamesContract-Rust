@@ -9,7 +9,6 @@ use crate::ContractError;
 pub const MAX_RECORD_DATA_LENGTH: usize = 64;
 pub const MAX_DOMAIN_LEN: usize = 32;
 
-/// ## Description
 /// This structure describes Partisia Name System state
 #[derive(ReadWriteState, CreateTypeSpec, Clone, Default, PartialEq, Eq, Debug)]
 pub struct PartisiaNameSystemState {
@@ -63,19 +62,16 @@ pub enum RecordClass {
 }
 
 impl Domain {
-    /// ## Description
     /// Get record given class
     pub fn get_record(&self, class: &RecordClass) -> Option<&Record> {
         self.records.get(class)
     }
 
-    /// ## Description
     /// Existence of record given class
     pub fn is_record_minted(&self, class: &RecordClass) -> bool {
         self.records.contains_key(class)
     }
 
-    /// ## Description
     /// Checks if domain is active
     /// Opposite of expired
     pub fn is_active(&self, unix_millis_now: i64) -> bool {
@@ -85,7 +81,6 @@ impl Domain {
         }
     }
 
-    /// ## Description
     /// Mints record for token
     pub fn mint_record(&mut self, class: &RecordClass, data: &[u8]) {
         assert!(
@@ -100,7 +95,6 @@ impl Domain {
         self.records.insert(*class, record);
     }
 
-    /// ## Description
     /// Update data of a record
     pub fn update_record_data(&mut self, class: &RecordClass, data: &[u8]) {
         assert!(
@@ -115,7 +109,6 @@ impl Domain {
         });
     }
 
-    /// ## Description
     /// Remove a record
     pub fn delete_record(&mut self, class: &RecordClass) {
         assert!(
@@ -133,13 +126,11 @@ impl Domain {
 }
 
 impl PartisiaNameSystemState {
-    /// ## Description
     /// Returns info given domain
     pub fn get_domain(&self, domain: &str) -> Option<&Domain> {
         self.domains.get(&String::from(domain))
     }
 
-    /// ## Description
     /// Returns if the domain is active
     /// If the domain is a subdomain, it checks if the parent is active
     pub fn is_active(&self, domain_name: &str, unix_millis_now: i64) -> bool {
@@ -165,7 +156,6 @@ impl PartisiaNameSystemState {
             .find(|(_, domain)| domain.token_id == token_id)
     }
 
-    /// ## Description
     /// Returns parent info by domain
     pub fn get_parent(&self, domain: &str) -> Option<&Domain> {
         self.domains
@@ -174,13 +164,11 @@ impl PartisiaNameSystemState {
             .and_then(|parent_id| self.domains.get(parent_id))
     }
 
-    /// ## Description
     /// Says is token id minted or not
     pub fn is_minted(&self, domain: &str) -> bool {
         self.domains.contains_key(&String::from(domain))
     }
 
-    /// ## Description
     /// This function returns token id for given domain
     pub fn get_token_id(&self, domain: &str) -> Option<u128> {
         self.domains.get(&String::from(domain)).map(|d| d.token_id)

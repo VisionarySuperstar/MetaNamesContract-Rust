@@ -15,7 +15,6 @@ pub const CONTRACT_DEPLOYER: Address = Address {
     ],
 };
 
-/// ## Description
 /// Creates event that will deploy a new contract.
 /// Returns newly deployed contract address
 /// ## Params
@@ -44,7 +43,6 @@ where
     add_contract_deploy_event(ctx, event_group, wasm, abi, &raw_init_msg)
 }
 
-/// ## Description
 /// Creates event that will deploy a new contract.
 /// Returns newly deployed contract address
 /// ## Params

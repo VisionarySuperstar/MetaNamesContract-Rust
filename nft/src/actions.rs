@@ -10,7 +10,6 @@ use crate::{
     ContractError,
 };
 
-/// ## Description
 /// Inits contract state.
 /// Returns [`NFTContractState`] if operation was successful,
 /// otherwise panics with error message defined in [`ContractError`]
@@ -28,7 +27,6 @@ pub fn execute_init(ctx: &ContractContext, msg: &NFTInitMsg) -> NFTContractState
     }
 }
 
-/// ## Description
 /// Mint a new token. Can only be executed by minter account.
 /// Returns [`NFTContractState`] if operation was successful,
 /// otherwise panics with error message defined in [`ContractError`]

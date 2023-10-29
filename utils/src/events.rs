@@ -6,7 +6,6 @@ use pbc_contract_common::{
 use pbc_traits::ReadRPC;
 use pbc_traits::WriteRPC;
 
-/// ## Description
 /// This trait describes methods that must be implemented
 /// in order to be able to convert a struct into rpc event
 pub trait IntoShortnameRPCEvent {
@@ -14,7 +13,6 @@ pub trait IntoShortnameRPCEvent {
     fn as_interaction(&self, builder: &mut EventGroupBuilder, dest: &Address);
 }
 
-/// ## Description
 /// This trait describes methods that must be implemented
 /// in order to be able to convert a struct into rpc event with specified cost
 pub trait IntoShortnameRPCEventWithCost {
@@ -22,7 +20,6 @@ pub trait IntoShortnameRPCEventWithCost {
     fn as_interaction(&self, builder: &mut EventGroupBuilder, dest: &Address, cost: u64);
 }
 
-/// ## Description
 /// Creates a callback event and adds it to event group builder object
 /// ## Params
 /// * **builder** is an object of type [`EventGroupBuilder`]
@@ -41,7 +38,6 @@ where
         .done();
 }
 
-/// ## Description
 /// Creates a callback event with specified cost and adds it to event group builder object
 /// ## Params
 /// * **builder** is an object of type [`EventGroupBuilder`]
@@ -67,7 +63,6 @@ pub fn build_msg_callback_with_cost<T>(
         .done();
 }
 
-/// ## Description
 /// Validates that all spawned events from original action was executed successfully
 /// ## Params
 /// * **callback_ctx** is an object of type [`CallbackContext`]

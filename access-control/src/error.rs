@@ -1,6 +1,5 @@
 use thiserror::Error;
 
-/// ## Description
 /// This enum describes access control extension error
 #[derive(Error, Debug)]
 pub enum ContractError {

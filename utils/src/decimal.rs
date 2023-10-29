@@ -5,7 +5,6 @@ use create_type_spec_derive::CreateTypeSpec;
 use read_write_rpc_derive::ReadWriteRPC;
 use read_write_state_derive::ReadWriteState;
 
-/// ## Description
 /// This structure describes wasm compatible decimal wrapper.
 #[derive(
     ReadWriteRPC, ReadWriteState, CreateTypeSpec, Clone, Copy, Eq, PartialEq, Debug, Default,
@@ -18,7 +17,6 @@ pub struct DecimalRatio {
 }
 
 impl DecimalRatio {
-    /// ## Description
     /// Creates new instance of [`DecimalRatio`] with initial values
     /// ## Params
     /// * **numerator** is an object of type [`u128`]
@@ -28,19 +26,16 @@ impl DecimalRatio {
         Self { numerator, scale }
     }
 
-    /// ## Description
     /// Returns [`DecimalRatio`] with value equals to 0
     pub fn zero() -> Self {
         Decimal::ZERO.into()
     }
 
-    /// ## Description
     /// Returns [`DecimalRatio`] with value equals to 1
     pub fn one() -> Self {
         Decimal::ONE.into()
     }
 
-    /// ## Description
     /// Performes native decimal division and returns wrapped
     /// [`DecimalRatio`] result
     /// ## Params
@@ -54,7 +49,6 @@ impl DecimalRatio {
         a.checked_div(b).unwrap().into()
     }
 
-    /// ## Description
     /// Returns [`u128`] converted value with cutted decimals
     pub fn to_u128(&self) -> u128 {
         Decimal::from_i128_with_scale(self.numerator as i128, self.scale)

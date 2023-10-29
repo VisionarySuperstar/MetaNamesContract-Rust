@@ -6,7 +6,6 @@ use crate::ContractError;
 
 pub const URL_LENGTH: usize = 64;
 
-/// ## Description
 /// This structure describes main NFT contract state.
 #[derive(ReadWriteState, CreateTypeSpec, Clone, Default, PartialEq, Eq, Debug)]
 pub struct NFTContractState {

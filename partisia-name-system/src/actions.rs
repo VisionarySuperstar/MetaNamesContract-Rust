@@ -15,7 +15,6 @@ use crate::{
 const CONTRACT_NAME: &str = env!("CARGO_PKG_NAME");
 const CONTRACT_VERSION: &str = env!("CARGO_PKG_VERSION");
 
-/// ## Description
 /// Inits contract state.
 /// Returns [`(PartisiaNameSystemState, Vec<EventGroup>)`] if operation was successful,
 /// otherwise panics with error message defined in [`ContractError`]
@@ -26,7 +25,6 @@ pub fn execute_init(ctx: &ContractContext) -> PartisiaNameSystemState {
     }
 }
 
-/// ## Description
 /// Mint a new token. Can only be executed by minter account.
 /// Returns [`Vec<EventGroup>`] if operation was successful,
 /// otherwise panics with error message defined in [`ContractError`]
@@ -60,7 +58,6 @@ pub fn execute_mint(
     vec![]
 }
 
-/// ## Description
 /// Mint a new record for a domain
 /// Returns [`Vec<EventGroup>`] if operation was successful,
 /// otherwise panics with error message defined in [`ContractError`]
@@ -87,7 +84,6 @@ pub fn execute_record_mint(
     vec![]
 }
 
-/// ## Description
 /// Update a record for a domain
 /// Returns [`Vec<EventGroup>`] if operation was successful,
 /// otherwise panics with error message defined in [`ContractError`]
@@ -115,7 +111,6 @@ pub fn execute_record_update(
     vec![]
 }
 
-/// ## Description
 /// Delete a record for a domain
 /// Returns [`Vec<EventGroup>`] if operation was successful,
 /// otherwise panics with error message defined in [`ContractError`]
@@ -143,7 +138,6 @@ pub fn execute_record_delete(
     vec![]
 }
 
-/// ## Description
 /// Delete all records for a domain
 /// Does not require the domain to be active
 pub fn execute_record_delete_all(
@@ -174,7 +168,6 @@ pub fn execute_update_expiration(
     vec![]
 }
 
-/// ## Description
 /// Validate the domain name
 /// Returns [`()`] if operation was successful,
 /// otherwise panics with error message defined in [`ContractError`]
@@ -186,7 +179,6 @@ pub fn validate_domain(domain: &str) {
     )
 }
 
-/// ## Description
 /// Validate the domain name with parent
 /// Returns [`()`] if operation was successful,
 /// otherwise panics with error message defined in [`ContractError`]
