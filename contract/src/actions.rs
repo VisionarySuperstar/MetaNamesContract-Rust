@@ -21,7 +21,7 @@ use utils::{
 /// Action to mint contract
 pub fn action_mint(
     ctx: ContractContext,
-    state: ContractState,
+    mut state: ContractState,
     domain: String,
     to: Address,
     token_uri: Option<String>,
@@ -59,7 +59,6 @@ pub fn action_mint(
         expires_at = Some(date);
     }
 
-    let mut state = state;
     let token_id = state.nft.get_next_token_id();
     let nft_events = nft_actions::execute_mint(
         &ctx,
@@ -131,11 +130,10 @@ pub fn action_build_renew_callback(
 
 pub fn action_renew_subscription(
     ctx: ContractContext,
-    state: ContractState,
+    mut state: ContractState,
     domain_name: String,
     subscription_years: u32,
 ) -> (ContractState, Vec<EventGroup>) {
-    let mut state = state;
     let domain = state.pns.get_domain(&domain_name).unwrap();
 
     let mut new_expiration_at = match domain.expires_at {
