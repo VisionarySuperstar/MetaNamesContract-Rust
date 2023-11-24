@@ -1,15 +1,17 @@
 use pbc_contract_common::address::Address;
 
-pub struct ACInitMsg {
+pub struct ACInitMsg<RoleEnum> {
+    pub admin_role: RoleEnum,
     pub admin_addresses: Vec<Address>,
+    pub additional_roles: Vec<RoleEnum>,
 }
 
-pub struct ACRoleMsg {
-    pub role: u8,
+pub struct ACRoleMsg<RoleEnum> {
+    pub role: RoleEnum,
     pub account: Address,
 }
 
-pub struct ACSetAdminRoleMsg {
-    pub role: u8,
-    pub new_admin_role: u8,
+pub struct ACSetAdminRoleMsg<RoleEnum> {
+    pub role: RoleEnum,
+    pub new_admin_role: RoleEnum,
 }

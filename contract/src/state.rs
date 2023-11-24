@@ -13,7 +13,7 @@ use crate::contract::__PBC_IS_ZK_CONTRACT;
 #[state]
 #[derive(PartialEq, Eq, Default, Clone, Debug)]
 pub struct ContractState {
-    pub access_control: AccessControlState,
+    pub access_control: AccessControlState<UserRole>,
     pub config: ContractConfig,
     pub nft: NFTContractState,
     pub pns: PartisiaNameSystemState,
@@ -32,12 +32,21 @@ pub struct PayableMintInfo {
 }
 
 #[repr(u8)]
-#[derive(ReadWriteRPC, ReadWriteState, CreateTypeSpec, PartialEq, Eq, Copy, Clone, Debug)]
+#[derive(
+    ReadWriteRPC, ReadWriteState, CreateTypeSpec, PartialEq, Eq, PartialOrd, Ord, Copy, Clone, Debug,
+)]
 pub enum UserRole {
     #[discriminant(0)]
     Admin {},
     #[discriminant(1)]
     Whitelist {},
+}
+
+// Implement the default manually as cannot use the derive macro
+impl Default for UserRole {
+    fn default() -> Self {
+        UserRole::Admin {}
+    }
 }
 
 #[repr(C)]
