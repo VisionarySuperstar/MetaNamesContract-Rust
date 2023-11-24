@@ -4,7 +4,7 @@ version = 3
 
 [[package]]
 name = "access-control"
-version = "2.0.0"
+version = "2.1.0"
 dependencies = [
  "create_type_spec_derive",
  "pbc_contract_codegen",
