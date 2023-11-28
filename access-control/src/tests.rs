@@ -3,14 +3,11 @@ use utils::tests::{mock_address, mock_contract_context};
 use crate::{
     actions::{execute_assert_only_role, execute_grant_role, execute_revoke_role},
     msg::ACRoleMsg,
-    state::AccessControlState,
+    state::{AccessControlState, DEFAULT_ADMIN_ROLE},
 };
 
-#[derive(Clone, Eq, Ord, PartialEq, PartialOrd, Debug)]
-enum RoleEnum {
-    Admin {},
-    Read {},
-}
+const ROLE_A: u8 = 0x02;
+const ROLE_B: u8 = 0x03;
 
 #[test]
 fn proper_access_control() {
@@ -18,61 +15,51 @@ fn proper_access_control() {
     let bob = mock_address(2u8);
     let jack = mock_address(3u8);
 
-    let mut access_control = AccessControlState::<RoleEnum>::new();
+    let mut access_control = AccessControlState::default();
 
-    assert!(!access_control.has_role(RoleEnum::Admin {}, &alice));
-    assert_eq!(access_control.get_role_admin(RoleEnum::Admin {}), None);
+    assert!(!access_control.has_role(ROLE_A, &alice));
+    assert_eq!(access_control.get_role_admin(ROLE_A), None);
 
-    access_control._setup_role(RoleEnum::Admin {}, RoleEnum::Admin {}, &[alice]);
-    assert!(!access_control.has_role(RoleEnum::Read {}, &alice));
-    assert!(access_control.has_role(RoleEnum::Admin {}, &alice));
+    access_control._setup_role(DEFAULT_ADMIN_ROLE, DEFAULT_ADMIN_ROLE, &[alice]);
+    assert!(!access_control.has_role(ROLE_A, &alice));
+    assert!(access_control.has_role(DEFAULT_ADMIN_ROLE, &alice));
 
-    assert!(!access_control.has_role(RoleEnum::Read {}, &bob));
-    access_control._setup_role(RoleEnum::Read {}, RoleEnum::Admin {}, &[bob]);
-    assert!(access_control.has_role(RoleEnum::Read {}, &bob));
+    assert!(!access_control.has_role(ROLE_B, &bob));
+    access_control._setup_role(ROLE_B, DEFAULT_ADMIN_ROLE, &[bob]);
+    assert!(access_control.has_role(ROLE_B, &bob));
 
-    assert!(!access_control.has_role(RoleEnum::Read {}, &jack));
+    assert!(!access_control.has_role(ROLE_B, &jack));
     execute_grant_role(
         &mock_contract_context(1u8),
         &mut access_control,
         &ACRoleMsg {
-            role: RoleEnum::Read {},
+            role: ROLE_B,
             account: jack,
         },
     );
-    assert!(access_control.has_role(RoleEnum::Read {}, &jack));
+    assert!(access_control.has_role(ROLE_B, &jack));
 
-    assert_eq!(
-        access_control.get_role_admin(RoleEnum::Read {}),
-        Some(&RoleEnum::Admin {})
-    );
+    assert_eq!(access_control.get_role_admin(ROLE_B), Some(0x00));
 
-    execute_assert_only_role(
-        &access_control,
-        &RoleEnum::Read {},
-        &mock_contract_context(3u8),
-    );
+    execute_assert_only_role(&access_control, ROLE_B, &mock_contract_context(3u8));
 
-    assert!(access_control.has_role(RoleEnum::Read {}, &jack));
+    assert!(access_control.has_role(ROLE_B, &jack));
     execute_revoke_role(
         &mock_contract_context(1u8),
         &mut access_control,
         &ACRoleMsg {
-            role: RoleEnum::Read {},
+            role: ROLE_B,
             account: jack,
         },
     );
-    assert!(!access_control.has_role(RoleEnum::Read {}, &jack));
+    assert!(!access_control.has_role(ROLE_B, &jack));
 
-    access_control._setup_role(RoleEnum::Admin {}, RoleEnum::Admin {}, &[bob]);
+    access_control._setup_role(ROLE_A, ROLE_B, &[bob]);
 
-    assert_eq!(
-        access_control.get_role_admin(RoleEnum::Admin {}),
-        Some(&RoleEnum::Admin {})
-    );
+    assert_eq!(access_control.get_role_admin(ROLE_A), Some(0x03));
 
-    access_control._renounce_role(RoleEnum::Admin {}, &mock_contract_context(1u8));
-    assert!(!access_control.has_role(RoleEnum::Admin {}, &alice));
+    access_control._renounce_role(DEFAULT_ADMIN_ROLE, &mock_contract_context(1u8));
+    assert!(!access_control.has_role(DEFAULT_ADMIN_ROLE, &alice));
 }
 
 #[test]
@@ -80,13 +67,9 @@ fn proper_access_control() {
 fn test_role_mismatch() {
     let jack = mock_address(3u8);
 
-    let mut access_control = AccessControlState::<RoleEnum>::new();
+    let mut access_control = AccessControlState::default();
 
-    access_control._setup_role(RoleEnum::Admin {}, RoleEnum::Admin {}, &[jack]);
+    access_control._setup_role(DEFAULT_ADMIN_ROLE, DEFAULT_ADMIN_ROLE, &[jack]);
 
-    execute_assert_only_role(
-        &access_control,
-        &RoleEnum::Read {},
-        &mock_contract_context(3u8),
-    );
+    execute_assert_only_role(&access_control, ROLE_A, &mock_contract_context(3u8));
 }

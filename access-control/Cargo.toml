@@ -1,6 +1,6 @@
 [package]
 name = "access-control"
-version = "2.1.0"
+version = "2.1.1"
 edition = "2021"
 
 [lib]
@@ -9,7 +9,7 @@ crate-type = ["cdylib", "rlib"]
 [dependencies]
 pbc_contract_common = { workspace = true }
 pbc_contract_codegen = { workspace = true }
-pbc_traits = { workspace = true, features = ["abi"] }
+pbc_traits = { workspace = true }
 pbc_lib = { workspace = true }
 read_write_rpc_derive = { workspace = true }
 read_write_state_derive = { workspace = true }

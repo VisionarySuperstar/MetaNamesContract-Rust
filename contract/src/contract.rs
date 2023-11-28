@@ -47,10 +47,9 @@ pub fn initialize(ctx: ContractContext, msg: InitMsg) -> (ContractState, Vec<Eve
             uri_template: msg.uri_template,
         },
     );
-    let access_control = ac_actions::execute_init(ac_msg::ACInitMsg::<UserRole> {
-        admin_role: UserRole::Admin {},
+    let access_control = ac_actions::execute_init(&ac_msg::ACInitMsg {
         admin_addresses: msg.admin_addresses,
-        additional_roles: vec![UserRole::Whitelist {}],
+        additional_roles: vec![UserRole::Whitelist {} as u8],
     });
 
     let state = ContractState {
@@ -186,7 +185,7 @@ pub fn mint(
 
     let is_admin = mut_state
         .access_control
-        .has_role(UserRole::Admin {}, &ctx.sender);
+        .has_role(UserRole::Admin {} as u8, &ctx.sender);
     if parent_id.is_some() || is_admin {
         let (new_state, mint_events) =
             action_mint(ctx, mut_state, domain, to, token_uri, parent_id, None);
@@ -198,7 +197,7 @@ pub fn mint(
         if mut_state.config.whitelist_enabled {
             let is_whitelisted = mut_state
                 .access_control
-                .has_role(UserRole::Whitelist {}, &ctx.sender);
+                .has_role(UserRole::Whitelist {} as u8, &ctx.sender);
             assert!(is_whitelisted, "{}", ContractError::UserNotWhitelisted);
         }
 
@@ -330,7 +329,7 @@ pub fn update_user_role(
             &ctx,
             &mut state.access_control,
             &ac_msg::ACRoleMsg {
-                role,
+                role: role as u8,
                 account: address,
             },
         );
@@ -339,7 +338,7 @@ pub fn update_user_role(
             &ctx,
             &mut state.access_control,
             &ac_msg::ACRoleMsg {
-                role,
+                role: role as u8,
                 account: address,
             },
         );
@@ -356,7 +355,7 @@ pub fn update_config(
 ) -> (ContractState, Vec<EventGroup>) {
     let is_admin = state
         .access_control
-        .has_role(UserRole::Admin {}, &ctx.sender);
+        .has_role(UserRole::Admin {} as u8, &ctx.sender);
     assert!(is_admin, "{}", ContractError::Unauthorized);
 
     state.config = config;
@@ -389,7 +388,7 @@ pub fn renew_subscription(
 
     let is_admin = state
         .access_control
-        .has_role(UserRole::Admin {}, &ctx.sender);
+        .has_role(UserRole::Admin {} as u8, &ctx.sender);
 
     let events;
     if is_admin {

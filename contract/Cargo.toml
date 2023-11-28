@@ -16,7 +16,7 @@ read_write_rpc_derive = { workspace = true }
 read_write_state_derive = { workspace = true }
 create_type_spec_derive = { workspace = true }
 
-access-control = { path = "../access-control", features = ["abi"] }
+access-control = { path = "../access-control" }
 contract-version-base = { path = "../contract-version-base" }
 partisia-name-system = { path = "../partisia-name-system" }
 nft = { path = "../nft" }

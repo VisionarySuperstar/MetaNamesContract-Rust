@@ -348,7 +348,7 @@ fn mint_counts(world: &mut ContractWorld, user: String, count: u32) {
 #[then(regex = r"(\w+) user (has|has not) the (\w+) role")]
 fn user_is_admin(world: &mut ContractWorld, user: String, has: String, role: String) {
     let has_role = world.state.access_control.has_role(
-        get_user_role(role),
+        get_user_role(role) as u8,
         &mock_address(get_address_for_user(user)),
     );
 
