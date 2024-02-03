@@ -31,15 +31,20 @@ Feature: Mint feature
 
   Scenario: The minting process of a domain without any parent, with a user without the whitelist role, fails
     Given a meta names contract
+    And contract config 'whitelist_enabled' is 'true'
     When Alice mints 'meta.name' domain without a parent
     Then 'meta.name' domain is not minted
 
-  Scenario: The minting process of a domain without any parent, with a user with the whitelist role, but with mint count limit 0, fails
+  Scenario: The minting process of a domain without any parent, with mint count limit 0, fails
     Given a meta names contract
-    And contract config 'whitelist_enabled' is 'false'
     And contract config 'mint_count_limit_enabled' is 'true'
     And contract config 'mint_count_limit' is '0'
     When Alice mints 'meta.name' domain without a parent
+    Then 'meta.name' domain is not minted
+
+  Scenario: The minting process of a domain without any parent, with a wrong payment token id, fails
+    Given a meta names contract
+    When Alice mints 'meta.name' domain with 1 as payment token id and without a parent
     Then 'meta.name' domain is not minted
 
   Scenario: The mint with the owned parent occurs properly

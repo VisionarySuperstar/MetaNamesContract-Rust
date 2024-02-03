@@ -1,10 +1,10 @@
 use crate::{
     actions::{
         action_build_mint_callback, action_build_renew_callback, action_mint,
-        action_renew_subscription,
+        action_renew_subscription, PaymentIntent,
     },
     msg::{InitMsg, MintMsg, RenewDomainMsg},
-    state::{ContractConfig, ContractState, ContractStats, UserRole},
+    state::{ContractConfig, ContractState, ContractStats, PaymentInfo, UserRole},
 };
 
 use contract_version_base::state::ContractVersionBase;
@@ -27,16 +27,25 @@ const CONTRACT_VERSION: &str = env!("CARGO_PKG_VERSION");
 
 #[init]
 pub fn initialize(ctx: ContractContext, msg: InitMsg) -> (ContractState, Vec<EventGroup>) {
+    let payment_info = msg.config.payment_info.clone();
     assert!(
-        msg.config.payable_mint_info.token.is_some(),
+        !payment_info.is_empty(),
         "{}",
-        ContractError::PayableTokenNotSet
+        ContractError::PaymentInfoNotValid
     );
-    assert!(
-        msg.config.payable_mint_info.receiver.is_some(),
-        "{}",
-        ContractError::PayableReceiverNotSet
-    );
+
+    payment_info.into_iter().for_each(|info| {
+        assert!(
+            info.token.is_some(),
+            "{}",
+            ContractError::PaymentTokenNotSet
+        );
+        assert!(
+            info.receiver.is_some(),
+            "{}",
+            ContractError::PaymentReceiverNotSet
+        );
+    });
 
     let pns = pns_actions::execute_init(&ctx);
     let nft = nft_actions::execute_init(
@@ -163,12 +172,14 @@ pub fn set_approval_for_all(
     (state, events)
 }
 
+#[allow(clippy::too_many_arguments)]
 #[action(shortname = 0x09)]
 pub fn mint(
     ctx: ContractContext,
     state: ContractState,
     domain: String,
     to: Address,
+    payment_coin_id: u64,
     token_uri: Option<String>,
     parent_id: Option<String>,
     subscription_years: Option<u32>,
@@ -194,29 +205,38 @@ pub fn mint(
 
         events.extend(mint_events);
     } else {
-        if mut_state.config.whitelist_enabled {
+        let config = &mut_state.config;
+        if config.whitelist_enabled {
             let is_whitelisted = mut_state
                 .access_control
                 .has_role(UserRole::Whitelist {} as u8, &ctx.sender);
             assert!(is_whitelisted, "{}", ContractError::UserNotWhitelisted);
         }
 
-        if mut_state.config.mint_count_limit_enabled && !is_admin {
+        if config.mint_count_limit_enabled && !is_admin {
             let mint_count = mut_state.stats.mint_count.get(&ctx.sender);
             assert!(
-                mint_count.is_none() || mint_count <= Some(&mut_state.config.mint_count_limit),
+                mint_count.is_none() || mint_count <= Some(&config.mint_count_limit),
                 "{}",
                 ContractError::MintCountLimitReached
             );
         }
 
+        let payment_info = assert_and_get_payment_info(config, payment_coin_id);
         let subscription_years = subscription_years.unwrap_or(1);
+        let total_fees = payment_info.fees.get(&domain) * subscription_years as u128;
         let payout_transfer_events = action_build_mint_callback(
             ctx,
-            mut_state.config.payable_mint_info,
+            &PaymentIntent {
+                id: payment_coin_id,
+                receiver: payment_info.receiver.unwrap(),
+                token: payment_info.token.unwrap(),
+                total_fees,
+            },
             &MintMsg {
                 domain,
                 to,
+                payment_coin_id,
                 token_uri,
                 parent_id,
                 subscription_years: Some(subscription_years),
@@ -240,6 +260,8 @@ pub fn on_mint_callback(
     assert_contract_enabled(&state);
 
     assert_callback_success(&callback_ctx);
+
+    assert_and_get_payment_info(&state.config, msg.payment_coin_id);
 
     action_mint(
         ctx,
@@ -363,19 +385,12 @@ pub fn update_config(
     (state, vec![])
 }
 
-fn assert_contract_enabled(state: &ContractState) {
-    assert!(
-        state.config.contract_enabled,
-        "{}",
-        ContractError::ContractDisabled
-    );
-}
-
 #[action(shortname = 0x26)]
 pub fn renew_subscription(
     ctx: ContractContext,
     mut state: ContractState,
     domain: String,
+    payment_coin_id: u64,
     payer: Address,
     subscription_years: u32,
 ) -> (ContractState, Vec<EventGroup>) {
@@ -398,11 +413,19 @@ pub fn renew_subscription(
         state = new_state;
         events = renew_events;
     } else {
+        let payment_info = assert_and_get_payment_info(&state.config, payment_coin_id);
+        let total_fees = payment_info.fees.get(&domain) * subscription_years as u128;
         events = action_build_renew_callback(
             ctx,
-            state.config.payable_mint_info,
+            &PaymentIntent {
+                id: payment_coin_id,
+                receiver: payment_info.receiver.unwrap(),
+                token: payment_info.token.unwrap(),
+                total_fees,
+            },
             &RenewDomainMsg {
                 domain,
+                payment_coin_id,
                 payer,
                 subscription_years,
             },
@@ -424,5 +447,26 @@ pub fn on_renew_subscription_callback(
 
     assert_callback_success(&callback_ctx);
 
+    assert_and_get_payment_info(&state.config, msg.payment_coin_id);
+
     action_renew_subscription(ctx, state, msg.domain, msg.subscription_years)
+}
+
+fn assert_contract_enabled(state: &ContractState) {
+    assert!(
+        state.config.contract_enabled,
+        "{}",
+        ContractError::ContractDisabled
+    );
+}
+
+fn assert_and_get_payment_info(config: &ContractConfig, payment_coin_id: u64) -> PaymentInfo {
+    let payment_info = config.get_payment_info(payment_coin_id);
+    assert!(
+        payment_info.is_some(),
+        "{}",
+        ContractError::PaymentInfoNotValid
+    );
+
+    payment_info.unwrap()
 }
