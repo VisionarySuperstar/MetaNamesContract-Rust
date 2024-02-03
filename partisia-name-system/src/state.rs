@@ -1,6 +1,6 @@
 use contract_version_base::state::ContractVersionBase;
 use create_type_spec_derive::CreateTypeSpec;
-use pbc_contract_common::sorted_vec_map::SortedVecMap;
+use pbc_contract_common::{avl_tree_map::AvlTreeMap, sorted_vec_map::SortedVecMap};
 use read_write_rpc_derive::ReadWriteRPC;
 use read_write_state_derive::ReadWriteState;
 
@@ -11,10 +11,10 @@ pub const MAX_DOMAIN_LEN: usize = 32;
 
 /// This structure describes Partisia Name System state
 #[repr(C)]
-#[derive(ReadWriteState, CreateTypeSpec, Clone, Default, PartialEq, Eq, Debug)]
+#[derive(ReadWriteState, CreateTypeSpec, Default, Debug)]
 pub struct PartisiaNameSystemState {
     pub version: ContractVersionBase,
-    pub domains: SortedVecMap<String, Domain>,
+    pub domains: AvlTreeMap<String, Domain>,
 }
 
 #[repr(C)]
@@ -130,7 +130,7 @@ impl Domain {
 
 impl PartisiaNameSystemState {
     /// Returns info given domain
-    pub fn get_domain(&self, domain: &str) -> Option<&Domain> {
+    pub fn get_domain(&self, domain: &str) -> Option<Domain> {
         self.domains.get(&String::from(domain))
     }
 
@@ -153,18 +153,18 @@ impl PartisiaNameSystemState {
         }
     }
 
-    pub fn get_domain_by_token_id(&self, token_id: u128) -> Option<(&String, &Domain)> {
+    pub fn get_domain_by_token_id(&self, token_id: u128) -> Option<(String, Domain)> {
         self.domains
             .iter()
             .find(|(_, domain)| domain.token_id == token_id)
     }
 
     /// Returns parent info by domain
-    pub fn get_parent(&self, domain: &str) -> Option<&Domain> {
+    pub fn get_parent(&self, domain: &str) -> Option<Domain> {
         self.domains
             .get(&String::from(domain))
-            .and_then(|d| d.parent_id.as_ref())
-            .and_then(|parent_id| self.domains.get(parent_id))
+            .and_then(|d| d.parent_id)
+            .and_then(|parent_id| self.domains.get(&parent_id))
     }
 
     /// Says is token id minted or not

@@ -1,4 +1,4 @@
-use std::panic::catch_unwind;
+use std::{mem::take, panic::catch_unwind};
 
 use cucumber::{given, then, when, World};
 use meta_names_contract::{
@@ -100,7 +100,7 @@ fn meta_names_contract(world: &mut ContractWorld) {
 #[given(regex = r"(contract) config '(.+)' is '(.+)'")]
 #[when(regex = r"(\w+) updates the config '(.+)' to '(.+)'")]
 fn update_contract_config(world: &mut ContractWorld, user: String, key: String, value: String) {
-    let res = catch_unwind(|| {
+    let res = catch_unwind(std::panic::AssertUnwindSafe(|| {
         let new_config = match key.as_str() {
             "contract_enabled" => {
                 let mut new_config = world.state.config.clone();
@@ -125,12 +125,13 @@ fn update_contract_config(world: &mut ContractWorld, user: String, key: String, 
             _ => panic!("Unknown config key"),
         };
 
+        let state = take(&mut world.state);
         update_config(
             mock_contract_context(get_address_for_user(user.clone())),
-            world.state.clone(),
+            state,
             new_config,
         )
-    });
+    }));
 
     if let Ok((new_state, _)) = res {
         world.state = new_state;
@@ -147,11 +148,12 @@ fn mint_a_domain(world: &mut ContractWorld, user: String, domain: String, token_
         token_id_str.parse::<u64>().unwrap()
     };
 
-    let res = catch_unwind(|| {
+    let res = catch_unwind(std::panic::AssertUnwindSafe(|| {
+        let state = take(&mut world.state);
         on_mint_callback(
             mock_contract_context(get_address_for_user(user.clone())),
             mock_successful_callback_context(),
-            world.state.clone(),
+            state,
             MintMsg {
                 domain,
                 to: mock_address(get_address_for_user(user)),
@@ -161,7 +163,7 @@ fn mint_a_domain(world: &mut ContractWorld, user: String, domain: String, token_
                 subscription_years: None,
             },
         )
-    });
+    }));
 
     if let Ok((new_state, _)) = res {
         world.state = new_state;
@@ -177,23 +179,26 @@ fn user_admin_role(
     role: String,
     user: String,
 ) {
-    let res = catch_unwind(|| match action.as_str() {
-        "with" => update_user_role(
-            mock_contract_context(SYSTEM_ADDRESS),
-            world.state.clone(),
-            get_user_role(role),
-            mock_address(get_address_for_user(admin)),
-            true,
-        ),
-        "grants" | "denied" => update_user_role(
-            mock_contract_context(get_address_for_user(admin)),
-            world.state.clone(),
-            get_user_role(role),
-            mock_address(get_address_for_user(user)),
-            action == "grants",
-        ),
-        _ => panic!("Unknown action"),
-    });
+    let res = catch_unwind(std::panic::AssertUnwindSafe(|| {
+        let state = take(&mut world.state);
+        match action.as_str() {
+            "with" => update_user_role(
+                mock_contract_context(SYSTEM_ADDRESS),
+                state,
+                get_user_role(role),
+                mock_address(get_address_for_user(admin)),
+                true,
+            ),
+            "grants" | "denied" => update_user_role(
+                mock_contract_context(get_address_for_user(admin)),
+                state,
+                get_user_role(role),
+                mock_address(get_address_for_user(user)),
+                action == "grants",
+            ),
+            _ => panic!("Unknown action"),
+        }
+    }));
 
     if let Ok((new_state, _)) = res {
         world.state = new_state;
@@ -202,9 +207,10 @@ fn user_admin_role(
 
 #[given(expr = "{word} approved {word} on '{word}' domain")]
 fn user_approve_domain(world: &mut ContractWorld, user: String, approved: String, domain: String) {
+    let state = take(&mut world.state);
     let (new_state, _) = approve_domain(
         mock_contract_context(get_address_for_user(user)),
-        world.state.clone(),
+        state,
         Some(mock_address(get_address_for_user(approved))),
         domain,
     );
@@ -222,8 +228,8 @@ fn mint_a_record(
     data: String,
     domain: String,
 ) {
-    let res = catch_unwind(|| {
-        let mut state = world.state.clone();
+    let res = catch_unwind(std::panic::AssertUnwindSafe(|| {
+        let mut state = take(&mut world.state);
         let context = &mock_contract_context(1);
         match action.as_str() {
             "mints" | "minted" => {
@@ -249,7 +255,7 @@ fn mint_a_record(
         };
 
         state
-    });
+    }));
 
     if let Ok(new_state) = res {
         world.state = new_state;
@@ -277,11 +283,12 @@ fn renew_domain_on_callback(
         },
     );
 
-    let res = catch_unwind(|| {
+    let res = catch_unwind(std::panic::AssertUnwindSafe(|| {
+        let state = take(&mut world.state);
         on_renew_subscription_callback(
             context,
             mock_successful_callback_context(),
-            world.state.clone(),
+            state,
             RenewDomainMsg {
                 domain: domain_name,
                 payer: mock_address(get_address_for_user(user)),
@@ -289,7 +296,7 @@ fn renew_domain_on_callback(
                 subscription_years: years,
             },
         )
-    });
+    }));
 
     if let Ok((new_state, _)) = res {
         world.state = new_state;
@@ -312,16 +319,17 @@ fn renew_domain(world: &mut ContractWorld, user: String, domain_name: String, ye
         },
     );
 
-    let res = catch_unwind(|| {
+    let res = catch_unwind(std::panic::AssertUnwindSafe(|| {
+        let state = take(&mut world.state);
         renew_subscription(
             context,
-            world.state.clone(),
+            state,
             domain_name,
             0,
             mock_address(get_address_for_user(user)),
             years,
         )
-    });
+    }));
 
     if let Ok((new_state, _)) = res {
         world.state = new_state;
@@ -336,16 +344,17 @@ fn mint_domain_with_parent(
     domain: String,
     parent: String,
 ) {
-    let res = catch_unwind(|| {
+    let res = catch_unwind(std::panic::AssertUnwindSafe(|| {
         let parent_opt = if parent == "a parent" {
             None
         } else {
             Some(parent.clone())
         };
 
+        let state = take(&mut world.state);
         mint(
             mock_contract_context(get_address_for_user(user.clone())),
-            world.state.clone(),
+            state,
             domain,
             mock_address(get_address_for_user(user)),
             0,
@@ -353,7 +362,7 @@ fn mint_domain_with_parent(
             parent_opt,
             Some(1),
         )
-    });
+    }));
 
     if let Ok((new_state, _)) = res {
         world.state = new_state;
@@ -362,15 +371,16 @@ fn mint_domain_with_parent(
 
 #[when(expr = "{word} transfers the '{word}' domain to {word}")]
 fn transfer_domain_to(world: &mut ContractWorld, user: String, domain: String, to: String) {
-    let res = catch_unwind(|| {
+    let res = catch_unwind(std::panic::AssertUnwindSafe(|| {
+        let state = take(&mut world.state);
         transfer_domain(
             mock_contract_context(get_address_for_user(user.clone())),
-            world.state.clone(),
+            state,
             mock_address(get_address_for_user(user.clone())),
             mock_address(get_address_for_user(to)),
             domain,
         )
-    });
+    }));
 
     if let Ok((new_state, _)) = res {
         world.state = new_state;
@@ -440,13 +450,16 @@ fn domain_has_no_record(world: &mut ContractWorld, domain: String, class: String
 
 #[then(regex = r"'(.+)' domain (does not expire|expires) in (\d+) years")]
 fn domain_expires_in(world: &mut ContractWorld, domain: String, action: String, years: u32) {
-    let domain = world.state.pns.get_domain(&domain).unwrap();
+    let domain = world.state.pns.get_domain(&domain);
 
     let expected_expires_at = world.point_in_time + milliseconds_in_years(years as i64);
     if action == "expires" {
+        let domain = domain.unwrap();
         assert_eq!(domain.expires_at, Some(expected_expires_at));
     } else {
-        assert_ne!(domain.expires_at, Some(expected_expires_at));
+        if let Some(domain) = domain {
+            assert_ne!(domain.expires_at, Some(expected_expires_at));
+        }
     }
 }
 

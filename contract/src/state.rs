@@ -11,7 +11,7 @@ use read_write_state_derive::ReadWriteState;
 use crate::contract::__PBC_IS_ZK_CONTRACT;
 
 #[state]
-#[derive(PartialEq, Eq, Default, Clone, Debug)]
+#[derive(Default, Debug)]
 pub struct ContractState {
     pub access_control: AccessControlState,
     pub config: ContractConfig,

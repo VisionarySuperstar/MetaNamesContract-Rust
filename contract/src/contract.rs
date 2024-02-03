@@ -90,9 +90,7 @@ pub fn transfer_from(
     );
 
     let (name, _) = state.pns.get_domain_by_token_id(token_id).unwrap();
-    let msg = &pns_msg::PnsRecordDeleteAllMsg {
-        domain: name.clone(),
-    };
+    let msg = &pns_msg::PnsRecordDeleteAllMsg { domain: name };
     let pns_events = pns_actions::execute_record_delete_all(&ctx, &mut state.pns, msg);
 
     nft_events.extend(pns_events);
