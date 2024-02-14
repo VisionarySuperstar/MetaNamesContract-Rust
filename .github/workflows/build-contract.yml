@@ -8,13 +8,13 @@ jobs:
   build-contract:
     runs-on: ubuntu-latest
     container:
-      image: registry.gitlab.com/partisia/dockerimages/rustmaven:1.72
+      image: registry.gitlab.com/partisia/dockerimages/rustmaven:1.74
 
     steps:
       - uses: actions/checkout@v3
 
       - name: Set default rust version
-        run: rustup default 1.72
+        run: rustup default 1.74
 
       - name: Add wasm target
         run: rustup target add wasm32-unknown-unknown
@@ -28,14 +28,21 @@ jobs:
       - name: Fetch dependencies
         run: cargo fetch --target wasm32-unknown-unknown
 
-      - name: Build release contract
+      - name: Build contracts
         run: |
           cargo partisia-contract build --release
           cd target/wasm32-unknown-unknown/release
           zip meta_names_contract.zip meta_names_contract.wasm meta_names_contract.abi
+          zip proxy_contract.zip contract_proxy.wasm contract_proxy.abi
 
-      - name: Upload contract artifacts
-        uses: actions/upload-artifact@v2
+      - name: Upload meta names contract artifact
+        uses: actions/upload-artifact@v4
         with:
           name: meta_names_contract
           path: target/wasm32-unknown-unknown/release/meta_names_contract.zip
+
+      - name: Upload proxy contract artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: proxy_contract
+          path: target/wasm32-unknown-unknown/release/proxy_contract.zip
