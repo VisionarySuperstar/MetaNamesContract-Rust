@@ -5,6 +5,7 @@ members = [
   "contract",
   "contract-proxy",
   "contract-version-base",
+  "contract-voting",
   "access-control",
   "nft",
   "partisia-name-system",
