@@ -18,6 +18,8 @@ const CONTRACT_VERSION: &str = env!("CARGO_PKG_VERSION");
 /// The state of the vote, which is persisted on-chain.
 #[state]
 pub struct VoteState {
+    /// Owner of the voting contract.
+    pub owner: Address,
     /// Identification of the proposal being voted for.
     pub proposal_id: u64,
     /// The list of eligible voters.
@@ -51,7 +53,7 @@ pub struct VoteState {
 ///
 #[init]
 pub fn initialize(
-    _ctx: ContractContext,
+    ctx: ContractContext,
     proposal_id: u64,
     voters: Vec<Address>,
     deadline_utc_millis: i64,
@@ -64,6 +66,7 @@ pub fn initialize(
         "All voters must be unique"
     );
     VoteState {
+        owner: ctx.sender,
         proposal_id,
         voters: unique_voters,
         deadline_utc_millis,
@@ -106,6 +109,7 @@ pub fn count(ctx: ContractContext, mut state: VoteState) -> VoteState {
 /// Voters can be added until the deadline.
 #[action(shortname = 0x03)]
 pub fn add_voters(ctx: ContractContext, mut state: VoteState, voters: Vec<Address>) -> VoteState {
+    assert_eq!(ctx.sender, state.owner, "Only the owner can add voters");
     assert_eq!(state.result, None, "The votes have already been counted");
 
     let mut unique_voters: SortedVecSet<Address> = voters.iter().cloned().collect();
@@ -122,6 +126,7 @@ pub fn remove_voters(
     mut state: VoteState,
     voters: Vec<Address>,
 ) -> VoteState {
+    assert_eq!(ctx.sender, state.owner, "Only the owner can add voters");
     assert_eq!(state.result, None, "The votes have already been counted");
 
     let voters_to_remove: SortedVecSet<Address> = voters.iter().cloned().collect();
