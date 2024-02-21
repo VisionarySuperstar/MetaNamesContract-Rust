@@ -16,6 +16,7 @@ const CONTRACT_VERSION: &str = env!("CARGO_PKG_VERSION");
 #[state]
 struct ContractState {
     pub address: Address,
+    pub owner: Address,
     pub version: ContractVersionBase,
 }
 
@@ -29,8 +30,9 @@ struct ContractState {
 ///
 /// The initial state of the contract
 #[init]
-fn initialize(_ctx: ContractContext, address: Address) -> ContractState {
+fn initialize(ctx: ContractContext, address: Address) -> ContractState {
     ContractState {
+        owner: ctx.sender,
         address,
         version: ContractVersionBase::new(CONTRACT_NAME, CONTRACT_VERSION),
     }
@@ -48,10 +50,15 @@ fn initialize(_ctx: ContractContext, address: Address) -> ContractState {
 /// Updated contract state
 #[action(shortname = 0x01)]
 fn update_address(
-    _ctx: ContractContext,
+    ctx: ContractContext,
     mut state: ContractState,
     address: Address,
 ) -> ContractState {
+    assert_eq!(
+        state.owner, ctx.sender,
+        "Only the owner can update the address"
+    );
+
     state.address = address;
 
     state
