@@ -51,16 +51,17 @@ pub enum RecordClass {
     Wallet {},
     #[discriminant(5)]
     Avatar {},
-    // Customizables
     #[discriminant(6)]
-    Custom {},
+    Email {},
     #[discriminant(7)]
-    Custom2 {},
+    Custom {},
     #[discriminant(8)]
-    Custom3 {},
+    Custom2 {},
     #[discriminant(9)]
-    Custom4 {},
+    Custom3 {},
     #[discriminant(10)]
+    Custom4 {},
+    #[discriminant(11)]
     Custom5 {},
 }
 

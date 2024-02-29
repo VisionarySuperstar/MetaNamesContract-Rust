@@ -923,7 +923,8 @@ dependencies = [
 
 [[package]]
 name = "meta-names-contract"
-version = "2.0.1"
+version = "2.1.1"
+>>>>>>> 8c13bab (chore(version): update contract to 2.1.0)
 dependencies = [
  "access-control",
  "contract-version-base",
