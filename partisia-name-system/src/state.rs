@@ -79,7 +79,7 @@ impl Domain {
     /// Opposite of expired
     pub fn is_active(&self, unix_millis_now: i64) -> bool {
         match self.expires_at {
-            Some(expires_at) => expires_at > unix_millis_now,
+            Some(expires_at) => expires_at >= unix_millis_now,
             None => true,
         }
     }
@@ -130,25 +130,20 @@ impl Domain {
 
 impl PartisiaNameSystemState {
     /// Returns info given domain
-    pub fn get_domain(&self, domain: &str) -> Option<Domain> {
-        self.domains.get(&String::from(domain))
+    pub fn get_domain(&self, domain_name: &str) -> Option<Domain> {
+        self.domains.get(&String::from(domain_name))
     }
 
     /// Returns if the domain is active
     /// If the domain is a subdomain, it checks if the parent is active
     pub fn is_active(&self, domain_name: &str, unix_millis_now: i64) -> bool {
         match self.get_domain(domain_name) {
-            Some(domain) => match domain.parent_id.as_ref() {
-                Some(parent_id) => {
-                    if let Some(parent) = self.get_domain(parent_id) {
-                        parent.is_active(unix_millis_now)
-                    } else {
-                        domain.is_active(unix_millis_now)
-                    }
-                }
-
-                None => domain.is_active(unix_millis_now),
-            },
+            Some(domain) => {
+                domain.is_active(unix_millis_now)
+                    && self
+                        .get_root_parent(domain_name)
+                        .map_or(true, |parent| parent.is_active(unix_millis_now))
+            }
             None => false,
         }
     }
@@ -160,20 +155,60 @@ impl PartisiaNameSystemState {
     }
 
     /// Returns parent info by domain
-    pub fn get_parent(&self, domain: &str) -> Option<Domain> {
-        self.domains
-            .get(&String::from(domain))
-            .and_then(|d| d.parent_id)
-            .and_then(|parent_id| self.domains.get(&parent_id))
+    pub fn get_parent(&self, domain: &Domain) -> Option<Domain> {
+        domain.parent_id.as_ref().and_then(|parent_id| {
+            if !self.domains.contains_key(parent_id) {
+                panic!("Expected parent domain not found")
+            }
+
+            self.domains.get(parent_id)
+        })
+    }
+
+    /// Get all parents of a domain
+    pub fn get_parents(&self, domain_name: &str) -> Vec<Domain> {
+        let mut parents: Vec<Domain> = vec![];
+        let mut current_domain = self.get_domain(domain_name);
+
+        while let Some(domain) = current_domain {
+            if let Some(parent) = self.get_parent(&domain) {
+                parents.push(parent.clone());
+                current_domain = Some(parent);
+            } else {
+                current_domain = None;
+            }
+        }
+
+        parents
+    }
+
+    /// Get root parent of a domain
+    pub fn get_root_parent(&self, domain_name: &str) -> Option<Domain> {
+        let parents = self.get_parents(domain_name);
+
+        match parents.last() {
+            Some(parent) => {
+                // By definition, the root parent has no parent
+                assert!(
+                    parent.parent_id.is_none(),
+                    "Expected root parent to have no parent"
+                );
+
+                Some(parent.clone())
+            }
+            None => None,
+        }
     }
 
     /// Says is token id minted or not
-    pub fn is_minted(&self, domain: &str) -> bool {
-        self.domains.contains_key(&String::from(domain))
+    pub fn is_minted(&self, domain_name: &str) -> bool {
+        self.domains.contains_key(&String::from(domain_name))
     }
 
     /// This function returns token id for given domain
-    pub fn get_token_id(&self, domain: &str) -> Option<u128> {
-        self.domains.get(&String::from(domain)).map(|d| d.token_id)
+    pub fn get_token_id(&self, domain_name: &str) -> Option<u128> {
+        self.domains
+            .get(&String::from(domain_name))
+            .map(|d| d.token_id)
     }
 }

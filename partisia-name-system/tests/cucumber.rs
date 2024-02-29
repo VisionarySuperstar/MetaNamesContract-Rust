@@ -11,7 +11,7 @@ use partisia_name_system::{
     },
     state::{PartisiaNameSystemState, RecordClass},
 };
-use utils::tests::{mock_contract_context, tomorrow_timestamp};
+use utils::tests::{mock_contract_context, tomorrow_timestamp, yesterday_timestamp};
 
 fn get_record_class_given(class: String) -> RecordClass {
     match class.as_str() {
@@ -40,6 +40,13 @@ fn pns_contract(world: &mut PartisiaNameSystemWorld) {
     let state = execute_init(&mock_contract_context(1));
 
     world.state = state;
+}
+
+#[given(regex = "'(.+)' domain is expired")]
+fn domain_is_expired(world: &mut PartisiaNameSystemWorld, domain_name: String) {
+    let mut domain = world.state.domains.get(&domain_name).unwrap();
+    domain.expires_at = Some(yesterday_timestamp());
+    world.state.domains.insert(domain_name, domain);
 }
 
 #[given(regex = ".+ minted '(.+)' domain without a parent")]
