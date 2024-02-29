@@ -94,7 +94,7 @@ impl Fees {
     pub fn get(&self, domain: &str) -> u128 {
         let decimals = 10_u128.pow(self.decimals);
 
-        let chars_count = domain.len() as u32;
+        let chars_count = domain.chars().count() as u32;
         for fee in &self.mapping {
             if fee.chars_count == chars_count {
                 return fee.amount * decimals;
