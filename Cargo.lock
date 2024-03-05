@@ -924,7 +924,6 @@ dependencies = [
 [[package]]
 name = "meta-names-contract"
 version = "2.1.1"
->>>>>>> 8c13bab (chore(version): update contract to 2.1.0)
 dependencies = [
  "access-control",
  "contract-version-base",
@@ -953,7 +952,7 @@ checksum = "68354c5c6bd36d73ff3feceb05efa59b6acb7626617f4962be322a825e61f79a"
 
 [[package]]
 name = "nft"
-version = "2.0.0"
+version = "3.0.0"
 dependencies = [
  "create_type_spec_derive",
  "pbc_contract_codegen",

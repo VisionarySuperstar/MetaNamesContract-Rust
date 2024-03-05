@@ -1,36 +1,57 @@
+use core::default::Default;
 use create_type_spec_derive::CreateTypeSpec;
-use pbc_contract_common::{address::Address, sorted_vec_map::SortedVecMap};
+use pbc_contract_common::{address::Address, avl_tree_map::AvlTreeMap};
 use read_write_state_derive::ReadWriteState;
 
 use crate::ContractError;
 
-pub const URL_LENGTH: usize = 64;
-
 /// This structure describes main NFT contract state.
+/// A permission to transfer and approve NFTs given from an NFT owner to a separate address, called an operator.
 #[repr(C)]
-#[derive(ReadWriteState, CreateTypeSpec, Clone, Default, PartialEq, Eq, Debug)]
-pub struct NFTContractState {
-    pub contract_owner: Option<Address>,
-    pub name: String,
-    pub symbol: String,
-    pub owners: SortedVecMap<u128, Address>,
-    pub token_approvals: SortedVecMap<u128, Address>,
-    pub operator_approvals: Vec<OperatorApproval>,
-    pub supply: u128,
-    pub uri_template: String,
-    pub token_uri_details: SortedVecMap<u128, [u8; URL_LENGTH]>,
+#[derive(ReadWriteState, CreateTypeSpec, PartialEq, Copy, Clone, Ord, PartialOrd, Eq, Debug)]
+pub struct OperatorApproval {
+    /// NFT owner.
+    pub owner: Address,
+    /// Operator of the owner's tokens.
+    pub operator: Address,
 }
 
+/// Unit
 #[repr(C)]
-#[derive(ReadWriteState, CreateTypeSpec, Copy, Clone, PartialEq, Eq, Debug)]
-pub struct OperatorApproval {
-    pub owner: Address,
-    pub operator: Address,
+#[derive(CreateTypeSpec, ReadWriteState, Debug)]
+pub struct Unit {}
+
+/// State of the contract.
+#[derive(ReadWriteState, CreateTypeSpec, Default, Debug)]
+pub struct NFTContractState {
+    /// Descriptive name for the collection of NFTs in this contract.
+    pub name: String,
+    /// Abbreviated name for NFTs in this contract.
+    pub symbol: String,
+    /// Mapping from token_id to the owner of the token.
+    pub owners: AvlTreeMap<u128, Address>,
+    /// Mapping from token_id to the approved address who can transfer the token.
+    pub token_approvals: AvlTreeMap<u128, Address>,
+    /// Containing approved operators of owners. Operators can transfer and change approvals on all tokens owned by owner.
+    pub operator_approvals: AvlTreeMap<OperatorApproval, Unit>,
+    /// Template which the uri's of the NFTs fit into.
+    pub uri_template: String,
+    /// Mapping from token_id to the URI of the token.
+    pub token_uri_details: AvlTreeMap<u128, String>,
+    /// Owner of the contract. Is allowed to mint new NFTs.
+    pub contract_owner: Option<Address>,
+    /// Total supply of the NFTs.
+    pub supply: u128,
 }
 
 impl NFTContractState {
     /// Find the owner of an NFT.
     /// Throws if no such token exists.
+    ///
+    /// ### Parameters:
+    ///
+    /// * `token_id`: [`u128`] The identifier for an NFT.
+    ///
     /// ### Returns:
     ///
     /// An [`Address`] for the owner of the NFT.
@@ -38,7 +59,7 @@ impl NFTContractState {
         let owner_opt = self.owners.get(&token_id);
         assert!(owner_opt.is_some(), "{}", ContractError::NotFound);
 
-        *owner_opt.unwrap()
+        owner_opt.unwrap()
     }
 
     /// Get the approved address for a single NFT.
@@ -51,7 +72,7 @@ impl NFTContractState {
     ///
     /// An [`Option<Address>`] The approved address for this NFT, or none if there is none.
     pub fn get_approved(&self, token_id: u128) -> Option<Address> {
-        self.token_approvals.get(&token_id).copied()
+        self.token_approvals.get(&token_id)
     }
 
     /// Query if an address is an authorized operator for another address.
@@ -64,10 +85,10 @@ impl NFTContractState {
     ///
     /// ### Returns:
     ///
-    /// A [`bool`] True if `_operator` is an approved operator for `_owner`, false otherwise.
+    /// A [`bool`] true if `operator` is an approved operator for `owner`, false otherwise.
     pub fn is_approved_for_all(&self, owner: Address, operator: Address) -> bool {
         let as_operator_approval: OperatorApproval = OperatorApproval { owner, operator };
-        self.operator_approvals.contains(&as_operator_approval)
+        self.operator_approvals.contains_key(&as_operator_approval)
     }
 
     /// Helper function to check whether a tokenId exists.
@@ -83,8 +104,7 @@ impl NFTContractState {
     ///
     /// A [`bool`] True if `token_id` is in use, false otherwise.
     pub fn exists(&self, token_id: u128) -> bool {
-        let owner = self.owners.get(&token_id);
-        owner.is_some()
+        self.owners.contains_key(&token_id)
     }
 
     /// Helper function to check whether a spender is owner or approved for a given token.
@@ -161,7 +181,6 @@ impl NFTContractState {
 
         // clear approvals from the previous owner
         self._approve(None, token_id);
-
         self.owners.insert(token_id, to);
     }
 }

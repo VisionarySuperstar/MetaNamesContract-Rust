@@ -36,7 +36,7 @@ fn test_mint_fees() {
         ("name", 50000000),
         ("names", 5000000),
         ("verylongname", 1000000),
-        ("🗼", 200000000)
+        ("🗼", 200000000),
     ];
 
     for (name, fee) in fees_tuples {

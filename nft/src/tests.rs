@@ -1,8 +1,6 @@
-use pbc_contract_common::sorted_vec_map::SortedVecMap;
-
 use utils::tests::{mock_address, mock_contract_context};
 
-use crate::state::{OperatorApproval, URL_LENGTH};
+use crate::state::OperatorApproval;
 use crate::{
     actions::{
         execute_approve, execute_burn, execute_init, execute_mint, execute_set_approval_for_all,
@@ -11,33 +9,7 @@ use crate::{
     msg::{
         NFTApproveForAllMsg, NFTApproveMsg, NFTBurnMsg, NFTInitMsg, NFTMintMsg, NFTTransferFromMsg,
     },
-    state::NFTContractState,
 };
-
-#[test]
-fn proper_execute_init() {
-    let msg = NFTInitMsg {
-        name: "Cool Token".to_string(),
-        symbol: "CTC".to_string(),
-        uri_template: "ipfs://some.some".to_string(),
-    };
-
-    let state = execute_init(&mock_contract_context(2), &msg);
-    assert_eq!(
-        state,
-        NFTContractState {
-            contract_owner: Some(mock_address(2)),
-            name: "Cool Token".to_string(),
-            symbol: "CTC".to_string(),
-            uri_template: "ipfs://some.some".to_string(),
-            supply: 0,
-            owners: SortedVecMap::new(),
-            token_approvals: SortedVecMap::new(),
-            token_uri_details: SortedVecMap::new(),
-            operator_approvals: vec![],
-        }
-    );
-}
 
 #[test]
 fn proper_mint() {
@@ -61,15 +33,9 @@ fn proper_mint() {
     let _ = execute_mint(&mock_contract_context(minter), &mut state, &mint_msg);
     assert_eq!(state.supply, 1);
 
-    assert_eq!(state.owners, SortedVecMap::from([(1, mock_address(alice))]));
-    let mut expected_bytes: [u8; URL_LENGTH] = [0; URL_LENGTH];
-    let bytes = "token".to_string().into_bytes();
-    expected_bytes[..bytes.len()].copy_from_slice(&bytes);
+    assert_eq!(state.owners.get(&1), Some(mock_address(alice)));
 
-    assert_eq!(
-        state.token_uri_details,
-        SortedVecMap::from([(1, expected_bytes)]),
-    );
+    assert_eq!(state.token_uri_details.get(&1), Some("token".to_string()));
 }
 
 #[test]
@@ -124,11 +90,11 @@ fn proper_set_approve_for_all() {
     let _ =
         execute_set_approval_for_all(&mock_contract_context(alice), &mut state, &approve_all_msg);
     assert_eq!(
-        state.operator_approvals,
-        vec![OperatorApproval {
+        state.operator_approvals.contains_key(&OperatorApproval {
             operator: mock_address(bob),
             owner: mock_address(alice)
-        }]
+        }),
+        true
     );
 
     let approve_all_msg = NFTApproveForAllMsg {
@@ -137,17 +103,18 @@ fn proper_set_approve_for_all() {
     };
     let _ = execute_set_approval_for_all(&mock_contract_context(bob), &mut state, &approve_all_msg);
     assert_eq!(
-        state.operator_approvals,
-        vec![
-            OperatorApproval {
-                operator: mock_address(bob),
-                owner: mock_address(alice)
-            },
-            OperatorApproval {
-                operator: mock_address(alice),
-                owner: mock_address(bob)
-            },
-        ]
+        state.operator_approvals.contains_key(&OperatorApproval {
+            operator: mock_address(bob),
+            owner: mock_address(alice)
+        }),
+        true
+    );
+    assert_eq!(
+        state.operator_approvals.contains_key(&OperatorApproval {
+            operator: mock_address(alice),
+            owner: mock_address(bob)
+        }),
+        true
     );
 }
 
@@ -173,7 +140,7 @@ fn proper_token_operator_approve() {
     };
 
     let _ = execute_mint(&mock_contract_context(minter), &mut state, &mint_msg);
-    assert_eq!(state.owners, SortedVecMap::from([(1, mock_address(alice))]),);
+    assert_eq!(state.owners.get(&1), Some(mock_address(alice)));
 
     let approve_msg = NFTApproveMsg {
         approved: Some(mock_address(jack)),
@@ -181,10 +148,7 @@ fn proper_token_operator_approve() {
     };
 
     let _ = execute_approve(&mock_contract_context(alice), &mut state, &approve_msg);
-    assert_eq!(
-        state.token_approvals,
-        SortedVecMap::from([(1, mock_address(jack))]),
-    );
+    assert_eq!(state.token_approvals.get(&1), Some(mock_address(jack)),);
 }
 
 #[test]
@@ -276,10 +240,7 @@ fn proper_contract_owner_transfer_from() {
         &mut state,
         &transfer_msg,
     );
-    assert_eq!(
-        state.owners,
-        SortedVecMap::from([(1, mock_address(contract_owner))]),
-    );
+    assert_eq!(state.owners.get(&1), Some(mock_address(contract_owner)),);
 }
 
 #[test]
@@ -311,7 +272,7 @@ fn proper_owner_transfer_from() {
     };
 
     let _ = execute_transfer_from(&mock_contract_context(alice), &mut state, &transfer_msg);
-    assert_eq!(state.owners, SortedVecMap::from([(1, mock_address(bob))]),);
+    assert_eq!(state.owners.get(&1), Some(mock_address(bob)));
 }
 
 #[test]
@@ -350,8 +311,8 @@ fn proper_approved_transfer_from() {
     };
 
     let _ = execute_transfer_from(&mock_contract_context(bob), &mut state, &transfer_msg);
-    assert_eq!(state.owners, SortedVecMap::from([(1, mock_address(bob))]),);
-    assert_eq!(state.token_approvals, SortedVecMap::new(),);
+    assert_eq!(state.owners.get(&1), Some(mock_address(bob)));
+    assert_eq!(state.token_approvals.len(), 0);
 }
 
 #[test]
@@ -390,14 +351,14 @@ fn proper_operator_transfer_from() {
     };
 
     let _ = execute_transfer_from(&mock_contract_context(bob), &mut state, &transfer_msg);
-    assert_eq!(state.owners, SortedVecMap::from([(1, mock_address(bob))]),);
-    assert_eq!(state.token_approvals, SortedVecMap::new(),);
+    assert_eq!(state.owners.get(&1), Some(mock_address(bob)));
+    assert_eq!(state.token_approvals.len(), 0);
     assert_eq!(
-        state.operator_approvals,
-        vec![OperatorApproval {
+        state.operator_approvals.contains_key(&OperatorApproval {
             owner: mock_address(alice),
             operator: mock_address(bob)
-        }]
+        }),
+        true
     );
 }
 

@@ -1,12 +1,10 @@
-use pbc_contract_common::{
-    context::ContractContext, events::EventGroup, sorted_vec_map::SortedVecMap,
-};
+use pbc_contract_common::{avl_tree_map::AvlTreeMap, context::ContractContext, events::EventGroup};
 
 use crate::{
     msg::{
         NFTApproveForAllMsg, NFTApproveMsg, NFTBurnMsg, NFTInitMsg, NFTMintMsg, NFTTransferFromMsg,
     },
-    state::{NFTContractState, OperatorApproval, URL_LENGTH},
+    state::{NFTContractState, OperatorApproval, Unit},
     ContractError,
 };
 
@@ -19,11 +17,11 @@ pub fn execute_init(ctx: &ContractContext, msg: &NFTInitMsg) -> NFTContractState
         name: msg.name.clone(),
         symbol: msg.symbol.clone(),
         supply: 0,
-        operator_approvals: vec![],
-        owners: SortedVecMap::new(),
-        token_approvals: SortedVecMap::new(),
+        operator_approvals: AvlTreeMap::new(),
+        owners: AvlTreeMap::new(),
+        token_approvals: AvlTreeMap::new(),
         uri_template: msg.uri_template.clone(),
-        token_uri_details: SortedVecMap::new(),
+        token_uri_details: AvlTreeMap::new(),
     }
 }
 
@@ -39,15 +37,7 @@ pub fn execute_mint(
 
     state.owners.insert(msg.token_id, msg.to);
     if let Some(token_uri) = msg.token_uri.clone() {
-        assert!(
-            token_uri.len() <= URL_LENGTH,
-            "{}",
-            ContractError::UriTooLong
-        );
-
-        let mut uri_details: [u8; URL_LENGTH] = [0; URL_LENGTH];
-        uri_details[..token_uri.len()].copy_from_slice(token_uri.as_bytes());
-        state.token_uri_details.insert(msg.token_id, uri_details);
+        state.token_uri_details.insert(msg.token_id, token_uri);
     }
 
     state.increase_supply();
@@ -95,13 +85,9 @@ pub fn execute_set_approval_for_all(
     };
 
     if msg.approved {
-        if !state.operator_approvals.contains(&operator_approval) {
-            state.operator_approvals.push(operator_approval);
-        }
+        state.operator_approvals.insert(operator_approval, Unit {});
     } else {
-        state
-            .operator_approvals
-            .retain(|&approval| approval != operator_approval);
+        state.operator_approvals.remove(&operator_approval)
     }
 
     vec![]
