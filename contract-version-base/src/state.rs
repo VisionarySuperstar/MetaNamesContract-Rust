@@ -6,7 +6,7 @@ use read_write_state_derive::ReadWriteState;
 #[derive(ReadWriteState, CreateTypeSpec, Clone, PartialEq, Eq, Debug, Default)]
 pub struct ContractVersionBase {
     /// contract name
-    pub name: String,
+    pub contract_name: String,
     /// contract version
     pub version: String,
 }
@@ -19,7 +19,7 @@ impl ContractVersionBase {
     /// * **version** is an object of type [`str`]
     pub fn new(name: &str, version: &str) -> Self {
         Self {
-            name: name.to_string(),
+            contract_name: name.to_string(),
             version: version.to_string(),
         }
     }
@@ -30,13 +30,13 @@ impl ContractVersionBase {
     ///
     /// * **version** is an object of type [`str`]
     pub fn set_contract_version(&mut self, name: &str, version: &str) {
-        self.name = name.to_string();
+        self.contract_name = name.to_string();
         self.version = version.to_string();
     }
 
     /// Returns current contract name
     pub fn get_contract_name(&self) -> String {
-        self.name.to_string()
+        self.contract_name.to_string()
     }
 
     /// Returns current contract version
