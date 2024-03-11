@@ -231,7 +231,7 @@ pub fn owner_info(
 
     let owner_info_event = OwnerInfoEvent {
         owner: address,
-        domain_count: *state.stats.mint_count.get(&address).unwrap_or(&0),
+        domain_count: state.stats.mint_count.get(&address).unwrap_or(0),
         total_supply: state.nft.supply,
     };
 
@@ -502,7 +502,7 @@ fn mint_domain(
         if config.mint_count_limit_enabled && !is_admin {
             let mint_count = mut_state.stats.mint_count.get(&ctx.sender);
             assert!(
-                mint_count.is_none() || mint_count <= Some(&config.mint_count_limit),
+                mint_count.is_none() || mint_count <= Some(config.mint_count_limit),
                 "{}",
                 ContractError::MintCountLimitReached
             );

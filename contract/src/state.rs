@@ -3,7 +3,7 @@ use contract_version_base::state::ContractVersionBase;
 use create_type_spec_derive::CreateTypeSpec;
 use nft::state::NFTContractState;
 use partisia_name_system::state::PartisiaNameSystemState;
-use pbc_contract_common::{address::Address, sorted_vec_map::SortedVecMap};
+use pbc_contract_common::{address::Address, avl_tree_map::AvlTreeMap};
 use read_write_rpc_derive::ReadWriteRPC;
 use read_write_state_derive::ReadWriteState;
 
@@ -66,9 +66,9 @@ pub struct ContractConfig {
 }
 
 #[repr(C)]
-#[derive(ReadWriteState, CreateTypeSpec, PartialEq, Eq, Default, Clone, Debug)]
+#[derive(ReadWriteState, CreateTypeSpec, Default, Debug)]
 pub struct ContractStats {
-    pub mint_count: SortedVecMap<Address, u32>,
+    pub mint_count: AvlTreeMap<Address, u32>,
 }
 
 impl ContractConfig {
@@ -85,7 +85,7 @@ impl ContractConfig {
 
 impl ContractStats {
     pub fn increase_mint_count(&mut self, address: Address) {
-        let count = self.mint_count.get(&address).unwrap_or(&0);
+        let count = self.mint_count.get(&address).unwrap_or(0);
         self.mint_count.insert(address, count + 1);
     }
 }

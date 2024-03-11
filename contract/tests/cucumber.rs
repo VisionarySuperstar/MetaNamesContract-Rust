@@ -459,7 +459,7 @@ fn domain_is_not_minted(world: &mut ContractWorld, domain: String) {
 fn mint_counts(world: &mut ContractWorld, user: String, count: u32) {
     let user = mock_address(get_address_for_user(user));
 
-    assert_eq!(world.state.stats.mint_count.get(&user), Some(&count));
+    assert_eq!(world.state.stats.mint_count.get(&user), Some(count));
 }
 
 #[then(regex = r"(\w+) user (has|has not) the (\w+) role")]
