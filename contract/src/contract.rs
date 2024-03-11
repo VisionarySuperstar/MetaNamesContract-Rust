@@ -209,8 +209,8 @@ pub fn mint_batch(
     let mut all_events = vec![];
     let mut state_holder = state;
     for msg in mint_msgs {
-        let (new_state, mut mint_events) = mint_domain(&ctx, state_holder, &msg);
-        all_events.append(&mut mint_events);
+        let (new_state, mint_events) = mint_domain(&ctx, state_holder, &msg);
+        all_events.extend(mint_events);
         state_holder = new_state;
     }
 
@@ -258,28 +258,21 @@ pub fn is_domain_owner(
     (state, vec![])
 }
 
-#[callback(shortname = 0x30)]
-pub fn on_mint_callback(
+#[action(shortname = 0x20)]
+pub fn mint_record_batch(
     ctx: ContractContext,
-    callback_ctx: CallbackContext,
-    state: ContractState,
-    msg: MintMsg,
+    mut state: ContractState,
+    mint_msgs: Vec<pns_msg::PnsRecordMintMsg>,
 ) -> (ContractState, Vec<EventGroup>) {
     assert_contract_enabled(&state);
 
-    assert_callback_success(&callback_ctx);
+    let mut events = vec![];
+    for msg in mint_msgs {
+        let mint_events = pns_actions::execute_record_mint(&ctx, &mut state.pns, &msg);
+        events.extend(mint_events);
+    }
 
-    assert_and_get_payment_info(&state.config, msg.payment_coin_id);
-
-    action_mint(
-        &ctx,
-        state,
-        &msg.domain,
-        &msg.to,
-        &msg.token_uri,
-        &msg.parent_id,
-        &msg.subscription_years,
-    )
+    (state, events)
 }
 
 #[action(shortname = 0x21)]
@@ -441,6 +434,30 @@ pub fn renew_subscription(
     };
 
     (state, events)
+}
+
+#[callback(shortname = 0x30)]
+pub fn on_mint_callback(
+    ctx: ContractContext,
+    callback_ctx: CallbackContext,
+    state: ContractState,
+    msg: MintMsg,
+) -> (ContractState, Vec<EventGroup>) {
+    assert_contract_enabled(&state);
+
+    assert_callback_success(&callback_ctx);
+
+    assert_and_get_payment_info(&state.config, msg.payment_coin_id);
+
+    action_mint(
+        &ctx,
+        state,
+        &msg.domain,
+        &msg.to,
+        &msg.token_uri,
+        &msg.parent_id,
+        &msg.subscription_years,
+    )
 }
 
 #[callback(shortname = 0x31)]
