@@ -44,7 +44,7 @@ fn proper_mint_with_parent() {
 
     let mint_msg = PnsMintMsg {
         token_id: 1,
-        domain: "meta".to_string(),
+        domain: "mpc".to_string(),
         parent_id: None,
         expires_at: Some(tomorrow_timestamp()),
     };
@@ -54,7 +54,7 @@ fn proper_mint_with_parent() {
     let mint_msg = PnsMintMsg {
         token_id: 2,
         domain: "name".to_string(),
-        parent_id: Some("meta".to_string()),
+        parent_id: Some("mpc".to_string()),
         expires_at: Some(tomorrow_timestamp()),
     };
 
@@ -74,7 +74,7 @@ fn when_parent_domain_is_expired_subdomain_mint_fails() {
 
     let mint_msg = PnsMintMsg {
         token_id: 1,
-        domain: "meta".to_string(),
+        domain: "mpc".to_string(),
         parent_id: None,
         expires_at: Some(tomorrow_timestamp()),
     };
@@ -82,7 +82,7 @@ fn when_parent_domain_is_expired_subdomain_mint_fails() {
     let _ = execute_mint(&mock_contract_context(minter), &mut state, &mint_msg);
 
     let update_expiration = PnsDomainUpdateExpirationMsg {
-        domain: "meta".to_string(),
+        domain: "mpc".to_string(),
         expires_at: Some(yesterday_timestamp()),
     };
 
@@ -95,7 +95,7 @@ fn when_parent_domain_is_expired_subdomain_mint_fails() {
     let mint_msg = PnsMintMsg {
         token_id: 2,
         domain: "name".to_string(),
-        parent_id: Some("meta".to_string()),
+        parent_id: Some("mpc".to_string()),
         expires_at: None,
     };
 
@@ -112,7 +112,7 @@ fn when_parent_domain_is_expired_subdomain_record_mint_fails() {
 
     let mint_msg = PnsMintMsg {
         token_id: 1,
-        domain: "meta".to_string(),
+        domain: "mpc".to_string(),
         parent_id: None,
         expires_at: Some(tomorrow_timestamp()),
     };
@@ -122,14 +122,14 @@ fn when_parent_domain_is_expired_subdomain_record_mint_fails() {
     let mint_msg = PnsMintMsg {
         token_id: 2,
         domain: "name".to_string(),
-        parent_id: Some("meta".to_string()),
+        parent_id: Some("mpc".to_string()),
         expires_at: None,
     };
 
     let _ = execute_mint(&mock_contract_context(minter), &mut state, &mint_msg);
 
     let update_expiration = PnsDomainUpdateExpirationMsg {
-        domain: "meta".to_string(),
+        domain: "mpc".to_string(),
         expires_at: Some(yesterday_timestamp()),
     };
 
@@ -158,7 +158,7 @@ fn when_parent_does_not_exist_mint_fails() {
 
     let mint_msg = PnsMintMsg {
         token_id: 1,
-        domain: "meta".to_string(),
+        domain: "mpc".to_string(),
         parent_id: Some("notfound".to_string()),
         expires_at: Some(tomorrow_timestamp()),
     };

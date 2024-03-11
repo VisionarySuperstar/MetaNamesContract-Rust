@@ -85,7 +85,7 @@ fn meta_names_contract(world: &mut ContractWorld) {
         admin_addresses: vec![mock_address(SYSTEM_ADDRESS)],
         config,
         name: "Meta Names".to_string(),
-        symbol: "META".to_string(),
+        symbol: "mpc".to_string(),
         uri_template: "metanames.io".to_string(),
     };
 
