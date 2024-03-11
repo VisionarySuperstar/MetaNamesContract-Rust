@@ -240,6 +240,24 @@ pub fn owner_info(
     (state, vec![event_builder.build()])
 }
 
+#[action(shortname = 0x12)]
+pub fn is_domain_owner(
+    ctx: ContractContext,
+    state: ContractState,
+    domain: String,
+    address: Address,
+) -> (ContractState, Vec<EventGroup>) {
+    assert_contract_enabled(&state);
+
+    let token_id = state.pns.get_token_id(&domain);
+    assert!(token_id.is_some(), "{}", ContractError::DomainNotMinted);
+
+    let is_owner = state.nft.owner_of(token_id.unwrap()) == address;
+    assert!(is_owner, "{}", ContractError::Unauthorized);
+
+    (state, vec![])
+}
+
 #[callback(shortname = 0x30)]
 pub fn on_mint_callback(
     ctx: ContractContext,
