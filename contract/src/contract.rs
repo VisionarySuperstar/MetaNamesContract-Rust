@@ -3,7 +3,7 @@ use crate::{
         action_build_mint_callback, action_build_renew_callback, action_mint,
         action_renew_subscription, PaymentIntent,
     },
-    msg::{InitMsg, MintMsg, RenewDomainMsg},
+    msg::{InitMsg, MintMsg, OwnerInfoEvent, RenewDomainMsg},
     state::{ContractConfig, ContractState, ContractStats, PaymentInfo, UserRole},
 };
 
@@ -215,6 +215,29 @@ pub fn mint_batch(
     }
 
     (state_holder, all_events)
+}
+
+/// Returns owner info as data in the event
+/// the event data is of type OwnerInfoEvent
+#[action(shortname = 0x11)]
+pub fn owner_info(
+    ctx: ContractContext,
+    state: ContractState,
+    address: Address,
+) -> (ContractState, Vec<EventGroup>) {
+    assert_contract_enabled(&state);
+
+    let mut event_builder = EventGroup::builder();
+
+    let owner_info_event = OwnerInfoEvent {
+        owner: address,
+        domain_count: *state.stats.mint_count.get(&address).unwrap_or(&0),
+        total_supply: state.nft.supply,
+    };
+
+    event_builder.return_data(owner_info_event);
+
+    (state, vec![event_builder.build()])
 }
 
 #[callback(shortname = 0x30)]

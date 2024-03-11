@@ -57,3 +57,15 @@ pub struct RenewDomainMsg {
     pub payment_coin_id: u64,
     pub subscription_years: u32,
 }
+
+// Events structs
+
+/// Struct for owner info event
+/// Copy this struct to the external contracts that are using this action
+/// to be able to decode the event data
+#[derive(ReadWriteRPC, CreateTypeSpec, Clone, PartialEq, Eq, Debug)]
+pub struct OwnerInfoEvent {
+    pub owner: Address,
+    pub domain_count: u32,
+    pub total_supply: u128,
+}
