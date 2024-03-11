@@ -1,6 +1,6 @@
 Feature: Mint feature
 
-  // NOTE: Cannot make integration tests on normal mint as there are minting fees
+  # NOTE: Cannot make integration tests on normal mint as there are minting fees
   Scenario: The mint without fees without the parent occurs properly
     Given a meta names contract
     When Alice mints 'mpc.name' domain without fees and a parent
@@ -76,3 +76,11 @@ Feature: Mint feature
     Given a meta names contract
     When Alice mints 'this.is.a.too.long.domain.meta.name' domain without fees and a parent
     Then 'this.is.a.too.long.domain.meta.name' domain is not minted
+
+  # NOTE: Cannot make integration tests on normal mint as there are minting fees, thus requires admin user
+  Scenario: The batch mint without fees without the parent occurs properly
+    Given a meta names contract
+    And Alice user with the admin role
+    When Alice batch mints 'meta.name' and 'meta.test' domain without fees and a parent
+    Then Alice owns 'meta.name' domain
+    And Alice owns 'meta.test' domain

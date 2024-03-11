@@ -184,68 +184,37 @@ pub fn mint(
 ) -> (ContractState, Vec<EventGroup>) {
     assert_contract_enabled(&state);
 
-    // Basic validations
-    assert!(!state.pns.is_minted(&domain), "{}", ContractError::Minted);
+    mint_domain(
+        &ctx,
+        state,
+        &MintMsg {
+            domain,
+            to,
+            payment_coin_id,
+            token_uri,
+            parent_id,
+            subscription_years,
+        },
+    )
+}
 
-    pns_actions::validate_domain(&domain);
+#[action(shortname = 0x10)]
+pub fn mint_batch(
+    ctx: ContractContext,
+    state: ContractState,
+    mint_msgs: Vec<MintMsg>,
+) -> (ContractState, Vec<EventGroup>) {
+    assert_contract_enabled(&state);
 
-    let mut events = vec![];
-    let mut mut_state = state;
-
-    let is_admin = mut_state
-        .access_control
-        .has_role(UserRole::Admin {} as u8, &ctx.sender);
-    if parent_id.is_some() || is_admin {
-        let (new_state, mint_events) =
-            action_mint(ctx, mut_state, domain, to, token_uri, parent_id, None);
-
-        mut_state = new_state;
-
-        events.extend(mint_events);
-    } else {
-        let config = &mut_state.config;
-        if config.whitelist_enabled {
-            let is_whitelisted = mut_state
-                .access_control
-                .has_role(UserRole::Whitelist {} as u8, &ctx.sender);
-            assert!(is_whitelisted, "{}", ContractError::UserNotWhitelisted);
-        }
-
-        if config.mint_count_limit_enabled && !is_admin {
-            let mint_count = mut_state.stats.mint_count.get(&ctx.sender);
-            assert!(
-                mint_count.is_none() || mint_count <= Some(&config.mint_count_limit),
-                "{}",
-                ContractError::MintCountLimitReached
-            );
-        }
-
-        let payment_info = assert_and_get_payment_info(config, payment_coin_id);
-        let subscription_years = subscription_years.unwrap_or(1);
-        let total_fees = payment_info.fees.get(&domain) * subscription_years as u128;
-        let payout_transfer_events = action_build_mint_callback(
-            ctx,
-            &PaymentIntent {
-                id: payment_coin_id,
-                receiver: payment_info.receiver.unwrap(),
-                token: payment_info.token.unwrap(),
-                total_fees,
-            },
-            &MintMsg {
-                domain,
-                to,
-                payment_coin_id,
-                token_uri,
-                parent_id,
-                subscription_years: Some(subscription_years),
-            },
-            0x30,
-        );
-
-        events.extend(payout_transfer_events);
+    let mut all_events = vec![];
+    let mut state_holder = state;
+    for msg in mint_msgs {
+        let (new_state, mut mint_events) = mint_domain(&ctx, state_holder, &msg);
+        all_events.append(&mut mint_events);
+        state_holder = new_state;
     }
 
-    (mut_state, events)
+    (state_holder, all_events)
 }
 
 #[callback(shortname = 0x30)]
@@ -262,13 +231,13 @@ pub fn on_mint_callback(
     assert_and_get_payment_info(&state.config, msg.payment_coin_id);
 
     action_mint(
-        ctx,
+        &ctx,
         state,
-        msg.domain,
-        msg.to,
-        msg.token_uri,
-        msg.parent_id,
-        msg.subscription_years,
+        &msg.domain,
+        &msg.to,
+        &msg.token_uri,
+        &msg.parent_id,
+        &msg.subscription_years,
     )
 }
 
@@ -414,7 +383,6 @@ pub fn renew_subscription(
         let payment_info = assert_and_get_payment_info(&state.config, payment_coin_id);
         let total_fees = payment_info.fees.get(&domain) * subscription_years as u128;
         events = action_build_renew_callback(
-            ctx,
             &PaymentIntent {
                 id: payment_coin_id,
                 receiver: payment_info.receiver.unwrap(),
@@ -448,6 +416,82 @@ pub fn on_renew_subscription_callback(
     assert_and_get_payment_info(&state.config, msg.payment_coin_id);
 
     action_renew_subscription(ctx, state, msg.domain, msg.subscription_years)
+}
+
+fn mint_domain(
+    ctx: &ContractContext,
+    state: ContractState,
+    mint_msg: &MintMsg,
+) -> (ContractState, Vec<EventGroup>) {
+    let MintMsg {
+        domain,
+        to,
+        payment_coin_id,
+        token_uri,
+        parent_id,
+        subscription_years,
+    } = mint_msg;
+
+    assert!(!state.pns.is_minted(&domain), "{}", ContractError::Minted);
+
+    pns_actions::validate_domain(&domain);
+
+    let mut events = vec![];
+    let mut mut_state = state;
+
+    let is_admin = mut_state
+        .access_control
+        .has_role(UserRole::Admin {} as u8, &ctx.sender);
+    if parent_id.is_some() || is_admin {
+        let (new_state, mint_events) =
+            action_mint(ctx, mut_state, domain, to, token_uri, parent_id, &None);
+
+        mut_state = new_state;
+
+        events.extend(mint_events);
+    } else {
+        let config = &mut_state.config;
+        if config.whitelist_enabled {
+            let is_whitelisted = mut_state
+                .access_control
+                .has_role(UserRole::Whitelist {} as u8, &ctx.sender);
+            assert!(is_whitelisted, "{}", ContractError::UserNotWhitelisted);
+        }
+
+        if config.mint_count_limit_enabled && !is_admin {
+            let mint_count = mut_state.stats.mint_count.get(&ctx.sender);
+            assert!(
+                mint_count.is_none() || mint_count <= Some(&config.mint_count_limit),
+                "{}",
+                ContractError::MintCountLimitReached
+            );
+        }
+
+        let payment_info = assert_and_get_payment_info(config, *payment_coin_id);
+        let subscription_years = subscription_years.unwrap_or(1);
+        let total_fees = payment_info.fees.get(&domain) * subscription_years as u128;
+        let payout_transfer_events = action_build_mint_callback(
+            &PaymentIntent {
+                id: *payment_coin_id,
+                receiver: payment_info.receiver.unwrap(),
+                token: payment_info.token.unwrap(),
+                total_fees,
+            },
+            &MintMsg {
+                domain: domain.to_string(),
+                to: *to,
+                payment_coin_id: *payment_coin_id,
+                token_uri: token_uri.clone(),
+                parent_id: parent_id.clone(),
+                subscription_years: Some(subscription_years),
+            },
+            0x30,
+        );
+
+        events.extend(payout_transfer_events);
+    }
+
+    (mut_state, events)
 }
 
 fn assert_contract_enabled(state: &ContractState) {

@@ -27,13 +27,13 @@ pub struct PaymentIntent {
 
 /// Action to mint contract
 pub fn action_mint(
-    ctx: ContractContext,
+    ctx: &ContractContext,
     mut state: ContractState,
-    domain: String,
-    to: Address,
-    token_uri: Option<String>,
-    parent_id: Option<String>,
-    subscription_years: Option<u32>,
+    domain: &String,
+    to: &Address,
+    token_uri: &Option<String>,
+    parent_id: &Option<String>,
+    subscription_years: &Option<u32>,
 ) -> (ContractState, Vec<EventGroup>) {
     assert!(!state.pns.is_minted(&domain), "{}", ContractError::Minted);
 
@@ -62,7 +62,7 @@ pub fn action_mint(
             ContractError::Unauthorized
         );
     } else if let Some(years_active) = subscription_years {
-        let date = ctx.block_production_time + milliseconds_in_years(years_active as i64);
+        let date = ctx.block_production_time + milliseconds_in_years(*years_active as i64);
         expires_at = Some(date);
     }
 
@@ -71,9 +71,9 @@ pub fn action_mint(
         &ctx,
         &mut state.nft,
         &nft_msg::NFTMintMsg {
-            to,
+            to: to.clone(),
             token_id,
-            token_uri,
+            token_uri: token_uri.clone(),
         },
     );
 
@@ -81,9 +81,9 @@ pub fn action_mint(
         &ctx,
         &mut state.pns,
         &pns_msg::PnsMintMsg {
-            domain,
+            domain: domain.clone(),
             expires_at,
-            parent_id,
+            parent_id: parent_id.clone(),
             token_id,
         },
     );
@@ -99,7 +99,6 @@ pub fn action_mint(
 }
 
 pub fn action_build_mint_callback(
-    ctx: ContractContext,
     payment_intent: &PaymentIntent,
     mint_msg: &MintMsg,
     callback_byte: u32,
@@ -119,7 +118,6 @@ pub fn action_build_mint_callback(
 }
 
 pub fn action_build_renew_callback(
-    ctx: ContractContext,
     payment_intent: &PaymentIntent,
     renew_msg: &RenewDomainMsg,
     callback_byte: u32,

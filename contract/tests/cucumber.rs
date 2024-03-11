@@ -3,8 +3,9 @@ use std::{mem::take, panic::catch_unwind};
 use cucumber::{given, then, when, World};
 use meta_names_contract::{
     contract::{
-        approve_domain, initialize, mint, on_mint_callback, on_renew_subscription_callback,
-        renew_subscription, transfer_domain, update_config, update_user_role,
+        approve_domain, initialize, mint, mint_batch, on_mint_callback,
+        on_renew_subscription_callback, renew_subscription, transfer_domain, update_config,
+        update_user_role,
     },
     msg::{InitMsg, MintMsg, RenewDomainMsg},
     state::{ContractConfig, ContractState, Fees, PaymentInfo, UserRole},
@@ -139,8 +140,10 @@ fn update_contract_config(world: &mut ContractWorld, user: String, key: String, 
 }
 
 #[given(regex = r"(\w+) minted '(.+)' domain without a (parent)")]
-#[when(regex = r"(\w+) mints '(.+)' domain without fees and a (parent)")]
-#[when(regex = r"(\w+) mints '(.+)' domain with (.+) as payment token id and without a parent")]
+#[when(regex = r"(Alice|Bob) mints '(.+)' domain without fees and a (parent)")]
+#[when(
+    regex = r"(Alice|Bob) mints '(.+)' domain with (.+) as payment token id and without a parent"
+)]
 fn mint_a_domain(world: &mut ContractWorld, user: String, domain: String, token_id_str: String) {
     let payment_coin_id = if token_id_str == "parent" {
         0
@@ -162,6 +165,54 @@ fn mint_a_domain(world: &mut ContractWorld, user: String, domain: String, token_
                 parent_id: None,
                 subscription_years: None,
             },
+        )
+    }));
+
+    if let Ok((new_state, _)) = res {
+        world.state = new_state;
+    }
+}
+
+#[when(regex = r"(Alice|Bob) batch mints '(.+)' and '(.+)' domain without fees and a (parent)")]
+fn mint_batch_domain(
+    world: &mut ContractWorld,
+    user: String,
+    domain: String,
+    domain2: String,
+    token_id_str: String,
+) {
+    let payment_coin_id = if token_id_str == "parent" {
+        0
+    } else {
+        token_id_str.parse::<u64>().unwrap()
+    };
+
+    let res = catch_unwind(std::panic::AssertUnwindSafe(|| {
+        let state = take(&mut world.state);
+
+        let domains_mint_msg = vec![
+            MintMsg {
+                domain,
+                to: mock_address(get_address_for_user(user.clone())),
+                payment_coin_id,
+                token_uri: None,
+                parent_id: None,
+                subscription_years: None,
+            },
+            MintMsg {
+                domain: domain2,
+                to: mock_address(get_address_for_user(user.clone())),
+                payment_coin_id,
+                token_uri: None,
+                parent_id: None,
+                subscription_years: None,
+            },
+        ];
+
+        mint_batch(
+            mock_contract_context(get_address_for_user(user)),
+            state,
+            domains_mint_msg,
         )
     }));
 
