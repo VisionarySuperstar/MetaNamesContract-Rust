@@ -952,7 +952,7 @@ checksum = "68354c5c6bd36d73ff3feceb05efa59b6acb7626617f4962be322a825e61f79a"
 
 [[package]]
 name = "nft"
-version = "3.0.0"
+version = "3.1.0"
 dependencies = [
  "create_type_spec_derive",
  "pbc_contract_codegen",

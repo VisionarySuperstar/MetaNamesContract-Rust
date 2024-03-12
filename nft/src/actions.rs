@@ -20,6 +20,7 @@ pub fn execute_init(ctx: &ContractContext, msg: &NFTInitMsg) -> NFTContractState
         operator_approvals: AvlTreeMap::new(),
         owners: AvlTreeMap::new(),
         token_approvals: AvlTreeMap::new(),
+        owners_inventory: AvlTreeMap::new(),
         uri_template: msg.uri_template.clone(),
         token_uri_details: AvlTreeMap::new(),
     }
@@ -36,6 +37,8 @@ pub fn execute_mint(
     assert!(!state.exists(msg.token_id), "{}", ContractError::Minted);
 
     state.owners.insert(msg.token_id, msg.to);
+    state._owner_inventory_add(msg.to, msg.token_id);
+
     if let Some(token_uri) = msg.token_uri.clone() {
         state.token_uri_details.insert(msg.token_id, token_uri);
     }
@@ -136,6 +139,7 @@ pub fn execute_burn(
     state._approve(None, token_id);
 
     state.owners.remove(&token_id);
+    state._owner_inventory_remove(owner, token_id);
     state.token_uri_details.remove(&token_id);
     state.decrease_supply();
 

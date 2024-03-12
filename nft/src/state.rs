@@ -34,6 +34,8 @@ pub struct NFTContractState {
     pub token_approvals: AvlTreeMap<u128, Address>,
     /// Containing approved operators of owners. Operators can transfer and change approvals on all tokens owned by owner.
     pub operator_approvals: AvlTreeMap<OperatorApproval, Unit>,
+    /// owners inverse lookup
+    pub owners_inventory: AvlTreeMap<Address, Vec<u128>>,
     /// Template which the uri's of the NFTs fit into.
     pub uri_template: String,
     /// Mapping from token_id to the URI of the token.
@@ -160,6 +162,27 @@ impl NFTContractState {
         }
     }
 
+    /// Add token id to owner inventory
+    pub fn _owner_inventory_add(&mut self, owner: Address, token_id: u128) {
+        let mut inventory = self.owners_inventory.get(&owner).unwrap_or(vec![]);
+        inventory.push(token_id);
+        self.owners_inventory.insert(owner, inventory);
+    }
+
+    /// Remove token id from owner inventory
+    ///
+    /// Throws if token id is not found
+    pub fn _owner_inventory_remove(&mut self, owner: Address, token_id: u128) {
+        let inventory = self.owners_inventory.get(&owner);
+        assert!(inventory.is_some(), "{}", ContractError::NotFound);
+
+        let mut new_inventory = inventory.unwrap();
+        if let Some(pos) = new_inventory.iter().position(|&id| id == token_id) {
+            new_inventory.swap_remove(pos);
+        }
+        self.owners_inventory.insert(owner, new_inventory);
+    }
+
     /// Mutates the state by transferring `token_id` from `from` to `to`.
     /// As opposed to {transfer_from}, this imposes no restrictions on `ctx.sender`.
     ///
@@ -182,5 +205,7 @@ impl NFTContractState {
         // clear approvals from the previous owner
         self._approve(None, token_id);
         self.owners.insert(token_id, to);
+        self._owner_inventory_remove(from, token_id);
+        self._owner_inventory_add(to, token_id);
     }
 }
