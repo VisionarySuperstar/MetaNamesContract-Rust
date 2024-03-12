@@ -225,13 +225,18 @@ pub fn owner_info(
     state: ContractState,
     address: Address,
 ) -> (ContractState, Vec<EventGroup>) {
-    assert_contract_enabled(&state);
-
     let mut event_builder = EventGroup::builder();
 
+    let domain_count = state
+        .nft
+        .owners_inventory
+        .get(&address)
+        .unwrap_or(vec![])
+        .iter()
+        .count() as u32;
     let owner_info_event = OwnerInfoEvent {
         owner: address,
-        domain_count: state.stats.mint_count.get(&address).unwrap_or(0),
+        domain_count,
         total_supply: state.nft.supply,
     };
 
@@ -247,8 +252,6 @@ pub fn is_domain_owner(
     domain: String,
     address: Address,
 ) -> (ContractState, Vec<EventGroup>) {
-    assert_contract_enabled(&state);
-
     let token_id = state.pns.get_token_id(&domain);
     assert!(token_id.is_some(), "{}", ContractError::DomainNotMinted);
 

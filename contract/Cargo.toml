@@ -1,6 +1,6 @@
 [package]
 name = "meta-names-contract"
-version = "2.3.0"
+version = "2.3.1"
 authors = ["Yeboster"]
 edition = "2021"
 
