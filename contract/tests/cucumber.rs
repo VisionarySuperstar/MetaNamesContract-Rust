@@ -507,10 +507,8 @@ fn domain_expires_in(world: &mut ContractWorld, domain: String, action: String, 
     if action == "expires" {
         let domain = domain.unwrap();
         assert_eq!(domain.expires_at, Some(expected_expires_at));
-    } else {
-        if let Some(domain) = domain {
-            assert_ne!(domain.expires_at, Some(expected_expires_at));
-        }
+    } else if let Some(domain) = domain {
+        assert_ne!(domain.expires_at, Some(expected_expires_at));
     }
 }
 

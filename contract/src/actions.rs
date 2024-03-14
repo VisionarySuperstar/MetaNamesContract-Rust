@@ -29,15 +29,15 @@ pub struct PaymentIntent {
 pub fn action_mint(
     ctx: &ContractContext,
     mut state: ContractState,
-    domain: &String,
+    domain: &str,
     to: &Address,
     token_uri: &Option<String>,
     parent_id: &Option<String>,
     subscription_years: &Option<u32>,
 ) -> (ContractState, Vec<EventGroup>) {
-    assert!(!state.pns.is_minted(&domain), "{}", ContractError::Minted);
+    assert!(!state.pns.is_minted(domain), "{}", ContractError::Minted);
 
-    pns_actions::validate_domain(&domain);
+    pns_actions::validate_domain(domain);
 
     let mut expires_at: Option<i64> = None;
 
@@ -53,7 +53,7 @@ pub fn action_mint(
             ContractError::DomainNotActive
         );
 
-        pns_actions::validate_domain_with_parent(&domain, &parent_id);
+        pns_actions::validate_domain_with_parent(domain, &parent_id);
 
         let parent_token_id = parent.token_id;
         assert!(
@@ -68,20 +68,20 @@ pub fn action_mint(
 
     let token_id = state.nft.get_next_token_id();
     let nft_events = nft_actions::execute_mint(
-        &ctx,
+        ctx,
         &mut state.nft,
         &nft_msg::NFTMintMsg {
-            to: to.clone(),
+            to: *to,
             token_id,
             token_uri: token_uri.clone(),
         },
     );
 
     let pns_events = pns_actions::execute_mint(
-        &ctx,
+        ctx,
         &mut state.pns,
         &pns_msg::PnsMintMsg {
-            domain: domain.clone(),
+            domain: domain.to_owned(),
             expires_at,
             parent_id: parent_id.clone(),
             token_id,
@@ -90,10 +90,7 @@ pub fn action_mint(
 
     state.stats.increase_mint_count(ctx.sender);
 
-    let events = nft_events
-        .into_iter()
-        .chain(pns_events.into_iter())
-        .collect();
+    let events = nft_events.into_iter().chain(pns_events).collect();
 
     (state, events)
 }

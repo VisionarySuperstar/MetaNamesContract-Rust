@@ -487,9 +487,9 @@ fn mint_domain(
         subscription_years,
     } = mint_msg;
 
-    assert!(!state.pns.is_minted(&domain), "{}", ContractError::Minted);
+    assert!(!state.pns.is_minted(domain), "{}", ContractError::Minted);
 
-    pns_actions::validate_domain(&domain);
+    pns_actions::validate_domain(domain);
 
     let mut events = vec![];
     let mut mut_state = state;
@@ -524,7 +524,7 @@ fn mint_domain(
 
         let payment_info = assert_and_get_payment_info(config, *payment_coin_id);
         let subscription_years = subscription_years.unwrap_or(1);
-        let total_fees = payment_info.fees.get(&domain) * subscription_years as u128;
+        let total_fees = payment_info.fees.get(domain) * subscription_years as u128;
         let payout_transfer_events = action_build_mint_callback(
             &PaymentIntent {
                 id: *payment_coin_id,
