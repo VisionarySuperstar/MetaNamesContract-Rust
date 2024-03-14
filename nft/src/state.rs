@@ -35,7 +35,7 @@ pub struct NFTContractState {
     /// Containing approved operators of owners. Operators can transfer and change approvals on all tokens owned by owner.
     pub operator_approvals: AvlTreeMap<OperatorApproval, Unit>,
     /// owners inverse lookup
-    pub owners_inventory: AvlTreeMap<Address, Vec<u128>>,
+    pub owners_balance: AvlTreeMap<Address, u128>,
     /// Template which the uri's of the NFTs fit into.
     pub uri_template: String,
     /// Mapping from token_id to the URI of the token.
@@ -162,25 +162,18 @@ impl NFTContractState {
         }
     }
 
-    /// Add token id to owner inventory
-    pub fn _owner_inventory_add(&mut self, owner: Address, token_id: u128) {
-        let mut inventory = self.owners_inventory.get(&owner).unwrap_or(vec![]);
-        inventory.push(token_id);
-        self.owners_inventory.insert(owner, inventory);
+    /// Increase owner nft balance
+    pub fn _increase_owner_balance(&mut self, owner: Address) {
+        let inventory = self.owners_balance.get(&owner).unwrap_or(0);
+        self.owners_balance.insert(owner, inventory + 1);
     }
 
-    /// Remove token id from owner inventory
-    ///
-    /// Throws if token id is not found
-    pub fn _owner_inventory_remove(&mut self, owner: Address, token_id: u128) {
-        let inventory = self.owners_inventory.get(&owner);
-        assert!(inventory.is_some(), "{}", ContractError::NotFound);
+    /// Decrease owner nft balance
+    pub fn _decrease_owner_balance(&mut self, owner: Address) {
+        let inventory = self.owners_balance.get(&owner).unwrap_or(0);
+        assert!(inventory > 0, "{}", ContractError::NotFound);
 
-        let mut new_inventory = inventory.unwrap();
-        if let Some(pos) = new_inventory.iter().position(|&id| id == token_id) {
-            new_inventory.swap_remove(pos);
-        }
-        self.owners_inventory.insert(owner, new_inventory);
+        self.owners_balance.insert(owner, inventory - 1);
     }
 
     /// Mutates the state by transferring `token_id` from `from` to `to`.
@@ -205,7 +198,7 @@ impl NFTContractState {
         // clear approvals from the previous owner
         self._approve(None, token_id);
         self.owners.insert(token_id, to);
-        self._owner_inventory_remove(from, token_id);
-        self._owner_inventory_add(to, token_id);
+        self._decrease_owner_balance(from);
+        self._increase_owner_balance(to);
     }
 }

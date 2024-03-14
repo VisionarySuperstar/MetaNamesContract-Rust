@@ -66,6 +66,6 @@ pub struct RenewDomainMsg {
 #[derive(ReadWriteRPC, CreateTypeSpec, Clone, PartialEq, Eq, Debug)]
 pub struct OwnerInfoEvent {
     pub owner: Address,
-    pub domain_count: u32,
+    pub domain_count: u128,
     pub total_supply: u128,
 }

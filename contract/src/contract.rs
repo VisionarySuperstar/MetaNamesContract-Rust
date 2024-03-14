@@ -227,13 +227,7 @@ pub fn owner_info(
 ) -> (ContractState, Vec<EventGroup>) {
     let mut event_builder = EventGroup::builder();
 
-    let domain_count = state
-        .nft
-        .owners_inventory
-        .get(&address)
-        .unwrap_or(vec![])
-        .iter()
-        .count() as u32;
+    let domain_count = state.nft.owners_balance.get(&address).unwrap_or(0);
     let owner_info_event = OwnerInfoEvent {
         owner: address,
         domain_count,
