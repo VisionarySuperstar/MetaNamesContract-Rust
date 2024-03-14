@@ -498,8 +498,15 @@ fn mint_domain(
         .access_control
         .has_role(UserRole::Admin {} as u8, &ctx.sender);
     if parent_id.is_some() || is_admin {
-        let (new_state, mint_events) =
-            action_mint(ctx, mut_state, domain, to, token_uri, parent_id, &None);
+        let (new_state, mint_events) = action_mint(
+            ctx,
+            mut_state,
+            domain,
+            to,
+            token_uri,
+            parent_id,
+            subscription_years,
+        );
 
         mut_state = new_state;
 
