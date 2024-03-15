@@ -16,28 +16,17 @@ use partisia_name_system::{
     state::RecordClass,
 };
 use utils::{
-    tests::{mock_address, mock_contract_context, mock_successful_callback_context},
+    tests::{
+        get_address_for_user, mock_address, mock_contract_context,
+        mock_successful_callback_context, ALICE_ADDRESS, PAYMENT_TOKEN_ADDRESS, SYSTEM_ADDRESS,
+    },
     time::milliseconds_in_years,
 };
-
-const SYSTEM_ADDRESS: u8 = 0;
-const ALICE_ADDRESS: u8 = 1;
-const BOB_ADDRESS: u8 = 2;
-const PAYMENT_TOKEN_ADDRESS: u8 = 10;
 
 #[derive(Debug, Default, World)]
 pub struct ContractWorld {
     state: ContractState,
     point_in_time: i64,
-}
-
-fn get_address_for_user(user: String) -> u8 {
-    match user.as_str() {
-        "Alice" => ALICE_ADDRESS,
-        "Bob" => BOB_ADDRESS,
-        "contract" => SYSTEM_ADDRESS,
-        _ => panic!("Unknown user"),
-    }
 }
 
 fn get_user_role(role: String) -> UserRole {

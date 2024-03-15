@@ -28,6 +28,7 @@ serde_json = { workspace = true }
 thiserror = { workspace = true }
 
 [dev-dependencies]
+criterion = { version = "0.5.1", features = ["html_reports"] }
 cucumber = { workspace = true }
 futures = { workspace = true }
 utils = { path = "../utils" }
@@ -48,3 +49,8 @@ abi = [
   "contract-version-base/abi",
   "utils/abi",
 ]
+
+
+[[bench]]
+name = "contract_benchmark"
+harness = false

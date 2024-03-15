@@ -3,6 +3,20 @@ use pbc_contract_common::context::{CallbackContext, ContractContext};
 use pbc_contract_common::Hash;
 use std::time::SystemTime;
 
+pub const SYSTEM_ADDRESS: u8 = 0;
+pub const ALICE_ADDRESS: u8 = 1;
+pub const BOB_ADDRESS: u8 = 2;
+pub const PAYMENT_TOKEN_ADDRESS: u8 = 10;
+
+pub fn get_address_for_user(user: String) -> u8 {
+    match user.to_lowercase().as_str() {
+        "alice" => ALICE_ADDRESS,
+        "bob" => BOB_ADDRESS,
+        "contract" => SYSTEM_ADDRESS,
+        _ => panic!("Unknown user"),
+    }
+}
+
 pub fn mock_address(le: u8) -> Address {
     Address {
         address_type: AddressType::Account,
