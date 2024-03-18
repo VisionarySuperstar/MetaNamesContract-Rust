@@ -1,6 +1,6 @@
 [package]
 name = "meta-names-contract"
-version = "2.3.1"
+version = "2.4.0"
 authors = ["Yeboster"]
 edition = "2021"
 
@@ -17,6 +17,7 @@ read_write_state_derive = { workspace = true }
 create_type_spec_derive = { workspace = true }
 
 access-control = { path = "../access-control" }
+airdrop = { path = "../airdrop" }
 contract-version-base = { path = "../contract-version-base" }
 partisia-name-system = { path = "../partisia-name-system" }
 nft = { path = "../nft" }

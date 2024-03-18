@@ -2,6 +2,7 @@
 resolver = "2"
 
 members = [
+  "airdrop",
   "contract",
   "contract-proxy",
   "contract-version-base",

@@ -38,6 +38,22 @@ dependencies = [
 ]
 
 [[package]]
+name = "airdrop"
+version = "1.0.0"
+dependencies = [
+ "create_type_spec_derive",
+ "pbc_contract_codegen",
+ "pbc_contract_common",
+ "pbc_lib",
+ "pbc_traits",
+ "read_write_rpc_derive",
+ "read_write_state_derive",
+ "rpc-msg-derive",
+ "serde_json",
+ "utils",
+]
+
+[[package]]
 name = "anes"
 version = "0.1.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1029,9 +1045,10 @@ checksum = "523dc4f511e55ab87b694dc30d0f820d60906ef06413f93d4d7a1385599cc149"
 
 [[package]]
 name = "meta-names-contract"
-version = "2.3.1"
+version = "2.4.0"
 dependencies = [
  "access-control",
+ "airdrop",
  "contract-version-base",
  "create_type_spec_derive",
  "criterion",

@@ -1,4 +1,5 @@
 use access_control::state::AccessControlState;
+use airdrop::state::AirdropState;
 use contract_version_base::state::ContractVersionBase;
 use create_type_spec_derive::CreateTypeSpec;
 use nft::state::NFTContractState;
@@ -14,6 +15,7 @@ use crate::contract::__PBC_IS_ZK_CONTRACT;
 #[derive(Default, Debug)]
 pub struct ContractState {
     pub access_control: AccessControlState,
+    pub airdrop: AirdropState,
     pub config: ContractConfig,
     pub nft: NFTContractState,
     pub pns: PartisiaNameSystemState,
@@ -38,6 +40,8 @@ pub enum UserRole {
     Admin {},
     #[discriminant(1)]
     Whitelist {},
+    #[discriminant(2)]
+    Airdrop {},
 }
 
 #[repr(C)]

@@ -3,7 +3,7 @@ use std::{mem::take, panic::catch_unwind};
 use cucumber::{given, then, when, World};
 use meta_names_contract::{
     contract::{
-        approve_domain, initialize, mint, mint_batch, on_mint_callback,
+        add_airdrop, approve_domain, initialize, mint, mint_batch, on_mint_callback,
         on_renew_subscription_callback, renew_subscription, transfer_domain, update_config,
         update_user_role,
     },
@@ -32,6 +32,7 @@ pub struct ContractWorld {
 fn get_user_role(role: String) -> UserRole {
     match role.as_str() {
         "admin" => UserRole::Admin {},
+        "airdrop" => UserRole::Airdrop {},
         "whitelist" => UserRole::Whitelist {},
         _ => panic!("Unknown role"),
     }
@@ -376,6 +377,23 @@ fn renew_domain(world: &mut ContractWorld, user: String, domain_name: String, ye
     }
 }
 
+#[given(expr = "{word} airdropped to '{word}'")]
+#[when(expr = "{word} add airdrop to '{word}'")]
+fn airdrop(world: &mut ContractWorld, user: String, to: String) {
+    let res = catch_unwind(std::panic::AssertUnwindSafe(|| {
+        let state = take(&mut world.state);
+        add_airdrop(
+            mock_contract_context(get_address_for_user(user.clone())),
+            state,
+            vec![mock_address(get_address_for_user(to))],
+        )
+    }));
+
+    if let Ok((new_state, _)) = res {
+        world.state = new_state;
+    }
+}
+
 #[when(expr = "{word} mints '{word}' domain with '{word}' domain as the parent")]
 #[when(regex = r"(\w+) mints '(.+)' domain without (a parent)")]
 fn mint_domain_with_parent(
@@ -499,6 +517,17 @@ fn domain_expires_in(world: &mut ContractWorld, domain: String, action: String, 
     } else if let Some(domain) = domain {
         assert_ne!(domain.expires_at, Some(expected_expires_at));
     }
+}
+
+#[then(regex = r"(\w+) (has|has not) the airdrop")]
+fn has_airdrop(world: &mut ContractWorld, user: String, action: String) {
+    let has_airdrop = world
+        .state
+        .airdrop
+        .has_airdrop(&mock_address(get_address_for_user(user)));
+
+    let has = action == "has";
+    assert_eq!(has_airdrop, has);
 }
 
 // This runs before everything else, so you can setup things here.

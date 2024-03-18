@@ -17,6 +17,7 @@ use pbc_contract_common::{
 use nft::{actions as nft_actions, msg as nft_msg};
 
 use access_control::{actions as ac_actions, msg as ac_msg};
+use airdrop::actions::{self as airdrop_actions, execute_airdrop};
 use partisia_name_system::{actions as pns_actions, msg as pns_msg, state::RecordClass};
 use utils::events::assert_callback_success;
 
@@ -58,11 +59,13 @@ pub fn initialize(ctx: ContractContext, msg: InitMsg) -> (ContractState, Vec<Eve
     );
     let access_control = ac_actions::execute_init(&ac_msg::ACInitMsg {
         admin_addresses: msg.admin_addresses,
-        additional_roles: vec![UserRole::Whitelist {} as u8],
+        additional_roles: vec![UserRole::Whitelist {} as u8, UserRole::Airdrop {} as u8],
     });
+    let airdrop = airdrop_actions::execute_init();
 
     let state = ContractState {
         access_control,
+        airdrop,
         config: msg.config,
         nft,
         pns,
@@ -433,6 +436,21 @@ pub fn renew_subscription(
     (state, events)
 }
 
+#[action(shortname = 0x27)]
+pub fn add_airdrop(
+    ctx: ContractContext,
+    mut state: ContractState,
+    addresses: Vec<Address>,
+) -> (ContractState, Vec<EventGroup>) {
+    assert_has_role(&state, UserRole::Airdrop {}, &ctx.sender);
+
+    for address in addresses {
+        airdrop_actions::execute_add_airdrop(&mut state.airdrop, &address);
+    }
+
+    (state, vec![])
+}
+
 #[callback(shortname = 0x30)]
 pub fn on_mint_callback(
     ctx: ContractContext,
@@ -529,31 +547,58 @@ fn mint_domain(
             );
         }
 
-        let payment_info = assert_and_get_payment_info(config, *payment_coin_id);
-        let subscription_years = subscription_years.unwrap_or(1);
-        let total_fees = payment_info.fees.get(domain) * subscription_years as u128;
-        let payout_transfer_events = action_build_mint_callback(
-            &PaymentIntent {
-                id: *payment_coin_id,
-                receiver: payment_info.receiver.unwrap(),
-                token: payment_info.token.unwrap(),
-                total_fees,
-            },
-            &MintMsg {
-                domain: domain.to_string(),
-                to: *to,
-                payment_coin_id: *payment_coin_id,
-                token_uri: token_uri.clone(),
-                parent_id: parent_id.clone(),
-                subscription_years: Some(subscription_years),
-            },
-            0x30,
-        );
+        let has_airdrop = mut_state.airdrop.has_airdrop(&ctx.sender);
+        if has_airdrop {
+            execute_airdrop(&mut mut_state.airdrop, &ctx.sender);
 
-        events.extend(payout_transfer_events);
+            let (new_state, mint_events) = action_mint(
+                ctx,
+                mut_state,
+                domain,
+                to,
+                token_uri,
+                parent_id,
+                subscription_years,
+            );
+
+            mut_state = new_state;
+
+            events.extend(mint_events);
+        } else {
+            let payment_info = assert_and_get_payment_info(config, *payment_coin_id);
+            let subscription_years = subscription_years.unwrap_or(1);
+            let total_fees = payment_info.fees.get(domain) * subscription_years as u128;
+            let payout_transfer_events = action_build_mint_callback(
+                &PaymentIntent {
+                    id: *payment_coin_id,
+                    receiver: payment_info.receiver.unwrap(),
+                    token: payment_info.token.unwrap(),
+                    total_fees,
+                },
+                &MintMsg {
+                    domain: domain.to_string(),
+                    to: *to,
+                    payment_coin_id: *payment_coin_id,
+                    token_uri: token_uri.clone(),
+                    parent_id: parent_id.clone(),
+                    subscription_years: Some(subscription_years),
+                },
+                0x30,
+            );
+
+            events.extend(payout_transfer_events);
+        }
     }
 
     (mut_state, events)
+}
+
+fn assert_has_role(state: &ContractState, role: UserRole, account: &Address) {
+    assert!(
+        state.access_control.has_role(role as u8, account),
+        "{}",
+        ContractError::Unauthorized
+    );
 }
 
 fn assert_contract_enabled(state: &ContractState) {
