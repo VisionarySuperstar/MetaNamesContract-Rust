@@ -62,6 +62,7 @@ pub struct Fees {
 #[repr(C)]
 #[derive(ReadWriteRPC, ReadWriteState, CreateTypeSpec, PartialEq, Eq, Default, Clone, Debug)]
 pub struct ContractConfig {
+    pub airdrop_min_domain_length: u32,
     pub contract_enabled: bool,
     pub mint_count_limit_enabled: bool,
     pub mint_count_limit: u32,

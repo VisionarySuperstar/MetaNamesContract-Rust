@@ -35,4 +35,7 @@ pub enum ContractError {
 
     #[error("The given subscription years value is not valid")]
     InvalidSubscriptionYears,
+
+    #[error("Domain not valid for airdrop")]
+    AirdropNotValid,
 }

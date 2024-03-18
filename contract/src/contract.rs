@@ -549,6 +549,13 @@ fn mint_domain(
 
         let has_airdrop = mut_state.airdrop.has_airdrop(&ctx.sender);
         if has_airdrop {
+            let domain_length = domain.chars().count() as u32;
+            assert!(
+                domain_length >= config.airdrop_min_domain_length,
+                "{}",
+                ContractError::AirdropNotValid
+            );
+
             execute_airdrop(&mut mut_state.airdrop, &ctx.sender);
 
             let (new_state, mint_events) = action_mint(
