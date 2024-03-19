@@ -6,10 +6,13 @@ use pbc_contract_common::{
 
 use crate::{
     msg::{
+        PnsCustomRecordDeleteMsg, PnsCustomRecordMintMsg, PnsCustomRecordUpdateMsg,
         PnsDomainUpdateExpirationMsg, PnsMintMsg, PnsRecordDeleteAllMsg, PnsRecordDeleteMsg,
         PnsRecordMintMsg, PnsRecordUpdateMsg,
     },
-    state::{Domain, PartisiaNameSystemState, MAX_DOMAIN_LEN, MAX_RECORD_DATA_LENGTH},
+    state::{
+        Domain, PartisiaNameSystemState, MAX_CUSTOM_RECORDS, MAX_DOMAIN_LEN, MAX_RECORD_DATA_LENGTH,
+    },
     ContractError,
 };
 
@@ -50,6 +53,7 @@ pub fn execute_mint(
         Domain {
             token_id: msg.token_id,
             records: SortedVecMap::new(),
+            custom_records: SortedVecMap::new(),
             minted_at: ctx.block_production_time,
             expires_at: msg.expires_at,
             parent_id: msg.parent_id.clone(),
@@ -153,6 +157,101 @@ pub fn execute_record_delete_all(
 
     let mut domain = state.domains.get(&msg.domain).unwrap();
     domain.records = SortedVecMap::new();
+    domain.custom_records = SortedVecMap::new();
+    state.domains.insert(msg.domain.clone(), domain);
+
+    vec![]
+}
+
+/// Mint a new custom record for a domain
+/// Returns [`Vec<EventGroup>`] if operation was successful,
+/// otherwise panics with error message defined in [`ContractError`]
+pub fn execute_custom_record_mint(
+    ctx: &ContractContext,
+    state: &mut PartisiaNameSystemState,
+    msg: &PnsCustomRecordMintMsg,
+) -> Vec<EventGroup> {
+    assert!(state.is_minted(&msg.domain), "{}", ContractError::NotFound);
+    assert!(
+        state.is_active(&msg.domain, ctx.block_production_time),
+        "{}",
+        ContractError::DomainExpired
+    );
+    assert!(
+        msg.data.len() < MAX_RECORD_DATA_LENGTH,
+        "{}",
+        ContractError::RecordDataTooLong
+    );
+
+    let mut domain = state.domains.get(&msg.domain).unwrap();
+    assert!(
+        domain.custom_records.len() < MAX_CUSTOM_RECORDS,
+        "{}",
+        ContractError::MaxCustomRecords
+    );
+
+    domain.mint_custom_record(msg.key.as_str(), msg.data.as_slice());
+    state.domains.insert(msg.domain.clone(), domain);
+
+    vec![]
+}
+
+/// Update a custom record for a domain
+/// Returns [`Vec<EventGroup>`] if operation was successful,
+/// otherwise panics with error message defined in [`ContractError`]
+pub fn execute_custom_record_update(
+    ctx: &ContractContext,
+    state: &mut PartisiaNameSystemState,
+    msg: &PnsCustomRecordUpdateMsg,
+) -> Vec<EventGroup> {
+    assert!(state.is_minted(&msg.domain), "{}", ContractError::NotFound);
+    assert!(
+        state.is_active(&msg.domain, ctx.block_production_time),
+        "{}",
+        ContractError::DomainExpired
+    );
+    assert!(
+        msg.data.len() < MAX_RECORD_DATA_LENGTH,
+        "{}",
+        ContractError::RecordDataTooLong
+    );
+
+    let mut domain = state.domains.get(&msg.domain).unwrap();
+    assert!(
+        domain.is_custom_record_minted(&msg.key),
+        "{}",
+        ContractError::NotFound
+    );
+
+    domain.update_custom_record_data(msg.key.as_str(), msg.data.as_slice());
+    state.domains.insert(msg.domain.clone(), domain);
+
+    vec![]
+}
+
+/// Delete a custom record for a domain
+/// Returns [`Vec<EventGroup>`] if operation was successful,
+/// otherwise panics with error message defined in [`ContractError`]
+pub fn execute_custom_record_delete(
+    ctx: &ContractContext,
+    state: &mut PartisiaNameSystemState,
+    msg: &PnsCustomRecordDeleteMsg,
+) -> Vec<EventGroup> {
+    assert!(state.is_minted(&msg.domain), "{}", ContractError::NotFound);
+    assert!(
+        state.is_active(&msg.domain, ctx.block_production_time),
+        "{}",
+        ContractError::DomainExpired
+    );
+
+    let mut domain = state.domains.get(&msg.domain).unwrap();
+    assert!(
+        domain.is_custom_record_minted(&msg.key),
+        "{}",
+        ContractError::NotFound
+    );
+
+    domain.delete_custom_record(&msg.key);
     state.domains.insert(msg.domain.clone(), domain);
 
     vec![]

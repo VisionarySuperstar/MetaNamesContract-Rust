@@ -6,7 +6,7 @@ pub enum ContractError {
     #[error("Token with specified id is already minted")]
     Minted,
 
-    #[error("Record with specified token id and class is already minted")]
+    #[error("Record is already minted")]
     RecordMinted,
 
     #[error("Token with specified id is not minted")]
@@ -14,6 +14,9 @@ pub enum ContractError {
 
     #[error("Record with specified token id and class is not minted")]
     RecordNotMinted,
+
+    #[error("The maximum amount of custom records has been reached")]
+    MaxCustomRecords,
 
     #[error("Not found")]
     NotFound,

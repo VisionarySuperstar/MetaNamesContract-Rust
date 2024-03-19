@@ -8,6 +8,7 @@ use crate::ContractError;
 
 pub const MAX_RECORD_DATA_LENGTH: usize = 64;
 pub const MAX_DOMAIN_LEN: usize = 32;
+pub const MAX_CUSTOM_RECORDS: usize = 10;
 
 /// This structure describes Partisia Name System state
 #[repr(C)]
@@ -26,6 +27,7 @@ pub struct Domain {
     /// Unix millis timestamp
     pub expires_at: Option<i64>,
     pub records: SortedVecMap<RecordClass, Record>,
+    pub custom_records: SortedVecMap<String, Record>,
 }
 
 #[repr(C)]
@@ -76,6 +78,16 @@ impl Domain {
         self.records.contains_key(class)
     }
 
+    /// Get custom record given key
+    pub fn get_custom_record(&self, key: &str) -> Option<&Record> {
+        self.custom_records.get(key)
+    }
+
+    /// Existence of custom record given key
+    pub fn is_custom_record_minted(&self, key: &str) -> bool {
+        self.custom_records.contains_key(key)
+    }
+
     /// Checks if domain is active
     /// Opposite of expired
     pub fn is_active(&self, unix_millis_now: i64) -> bool {
@@ -123,6 +135,49 @@ impl Domain {
 
         if self.records.contains_key(class) {
             self.records.remove_entry(class);
+        } else {
+            panic!("{}", ContractError::NotFound);
+        }
+    }
+
+    /// Mints custom record for token
+    pub fn mint_custom_record(&mut self, key: &str, data: &[u8]) {
+        assert!(
+            !self.is_custom_record_minted(key),
+            "{}",
+            ContractError::RecordMinted
+        );
+
+        let record = Record {
+            data: data.to_vec(),
+        };
+        self.custom_records.insert(String::from(key), record);
+    }
+
+    /// Update data of a custom record
+    pub fn update_custom_record_data(&mut self, key: &str, data: &[u8]) {
+        assert!(
+            self.is_custom_record_minted(key),
+            "{}",
+            ContractError::RecordNotMinted
+        );
+
+        self.custom_records.get_mut(key).map(|record| {
+            record.data = data.to_vec();
+            record
+        });
+    }
+
+    /// Remove a custom record
+    pub fn delete_custom_record(&mut self, key: &str) {
+        assert!(
+            self.is_custom_record_minted(key),
+            "{}",
+            ContractError::RecordNotMinted
+        );
+
+        if self.custom_records.contains_key(key) {
+            self.custom_records.remove_entry(key);
         } else {
             panic!("{}", ContractError::NotFound);
         }

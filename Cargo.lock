@@ -1045,7 +1045,7 @@ checksum = "523dc4f511e55ab87b694dc30d0f820d60906ef06413f93d4d7a1385599cc149"
 
 [[package]]
 name = "meta-names-contract"
-version = "2.4.1"
+version = "2.5.0"
 dependencies = [
  "access-control",
  "airdrop",
@@ -1141,7 +1141,7 @@ checksum = "c08d65885ee38876c4f86fa503fb49d7b507c2b62552df7c70b2fce627e06381"
 
 [[package]]
 name = "partisia-name-system"
-version = "2.0.0"
+version = "2.1.0"
 dependencies = [
  "contract-version-base",
  "create_type_spec_derive",

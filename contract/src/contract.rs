@@ -258,6 +258,79 @@ pub fn is_domain_owner(
     (state, vec![])
 }
 
+#[action(shortname = 0x16)]
+pub fn mint_custom_record_batch(
+    ctx: ContractContext,
+    mut state: ContractState,
+    mint_msgs: Vec<pns_msg::PnsCustomRecordMintMsg>,
+) -> (ContractState, Vec<EventGroup>) {
+    assert_contract_enabled(&state);
+
+    let mut events = vec![];
+    for msg in mint_msgs {
+        let mint_events = pns_actions::execute_custom_record_mint(&ctx, &mut state.pns, &msg);
+        events.extend(mint_events);
+    }
+
+    (state, events)
+}
+
+#[action(shortname = 0x17)]
+pub fn mint_custom_record(
+    ctx: ContractContext,
+    mut state: ContractState,
+    domain: String,
+    key: String,
+    data: Vec<u8>,
+) -> (ContractState, Vec<EventGroup>) {
+    assert_contract_enabled(&state);
+
+    let events = pns_actions::execute_custom_record_mint(
+        &ctx,
+        &mut state.pns,
+        &pns_msg::PnsCustomRecordMintMsg { domain, key, data },
+    );
+
+    (state, events)
+}
+
+#[action(shortname = 0x18)]
+pub fn update_custom_record(
+    ctx: ContractContext,
+    mut state: ContractState,
+    domain: String,
+    key: String,
+    data: Vec<u8>,
+) -> (ContractState, Vec<EventGroup>) {
+    assert_contract_enabled(&state);
+
+    let events = pns_actions::execute_custom_record_update(
+        &ctx,
+        &mut state.pns,
+        &pns_msg::PnsCustomRecordUpdateMsg { domain, key, data },
+    );
+
+    (state, events)
+}
+
+#[action(shortname = 0x19)]
+pub fn delete_custom_record(
+    ctx: ContractContext,
+    mut state: ContractState,
+    domain: String,
+    key: String,
+) -> (ContractState, Vec<EventGroup>) {
+    assert_contract_enabled(&state);
+
+    let events = pns_actions::execute_custom_record_delete(
+        &ctx,
+        &mut state.pns,
+        &pns_msg::PnsCustomRecordDeleteMsg { domain, key },
+    );
+
+    (state, events)
+}
+
 #[action(shortname = 0x20)]
 pub fn mint_record_batch(
     ctx: ContractContext,

@@ -43,6 +43,28 @@ pub struct PnsRecordDeleteMsg {
     pub class: RecordClass,
 }
 
+#[derive(ReadWriteRPC, CreateTypeSpec, Clone, PartialEq, Eq, Debug)]
+pub struct PnsCustomRecordMintMsg {
+    pub domain: String,
+    pub key: String,
+    pub data: Vec<u8>,
+}
+
+/// This structure describes fields for the record update msg
+#[derive(ReadWriteRPC, CreateTypeSpec, Clone, PartialEq, Eq, Debug)]
+pub struct PnsCustomRecordUpdateMsg {
+    pub domain: String,
+    pub key: String,
+    pub data: Vec<u8>,
+}
+
+/// This structure describes fields for the Record Delete Msg
+#[derive(ReadWriteRPC, CreateTypeSpec, Clone, PartialEq, Eq, Debug)]
+pub struct PnsCustomRecordDeleteMsg {
+    pub domain: String,
+    pub key: String,
+}
+
 /// This structure describes fields for the Record Delete All Msg
 #[derive(ReadWriteRPC, CreateTypeSpec, Clone, PartialEq, Eq, Debug)]
 pub struct PnsRecordDeleteAllMsg {
