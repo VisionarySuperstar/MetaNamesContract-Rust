@@ -1,5 +1,3 @@
-use std::fmt::format;
-
 use crate::{
     actions::{
         execute_custom_record_delete, execute_custom_record_mint, execute_custom_record_update,
@@ -11,7 +9,7 @@ use crate::{
         PnsDomainUpdateExpirationMsg, PnsMintMsg, PnsRecordDeleteAllMsg, PnsRecordDeleteMsg,
         PnsRecordMintMsg, PnsRecordUpdateMsg,
     },
-    state::{Record, RecordClass, MAX_CUSTOM_RECORDS},
+    state::{RecordClass, MAX_CUSTOM_RECORDS},
 };
 
 use utils::tests::{
@@ -242,12 +240,7 @@ fn proper_record_mint() {
 
     let domain = state.get_domain(domain).unwrap();
     let record = domain.get_record(&record_class).unwrap();
-    assert_eq!(
-        *record,
-        Record {
-            data: string_to_bytes("data"),
-        }
-    );
+    assert_eq!(*record, string_to_bytes("data"));
 }
 
 #[test]
@@ -341,12 +334,7 @@ fn proper_record_update() {
 
     let domain = state.get_domain(domain).unwrap();
     let record = domain.get_record(&record_class).unwrap();
-    assert_eq!(
-        *record,
-        Record {
-            data: string_to_bytes("new data"),
-        }
-    );
+    assert_eq!(*record, string_to_bytes("new data"));
 }
 
 #[test]
@@ -503,12 +491,7 @@ fn proper_custom_record_mint() {
 
     let domain = state.get_domain(domain).unwrap();
     let record = domain.get_custom_record(&record_key).unwrap();
-    assert_eq!(
-        *record,
-        Record {
-            data: string_to_bytes("data"),
-        }
-    );
+    assert_eq!(*record, string_to_bytes("data"));
 }
 
 #[test]
@@ -629,12 +612,7 @@ fn proper_custom_record_update() {
 
     let domain = state.get_domain(domain).unwrap();
     let record = domain.get_custom_record(&record_key).unwrap();
-    assert_eq!(
-        *record,
-        Record {
-            data: string_to_bytes("new data"),
-        }
-    );
+    assert_eq!(*record, string_to_bytes("new data"));
 }
 
 #[test]

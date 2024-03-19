@@ -174,7 +174,7 @@ fn domain_has_record(
     if let Some(domain) = domain {
         let record = domain.get_record(&get_record_class_given(class)).unwrap();
 
-        assert_eq!(record.data, data.into_bytes());
+        assert_eq!(*record, data.into_bytes());
     }
 }
 

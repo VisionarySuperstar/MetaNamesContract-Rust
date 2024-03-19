@@ -26,14 +26,8 @@ pub struct Domain {
     pub minted_at: i64,
     /// Unix millis timestamp
     pub expires_at: Option<i64>,
-    pub records: SortedVecMap<RecordClass, Record>,
-    pub custom_records: SortedVecMap<String, Record>,
-}
-
-#[repr(C)]
-#[derive(ReadWriteState, CreateTypeSpec, Clone, PartialEq, Eq, Debug)]
-pub struct Record {
-    pub data: Vec<u8>,
+    pub records: SortedVecMap<RecordClass, Vec<u8>>,
+    pub custom_records: SortedVecMap<String, Vec<u8>>,
 }
 
 #[repr(u8)]
@@ -69,7 +63,7 @@ pub enum RecordClass {
 
 impl Domain {
     /// Get record given class
-    pub fn get_record(&self, class: &RecordClass) -> Option<&Record> {
+    pub fn get_record(&self, class: &RecordClass) -> Option<&Vec<u8>> {
         self.records.get(class)
     }
 
@@ -79,7 +73,7 @@ impl Domain {
     }
 
     /// Get custom record given key
-    pub fn get_custom_record(&self, key: &str) -> Option<&Record> {
+    pub fn get_custom_record(&self, key: &str) -> Option<&Vec<u8>> {
         self.custom_records.get(key)
     }
 
@@ -105,10 +99,7 @@ impl Domain {
             ContractError::RecordMinted
         );
 
-        let record = Record {
-            data: data.to_vec(),
-        };
-        self.records.insert(*class, record);
+        self.records.insert(*class, data.to_owned());
     }
 
     /// Update data of a record
@@ -119,10 +110,7 @@ impl Domain {
             ContractError::RecordNotMinted
         );
 
-        self.records.get_mut(class).map(|record| {
-            record.data = data.to_vec();
-            record
-        });
+        self.records.insert(*class, data.to_owned());
     }
 
     /// Remove a record
@@ -148,10 +136,7 @@ impl Domain {
             ContractError::RecordMinted
         );
 
-        let record = Record {
-            data: data.to_vec(),
-        };
-        self.custom_records.insert(String::from(key), record);
+        self.custom_records.insert(key.to_owned(), data.to_owned());
     }
 
     /// Update data of a custom record
@@ -162,10 +147,7 @@ impl Domain {
             ContractError::RecordNotMinted
         );
 
-        self.custom_records.get_mut(key).map(|record| {
-            record.data = data.to_vec();
-            record
-        });
+        self.custom_records.insert(key.to_owned(), data.to_owned());
     }
 
     /// Remove a custom record
@@ -187,7 +169,7 @@ impl Domain {
 impl PartisiaNameSystemState {
     /// Returns info given domain
     pub fn get_domain(&self, domain_name: &str) -> Option<Domain> {
-        self.domains.get(&String::from(domain_name))
+        self.domains.get(&domain_name.to_owned())
     }
 
     /// Returns if the domain is active
@@ -258,13 +240,13 @@ impl PartisiaNameSystemState {
 
     /// Says is token id minted or not
     pub fn is_minted(&self, domain_name: &str) -> bool {
-        self.domains.contains_key(&String::from(domain_name))
+        self.domains.contains_key(&domain_name.to_owned())
     }
 
     /// This function returns token id for given domain
     pub fn get_token_id(&self, domain_name: &str) -> Option<u128> {
         self.domains
-            .get(&String::from(domain_name))
+            .get(&domain_name.to_owned())
             .map(|d| d.token_id)
     }
 }
