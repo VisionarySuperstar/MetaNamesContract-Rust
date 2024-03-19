@@ -26,7 +26,7 @@ read_write_rpc_derive = { git = "https://git@gitlab.com/partisiablockchain/langu
 read_write_state_derive = { git = "https://git@gitlab.com/partisiablockchain/language/contract-sdk.git", tag = "v.16.47.0" }
 create_type_spec_derive = { git = "https://git@gitlab.com/partisiablockchain/language/contract-sdk.git", tag = "v.16.47.0" }
 
-cucumber = "0.19"
+cucumber = "0.20.2"
 futures = "0.3"
 
 serde_json = "1.0"
