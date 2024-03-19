@@ -41,6 +41,7 @@ harness = false
 [features]
 abi = [
   "access-control/abi",
+  "airdrop/abi",
   "pbc_contract_common/abi",
   "pbc_contract_codegen/abi",
   "pbc_traits/abi",
